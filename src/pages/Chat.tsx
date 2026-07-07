@@ -2,44 +2,13 @@ import { useEffect, useRef, useState } from 'react'
 import { TopBar } from '@/components/AppShell'
 import { ProvenanceBadge, SourceChip } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
-import { Attach, Dismiss, Plus, Send, Stop } from '@/icons'
-import { conversations as seed } from '@/lib/mockData'
+import { Attach, Chat as ChatGlyph, Dismiss, Node, Person, Plus, Send, Stop, Time } from '@/icons'
+import { conversations as seed, oliverCitations } from '@/lib/mockData'
 import type { ChatMessage, Citation, Conversation } from '@/lib/types'
 
 const CANNED: { text: string; citations: Citation[] } = {
   text: "Oliver now leads design. He moved off the backend team last month, so he's running the design work for your team rather than backend development.",
-  citations: [
-    {
-      memoryId: 'm_oliver_design',
-      provenance: 'stated',
-      quote: 'Oliver now leads design.',
-      source: { kind: 'slack', label: 'Slack · #engineering' },
-    },
-    {
-      memoryId: 'm_oliver_design',
-      provenance: 'stated',
-      quote: 'Moved off the backend team last month.',
-      source: { kind: 'chat', label: 'you', when: '6 days ago' },
-    },
-    {
-      memoryId: 'm_oliver_infer',
-      provenance: 'inferred',
-      quote: 'Now runs the design work for the team.',
-      source: { kind: 'chat', label: "Anant's inference" },
-    },
-    {
-      memoryId: 'm_oliver_reviews',
-      provenance: 'aggregated',
-      quote: 'Leads the weekly design reviews.',
-      source: { kind: 'notion', label: 'Notion · Design' },
-    },
-    {
-      memoryId: 'm_oliver_handoff',
-      provenance: 'stated',
-      quote: 'Backend hand-off routes through the platform pod.',
-      source: { kind: 'slack', label: 'Slack · #engineering', speaker: 'Priya' },
-    },
-  ],
+  citations: oliverCitations,
 }
 
 export function ChatPage() {
@@ -218,12 +187,7 @@ export function ChatPage() {
           />
           <div className="rise relative z-10 flex max-h-[80vh] w-[70vw] max-w-[960px] flex-col overflow-hidden rounded-[4px] border border-rule bg-paper-raised shadow-[var(--shadow-pop)]">
             <div className="flex items-start justify-between gap-3 border-b border-rule px-6 py-4">
-              <div>
-                <div className="text-[1.05rem] font-[500] text-ink">Sources for this answer</div>
-                <div className="text-[0.8125rem] text-ink-muted">
-                  The memories behind it — {sourceList.length} in total.
-                </div>
-              </div>
+              <div className="text-[1.05rem] font-[500] text-ink">Sources for this answer</div>
               <IconButton label="Close" onClick={() => setSourcesOpen(false)}>
                 <Dismiss size={18} />
               </IconButton>
@@ -231,11 +195,41 @@ export function ChatPage() {
             <div className="grid gap-3 overflow-y-auto p-6 sm:grid-cols-2">
               {sourceList.map((c, i) => (
                 <div key={i} className="rounded-[4px] border border-rule bg-veil p-4">
-                  <ProvenanceBadge provenance={c.provenance} />
-                  <p className="mt-3 text-[0.95rem] leading-snug text-ink">{c.quote}</p>
-                  <div className="mt-3">
-                    <SourceChip source={c.source} onClick={() => {}} />
+                  <div className="flex items-center justify-between gap-2">
+                    <ProvenanceBadge provenance={c.provenance} />
+                    <SourceChip source={c.source} />
                   </div>
+                  <p className="mt-3 text-[0.95rem] leading-snug text-ink">{c.quote}</p>
+                  <dl className="mt-3 space-y-1.5 border-t border-rule/70 pt-3 text-[0.8125rem]">
+                    {c.date && (
+                      <div className="flex items-center gap-2 text-ink-soft">
+                        <Time size={14} className="shrink-0 text-ink-faint" />
+                        <span>{c.date}</span>
+                      </div>
+                    )}
+                    {c.conversation && (
+                      <div className="flex items-center gap-2 text-ink-soft">
+                        <ChatGlyph size={14} className="shrink-0 text-ink-faint" />
+                        <span>
+                          In <span className="text-ink">{c.conversation}</span>
+                        </span>
+                      </div>
+                    )}
+                    {c.source.speaker && (
+                      <div className="flex items-center gap-2 text-ink-soft">
+                        <Person size={14} className="shrink-0 text-ink-faint" />
+                        <span>
+                          Said by <span className="text-ink">{c.source.speaker}</span>
+                        </span>
+                      </div>
+                    )}
+                    {c.context && (
+                      <div className="flex items-center gap-2 text-ink-muted">
+                        <Node size={14} className="shrink-0 text-ink-faint" />
+                        <span>{c.context}</span>
+                      </div>
+                    )}
+                  </dl>
                 </div>
               ))}
             </div>

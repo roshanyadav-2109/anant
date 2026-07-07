@@ -1,4 +1,5 @@
 import type {
+  Citation,
   Connector,
   Conversation,
   Insight,
@@ -198,6 +199,57 @@ export const connectors: Connector[] = [
   { id: 'fireflies', name: 'Fireflies', category: 'Transcripts', status: 'available', icon: CoFireflies },
 ]
 
+/* Detailed provenance for the sample answer — dates, the conversation each
+   came from, and how it was captured. Shared by the seed thread and the live
+   composer's canned reply. */
+export const oliverCitations: Citation[] = [
+  {
+    memoryId: 'm_oliver_design',
+    provenance: 'stated',
+    quote: 'Oliver now leads design.',
+    source: { kind: 'slack', label: 'Slack · #engineering', speaker: 'Priya' },
+    date: '2 Jul 2026, 9:41am',
+    conversation: 'Design team changes',
+    context: 'Announced in #engineering',
+  },
+  {
+    memoryId: 'm_oliver_design',
+    provenance: 'stated',
+    quote: 'Moved off the backend team last month.',
+    source: { kind: 'chat', label: 'You', when: '6 days ago' },
+    date: '2 Jul 2026, 10:05am',
+    conversation: 'Design team changes',
+    context: 'You told Anant in chat',
+  },
+  {
+    memoryId: 'm_oliver_infer',
+    provenance: 'inferred',
+    quote: 'Now runs the design work for the team.',
+    source: { kind: 'chat', label: "Anant's inference" },
+    date: 'Noticed 2 Jul 2026',
+    conversation: 'Design team changes',
+    context: 'Drawn from 14 signals',
+  },
+  {
+    memoryId: 'm_oliver_reviews',
+    provenance: 'aggregated',
+    quote: 'Leads the weekly design reviews.',
+    source: { kind: 'notion', label: 'Notion · Design' },
+    date: 'Updated 28 Jun 2026',
+    conversation: 'Roadmap review',
+    context: 'Pattern across 6 review notes',
+  },
+  {
+    memoryId: 'm_oliver_handoff',
+    provenance: 'stated',
+    quote: 'Backend hand-off routes through the platform pod.',
+    source: { kind: 'slack', label: 'Slack · #engineering', speaker: 'Priya' },
+    date: '1 Jul 2026, 3:18pm',
+    conversation: 'Design team changes',
+    context: 'Thread reply from Priya',
+  },
+]
+
 export const conversations: Conversation[] = [
   {
     id: 'c_design',
@@ -209,38 +261,7 @@ export const conversations: Conversation[] = [
         id: 'c_design_a',
         role: 'anant',
         text: "Oliver now leads design. He moved off the backend team last month, so he's running the design work for your team rather than backend development.",
-        citations: [
-          {
-            memoryId: 'm_oliver_design',
-            provenance: 'stated',
-            quote: 'Oliver now leads design.',
-            source: { kind: 'slack', label: 'Slack · #engineering' },
-          },
-          {
-            memoryId: 'm_oliver_design',
-            provenance: 'stated',
-            quote: 'Moved off the backend team last month.',
-            source: { kind: 'chat', label: 'you', when: '6 days ago' },
-          },
-          {
-            memoryId: 'm_oliver_infer',
-            provenance: 'inferred',
-            quote: 'Now runs the design work for the team.',
-            source: { kind: 'chat', label: "Anant's inference" },
-          },
-          {
-            memoryId: 'm_oliver_reviews',
-            provenance: 'aggregated',
-            quote: 'Leads the weekly design reviews.',
-            source: { kind: 'notion', label: 'Notion · Design' },
-          },
-          {
-            memoryId: 'm_oliver_handoff',
-            provenance: 'stated',
-            quote: 'Backend hand-off routes through the platform pod.',
-            source: { kind: 'slack', label: 'Slack · #engineering', speaker: 'Priya' },
-          },
-        ],
+        citations: oliverCitations,
       },
     ],
   },

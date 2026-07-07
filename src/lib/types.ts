@@ -74,6 +74,9 @@ export interface Citation {
   provenance: Provenance
   quote: string
   source: SourceRef
+  date?: string // absolute, e.g. "2 Jul 2026, 4:12pm"
+  conversation?: string // which conversation surfaced it
+  context?: string // extra detail — channel, thread, how it was captured
 }
 
 export interface ChatMessage {
