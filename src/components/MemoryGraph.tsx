@@ -115,7 +115,7 @@ export function MemoryGraph() {
             <span className="h-2.5 w-2.5 rounded-full border border-ink-faint bg-veil" /> Person
           </span>
           <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-3.5 rounded-[3px] border border-ink-faint bg-veil" /> Project
+            <span className="h-2.5 w-3.5 rounded-[4px] border border-ink-faint bg-veil" /> Project
           </span>
           <span className="ml-auto inline-flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5">

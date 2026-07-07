@@ -46,7 +46,7 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
       className={({ isActive }) =>
         cx(
           // floating tab with a 2px corner
-          'focus-ring group/nav relative flex items-center gap-3 rounded-[2px] px-3 py-2 text-[0.9rem] transition-colors duration-150',
+          'focus-ring group/nav relative flex items-center gap-3 rounded-[4px] px-3 py-2 text-[0.9rem] transition-colors duration-150',
           collapsed && 'justify-center px-0',
           isActive
             ? 'bg-white/[0.07] font-[600] text-white'
@@ -108,7 +108,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             onClick={() => setCollapsed((v) => !v)}
             title={collapsed ? 'Expand' : 'Collapse to icons'}
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-            className="focus-ring flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] text-[var(--color-sidebar-faint)] transition-colors hover:bg-white/[0.08] hover:text-white"
+            className="focus-ring flex h-8 w-8 shrink-0 items-center justify-center rounded-[4px] text-[var(--color-sidebar-faint)] transition-colors hover:bg-white/[0.08] hover:text-white"
           >
             <Panel size={19} />
           </button>
@@ -134,11 +134,11 @@ export function AppShell({ children }: { children: ReactNode }) {
           <button
             onClick={() => setMenuOpen((v) => !v)}
             className={cx(
-              'focus-ring flex w-full items-center gap-3 rounded-[2px] px-2 py-2 text-left transition-colors hover:bg-white/[0.06]',
+              'focus-ring flex w-full items-center gap-3 rounded-[4px] px-2 py-2 text-left transition-colors hover:bg-white/[0.06]',
               collapsed && 'justify-center px-0',
             )}
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] bg-white/[0.08] text-[0.85rem] font-[500] text-white">
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[4px] bg-white/[0.08] text-[0.85rem] font-[500] text-white">
               {initials}
             </span>
             {!collapsed && (

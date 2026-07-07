@@ -141,32 +141,6 @@ export function ChatPage() {
 
         {/* Thread */}
         <section className="relative flex min-h-0 flex-col">
-          {/* Floating sources panel — opens from "See all sources" */}
-          {sourcesOpen && (
-            <div className="rise absolute right-4 top-4 z-30 w-[320px] overflow-hidden rounded-[2px] border border-rule bg-paper-raised shadow-[var(--shadow-pop)]">
-              <div className="flex items-start justify-between gap-2 border-b border-rule px-4 py-2.5">
-                <div>
-                  <div className="text-[0.8125rem] font-[500] text-ink">Sources for this answer</div>
-                  <div className="text-[0.6875rem] text-ink-muted">The memories behind it.</div>
-                </div>
-                <IconButton label="Close" onClick={() => setSourcesOpen(false)}>
-                  <Dismiss size={16} />
-                </IconButton>
-              </div>
-              <div className="max-h-[65vh] space-y-3 overflow-y-auto p-3">
-                {sourceList.map((c, i) => (
-                  <div key={i} className="rounded-[2px] border border-rule bg-veil p-3.5">
-                    <ProvenanceBadge provenance={c.provenance} />
-                    <p className="mt-2.5 text-[0.9375rem] leading-snug text-ink">{c.quote}</p>
-                    <div className="mt-2.5">
-                      <SourceChip source={c.source} onClick={() => {}} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           <div ref={threadRef} className="min-h-0 flex-1 overflow-y-auto px-8 py-6">
             {active.messages.length === 0 ? (
               <div className="mx-auto flex h-full max-w-lg flex-col items-center justify-center text-center">
@@ -233,6 +207,41 @@ export function ChatPage() {
           </div>
         </section>
       </div>
+
+      {/* Sources — a centred modal over a blurred screen */}
+      {sourcesOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <button
+            aria-label="Close sources"
+            onClick={() => setSourcesOpen(false)}
+            className="absolute inset-0 bg-ink/25 backdrop-blur-md"
+          />
+          <div className="rise relative z-10 flex max-h-[80vh] w-[70vw] max-w-[960px] flex-col overflow-hidden rounded-[4px] border border-rule bg-paper-raised shadow-[var(--shadow-pop)]">
+            <div className="flex items-start justify-between gap-3 border-b border-rule px-6 py-4">
+              <div>
+                <div className="text-[1.05rem] font-[500] text-ink">Sources for this answer</div>
+                <div className="text-[0.8125rem] text-ink-muted">
+                  The memories behind it — {sourceList.length} in total.
+                </div>
+              </div>
+              <IconButton label="Close" onClick={() => setSourcesOpen(false)}>
+                <Dismiss size={18} />
+              </IconButton>
+            </div>
+            <div className="grid gap-3 overflow-y-auto p-6 sm:grid-cols-2">
+              {sourceList.map((c, i) => (
+                <div key={i} className="rounded-[4px] border border-rule bg-veil p-4">
+                  <ProvenanceBadge provenance={c.provenance} />
+                  <p className="mt-3 text-[0.95rem] leading-snug text-ink">{c.quote}</p>
+                  <div className="mt-3">
+                    <SourceChip source={c.source} onClick={() => {}} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
