@@ -219,8 +219,26 @@ export const conversations: Conversation[] = [
           {
             memoryId: 'm_oliver_design',
             provenance: 'stated',
-            quote: 'Moved off backend last month.',
+            quote: 'Moved off the backend team last month.',
             source: { kind: 'chat', label: 'you', when: '6 days ago' },
+          },
+          {
+            memoryId: 'm_oliver_infer',
+            provenance: 'inferred',
+            quote: 'Now runs the design work for the team.',
+            source: { kind: 'chat', label: "Anant's inference" },
+          },
+          {
+            memoryId: 'm_oliver_reviews',
+            provenance: 'aggregated',
+            quote: 'Leads the weekly design reviews.',
+            source: { kind: 'notion', label: 'Notion · Design' },
+          },
+          {
+            memoryId: 'm_oliver_handoff',
+            provenance: 'stated',
+            quote: 'Backend hand-off routes through the platform pod.',
+            source: { kind: 'slack', label: 'Slack · #engineering', speaker: 'Priya' },
           },
         ],
       },

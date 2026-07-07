@@ -1,7 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
-import { SovereigntyIndicator } from '@/components/Sovereignty'
 import { cx, IconButton } from '@/components/ui'
 import {
   Chat,
@@ -199,10 +198,7 @@ export function TopBar({
         <h1 className="text-[1.4rem] font-[500] leading-none tracking-[-0.02em] text-ink">{title}</h1>
         <p className="mt-1.5 truncate text-[0.875rem] text-ink-muted">{intent}</p>
       </div>
-      <div className="ml-auto flex items-center gap-3">
-        {actions}
-        <SovereigntyIndicator />
-      </div>
+      {actions && <div className="ml-auto flex items-center gap-3">{actions}</div>}
     </header>
   )
 }

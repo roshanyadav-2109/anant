@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { supabaseConfigured } from '@/lib/supabase'
 import { Button, cx, Field } from '@/components/ui'
-import { SovereigntyIndicator } from '@/components/Sovereignty'
 import { ProvenanceBadge, SourceChip } from '@/components/Provenance'
 import { ArrowRight, Mark } from '@/icons'
 
@@ -103,7 +102,7 @@ export function Login() {
           </div>
         </div>
 
-        <SovereigntyIndicator className="self-start" />
+        <div />
       </section>
 
       {/* Auth panel */}

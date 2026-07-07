@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { TopBar } from '@/components/AppShell'
 import { ProvenanceBadge, SourceChip } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
-import { Attach, ChevronRight, Plus, Regenerate, Send, Stop } from '@/icons'
+import { Attach, Dismiss, Plus, Send, Stop } from '@/icons'
 import { conversations as seed } from '@/lib/mockData'
 import type { ChatMessage, Citation, Conversation } from '@/lib/types'
 
@@ -18,8 +18,26 @@ const CANNED: { text: string; citations: Citation[] } = {
     {
       memoryId: 'm_oliver_design',
       provenance: 'stated',
-      quote: 'Moved off backend last month.',
+      quote: 'Moved off the backend team last month.',
       source: { kind: 'chat', label: 'you', when: '6 days ago' },
+    },
+    {
+      memoryId: 'm_oliver_infer',
+      provenance: 'inferred',
+      quote: 'Now runs the design work for the team.',
+      source: { kind: 'chat', label: "Anant's inference" },
+    },
+    {
+      memoryId: 'm_oliver_reviews',
+      provenance: 'aggregated',
+      quote: 'Leads the weekly design reviews.',
+      source: { kind: 'notion', label: 'Notion · Design' },
+    },
+    {
+      memoryId: 'm_oliver_handoff',
+      provenance: 'stated',
+      quote: 'Backend hand-off routes through the platform pod.',
+      source: { kind: 'slack', label: 'Slack · #engineering', speaker: 'Priya' },
     },
   ],
 }
@@ -29,11 +47,15 @@ export function ChatPage() {
   const [activeId, setActiveId] = useState(seed[0].id)
   const [draft, setDraft] = useState('')
   const [streaming, setStreaming] = useState(false)
+  const [sourcesOpen, setSourcesOpen] = useState(false)
+  const [sourceList, setSourceList] = useState<Citation[]>([])
   const threadRef = useRef<HTMLDivElement>(null)
   const active = convos.find((c) => c.id === activeId)!
 
-  const lastAnswer = [...active.messages].reverse().find((m) => m.role === 'anant')
-  const citations = lastAnswer?.citations ?? []
+  function openSources(list: Citation[]) {
+    setSourceList(list)
+    setSourcesOpen(true)
+  }
 
   useEffect(() => {
     threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: 'smooth' })
@@ -90,7 +112,7 @@ export function ChatPage() {
     <>
       <TopBar title="Chat" intent="Ask anything — every answer shows the memory behind it." />
 
-      <div className="grid min-h-0 flex-1 grid-cols-[240px_1fr_320px]">
+      <div className="grid min-h-0 flex-1 grid-cols-[240px_1fr]">
         {/* Conversation list */}
         <aside className="flex min-h-0 flex-col border-r border-rule bg-paper-sunk/30">
           <div className="p-3">
@@ -118,7 +140,33 @@ export function ChatPage() {
         </aside>
 
         {/* Thread */}
-        <section className="flex min-h-0 flex-col">
+        <section className="relative flex min-h-0 flex-col">
+          {/* Floating sources panel — opens from "See all sources" */}
+          {sourcesOpen && (
+            <div className="rise absolute right-4 top-4 z-30 w-[320px] overflow-hidden rounded-[2px] border border-rule bg-paper-raised shadow-[var(--shadow-pop)]">
+              <div className="flex items-start justify-between gap-2 border-b border-rule px-4 py-2.5">
+                <div>
+                  <div className="text-[0.8125rem] font-[500] text-ink">Sources for this answer</div>
+                  <div className="text-[0.6875rem] text-ink-muted">The memories behind it.</div>
+                </div>
+                <IconButton label="Close" onClick={() => setSourcesOpen(false)}>
+                  <Dismiss size={16} />
+                </IconButton>
+              </div>
+              <div className="max-h-[65vh] space-y-3 overflow-y-auto p-3">
+                {sourceList.map((c, i) => (
+                  <div key={i} className="rounded-[2px] border border-rule bg-veil p-3.5">
+                    <ProvenanceBadge provenance={c.provenance} />
+                    <p className="mt-2.5 text-[0.9375rem] leading-snug text-ink">{c.quote}</p>
+                    <div className="mt-2.5">
+                      <SourceChip source={c.source} onClick={() => {}} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div ref={threadRef} className="min-h-0 flex-1 overflow-y-auto px-8 py-6">
             {active.messages.length === 0 ? (
               <div className="mx-auto flex h-full max-w-lg flex-col items-center justify-center text-center">
@@ -137,7 +185,7 @@ export function ChatPage() {
               <div className="mx-auto max-w-2xl space-y-6">
                 <div className="eyebrow text-center">Conversation</div>
                 {active.messages.map((m) => (
-                  <Message key={m.id} message={m} />
+                  <Message key={m.id} message={m} onSeeSources={openSources} />
                 ))}
               </div>
             )}
@@ -179,52 +227,23 @@ export function ChatPage() {
                 )}
               </div>
               <p className="mt-2 text-center text-[0.6875rem] text-ink-faint">
-                Answers stay on your machine. Ask about one source, e.g. “from Slack”.
+                Tip: ask about one source, e.g. “from Slack”.
               </p>
             </div>
           </div>
         </section>
-
-        {/* Sources panel */}
-        <aside className="flex min-h-0 flex-col border-l border-rule bg-paper-sunk/30">
-          <div className="border-b border-rule px-4 py-3">
-            <div className="text-[0.8125rem] font-[500] text-ink">Sources for this answer</div>
-            <div className="text-[0.6875rem] text-ink-muted">Which memories were used, and why to trust them.</div>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto p-3">
-            {citations.length === 0 ? (
-              <p className="px-2 py-8 text-center text-[0.8125rem] text-ink-faint">
-                Ask a question — the memories behind the answer appear here with full provenance.
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {citations.map((c, i) => (
-                  <div key={i} className="rounded-[var(--radius)] border border-rule bg-paper-raised p-3.5">
-                    <ProvenanceBadge provenance={c.provenance} />
-                    <p
-                      className="mt-2.5 font-display text-[0.9375rem] leading-snug text-ink"
-                      style={{ fontVariationSettings: "'opsz' 32" }}
-                    >
-                      {c.quote}
-                    </p>
-                    <div className="mt-2.5">
-                      <SourceChip source={c.source} onClick={() => {}} />
-                    </div>
-                  </div>
-                ))}
-                <button className="flex w-full items-center justify-center gap-1 rounded-[var(--radius)] border border-dashed border-rule py-2 text-[0.8125rem] text-ink-muted hover:border-ink-faint hover:text-ink">
-                  Related memory <ChevronRight size={14} />
-                </button>
-              </div>
-            )}
-          </div>
-        </aside>
       </div>
     </>
   )
 }
 
-function Message({ message }: { message: ChatMessage }) {
+function Message({
+  message,
+  onSeeSources,
+}: {
+  message: ChatMessage
+  onSeeSources: (list: Citation[]) => void
+}) {
   if (message.role === 'user') {
     return (
       <div className="flex justify-end">
@@ -249,21 +268,19 @@ function Message({ message }: { message: ChatMessage }) {
         >
           {message.text}
         </p>
-        {message.citations && (
-          <div className="mt-3">
-            <div className="mb-1.5 flex items-center gap-2">
-              <span className="eyebrow !text-[0.625rem]">Based on</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {message.citations.map((c, i) => (
-                <SourceChip key={i} source={c.source} onClick={() => {}} />
-              ))}
-            </div>
-            <div className="mt-3 flex items-center gap-1">
-              <Button variant="quiet" size="sm" leading={<Regenerate size={15} />}>
-                Regenerate
-              </Button>
-            </div>
+        {message.citations && !message.streaming && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {message.citations.slice(0, 3).map((c, i) => (
+              <SourceChip key={i} source={c.source} onClick={() => onSeeSources(message.citations!)} />
+            ))}
+            {message.citations.length > 3 && (
+              <button
+                onClick={() => onSeeSources(message.citations!)}
+                className="focus-ring inline-flex items-center gap-1.5 rounded-full border border-rule bg-paper-sunk px-2.5 py-1 text-[0.75rem] font-[500] text-ink-soft transition-colors hover:border-ink-faint hover:text-ink"
+              >
+                +{message.citations.length - 3} more sources
+              </button>
+            )}
           </div>
         )}
       </div>
