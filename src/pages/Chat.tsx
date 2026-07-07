@@ -108,7 +108,7 @@ export function ChatPage() {
                   c.id === activeId ? 'bg-paper-raised shadow-[inset_0_0_0_1px_var(--color-rule)]' : 'hover:bg-paper-raised/60',
                 )}
               >
-                <div className={cx('truncate text-[0.875rem]', c.id === activeId ? 'font-[600] text-ink' : 'text-ink-soft')}>
+                <div className={cx('truncate text-[0.875rem]', c.id === activeId ? 'font-[500] text-ink' : 'text-ink-soft')}>
                   {c.title}
                 </div>
                 <div className="text-[0.6875rem] text-ink-faint">{c.when}</div>
@@ -124,7 +124,7 @@ export function ChatPage() {
               <div className="mx-auto flex h-full max-w-lg flex-col items-center justify-center text-center">
                 <p className="eyebrow mb-3">A blank page that remembers</p>
                 <h2
-                  className="font-display text-[1.75rem] font-[600] text-ink"
+                  className="font-display text-[1.75rem] font-[500] text-ink"
                   style={{ fontVariationSettings: "'SOFT' 3, 'WONK' 1, 'opsz' 90" }}
                 >
                   Ask a question, or connect a source
@@ -188,7 +188,7 @@ export function ChatPage() {
         {/* Sources panel */}
         <aside className="flex min-h-0 flex-col border-l border-rule bg-paper-sunk/30">
           <div className="border-b border-rule px-4 py-3">
-            <div className="text-[0.8125rem] font-[600] text-ink">Sources for this answer</div>
+            <div className="text-[0.8125rem] font-[500] text-ink">Sources for this answer</div>
             <div className="text-[0.6875rem] text-ink-muted">Which memories were used, and why to trust them.</div>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-3">
@@ -236,7 +236,7 @@ function Message({ message }: { message: ChatMessage }) {
   }
   return (
     <div className="flex gap-3">
-      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-evergreen text-[0.75rem] font-[600] text-veil">
+      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-evergreen text-[0.75rem] font-[500] text-veil">
         a
       </span>
       <div className="min-w-0">

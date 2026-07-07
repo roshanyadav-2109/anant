@@ -16,7 +16,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const buttonBase =
-  'focus-ring inline-flex items-center justify-center gap-2 rounded-[var(--radius)] font-[600] transition-colors duration-150 disabled:opacity-40 disabled:pointer-events-none select-none'
+  'focus-ring inline-flex items-center justify-center gap-2 rounded-[var(--radius)] font-[500] transition-colors duration-150 disabled:opacity-40 disabled:pointer-events-none select-none'
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:
@@ -91,7 +91,7 @@ export function Segmented<T extends string>({
           key={o.value}
           onClick={() => onChange(o.value)}
           className={cx(
-            'focus-ring inline-flex items-center gap-1.5 rounded-[5px] px-3 py-1 text-[0.8125rem] font-[600] transition-colors',
+            'focus-ring inline-flex items-center gap-1.5 rounded-[5px] px-3 py-1 text-[0.8125rem] font-[500] transition-colors',
             value === o.value ? 'bg-evergreen text-veil' : 'text-ink-muted hover:text-ink',
           )}
         >
@@ -130,7 +130,7 @@ export function Field({
 }: InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string }) {
   return (
     <label className="block">
-      <span className="mb-1.5 block text-[0.8125rem] font-[600] text-ink-soft">{label}</span>
+      <span className="mb-1.5 block text-[0.8125rem] font-[500] text-ink-soft">{label}</span>
       <input
         className={cx(
           'focus-ring w-full rounded-[var(--radius)] border border-rule bg-veil px-3.5 py-2.5 text-[0.9375rem] text-ink placeholder:text-ink-faint',

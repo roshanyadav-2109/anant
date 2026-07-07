@@ -42,7 +42,7 @@ export function WorkspacePage() {
           <div className="flex items-center gap-3 rounded-[var(--radius-lg)] border border-rule bg-paper-raised px-5 py-3.5">
             <Lock size={18} className="shrink-0 text-evergreen" />
             <p className="text-[0.875rem] text-ink-soft">
-              Hard tenant isolation — every view is scoped to <span className="font-[600] text-ink">Neural AI</span>.
+              Hard tenant isolation — every view is scoped to <span className="font-[500] text-ink">Neural AI</span>.
               A clear boundary separates each person&rsquo;s private memory from team-shared memory.
             </p>
           </div>
@@ -60,11 +60,11 @@ export function WorkspacePage() {
                     <Person size={17} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[0.875rem] font-[600] text-ink">{m.name}</div>
+                    <div className="text-[0.875rem] font-[500] text-ink">{m.name}</div>
                     <div className="truncate text-[0.75rem] text-ink-muted">{m.email}</div>
                   </div>
                   <span className="hidden text-[0.75rem] text-ink-faint sm:block">{m.memory}</span>
-                  <span className={cx('rounded-full border px-2.5 py-1 text-[0.6875rem] font-[600]', roleTone[m.role])}>
+                  <span className={cx('rounded-full border px-2.5 py-1 text-[0.6875rem] font-[500]', roleTone[m.role])}>
                     {m.role}
                   </span>
                 </div>
@@ -86,7 +86,7 @@ export function WorkspacePage() {
                     <span className="flex-1 text-[0.875rem] text-ink">{c.name}</span>
                     <span
                       className={cx(
-                        'text-[0.75rem] font-[600]',
+                        'text-[0.75rem] font-[500]',
                         c.status === 'available' ? 'text-ink-faint' : 'text-evergreen',
                       )}
                     >
@@ -108,7 +108,7 @@ export function WorkspacePage() {
               <div className="p-3">
                 {audit.map((a, i) => (
                   <div key={i} className="flex items-baseline gap-2 px-2 py-2 text-[0.8125rem]">
-                    <span className="font-[600] text-ink">{a.who}</span>
+                    <span className="font-[500] text-ink">{a.who}</span>
                     <span className="text-ink-soft">{a.what}</span>
                     <span className="ml-auto shrink-0 text-ink-faint">{a.when}</span>
                   </div>

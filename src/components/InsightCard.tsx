@@ -22,7 +22,7 @@ export function InsightCard({ insight }: { insight: Insight }) {
     return (
       <div className="rounded-[var(--radius-lg)] border border-dashed border-rule px-5 py-4 text-[0.875rem] text-ink-muted">
         {resolved === 'kept' ? 'Kept — folded into memory.' : 'Dismissed.'}{' '}
-        <button className="font-[600] text-evergreen hover:underline" onClick={() => setResolved(null)}>
+        <button className="font-[500] text-evergreen hover:underline" onClick={() => setResolved(null)}>
           Undo
         </button>
       </div>
@@ -32,7 +32,7 @@ export function InsightCard({ insight }: { insight: Insight }) {
   return (
     <article className="group rounded-[var(--radius-lg)] border border-rule bg-paper-raised p-5 transition-colors hover:border-ink-faint/60">
       <div className="mb-3 flex items-center gap-2">
-        <span className="inline-flex items-center gap-1.5 text-[0.6875rem] font-[600] uppercase tracking-[0.14em] text-ink-faint">
+        <span className="inline-flex items-center gap-1.5 text-[0.6875rem] font-[500] uppercase tracking-[0.14em] text-ink-faint">
           <meta.Icon size={14} className="text-ink-muted" />
           {meta.label}
         </span>
@@ -40,7 +40,7 @@ export function InsightCard({ insight }: { insight: Insight }) {
       </div>
 
       <h3
-        className="font-display text-[1.125rem] font-[600] leading-snug text-ink"
+        className="font-display text-[1.125rem] font-[500] leading-snug text-ink"
         style={{ fontVariationSettings: "'SOFT' 2, 'opsz' 60" }}
       >
         {insight.title}

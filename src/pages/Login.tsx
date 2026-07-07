@@ -48,16 +48,16 @@ export function Login() {
       <section className="relative hidden flex-col justify-between overflow-hidden border-r border-rule bg-paper-sunk/50 px-12 py-10 lg:flex">
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full opacity-[0.06]"
-          style={{ background: 'radial-gradient(circle, var(--color-evergreen), transparent 70%)' }}
+          className="pointer-events-none absolute -right-24 -top-24 h-96 w-96 rounded-full opacity-[0.05]"
+          style={{ background: 'radial-gradient(circle, var(--color-royal), transparent 70%)' }}
         />
         <div className="flex items-center gap-3">
-          <span className="flex h-9 w-9 items-center justify-center rounded-[9px] bg-evergreen text-veil">
+          <span className="flex h-9 w-9 items-center justify-center rounded-[4px] bg-royal text-white">
             <Mark size={22} />
           </span>
           <div className="leading-tight">
             <div
-              className="font-display text-[1.35rem] font-[600] text-ink"
+              className="font-display text-[1.35rem] font-[500] text-ink"
               style={{ fontVariationSettings: "'SOFT' 2, 'WONK' 1, 'opsz' 144" }}
             >
               Anant
@@ -69,7 +69,7 @@ export function Login() {
         <div className="max-w-lg">
           <p className="eyebrow mb-5">Sovereign cognitive memory</p>
           <h1
-            className="font-display text-[3.25rem] font-[600] leading-[1.03] text-ink"
+            className="font-display text-[3.25rem] font-[500] leading-[1.03] text-ink"
             style={{ fontVariationSettings: "'SOFT' 4, 'WONK' 1, 'opsz' 144" }}
           >
             It doesn&rsquo;t just answer.
@@ -110,13 +110,13 @@ export function Login() {
       <section className="flex flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
           <div className="mb-8 lg:hidden">
-            <span className="flex h-10 w-10 items-center justify-center rounded-[10px] bg-evergreen text-veil">
+            <span className="flex h-10 w-10 items-center justify-center rounded-[4px] bg-royal text-white">
               <Mark size={24} />
             </span>
           </div>
 
           <h2
-            className="font-display text-[1.75rem] font-[600] text-ink"
+            className="font-display text-[1.75rem] font-[500] text-ink"
             style={{ fontVariationSettings: "'SOFT' 2, 'WONK' 1, 'opsz' 90" }}
           >
             {mode === 'signin' ? 'Welcome back' : 'Create your memory'}
@@ -185,7 +185,7 @@ export function Login() {
           <p className="mt-6 text-center text-[0.875rem] text-ink-muted">
             {mode === 'signin' ? 'New to Anant?' : 'Already have a workspace?'}{' '}
             <button
-              className="font-[600] text-evergreen hover:underline"
+              className="font-[500] text-evergreen hover:underline"
               onClick={() => { setMode(mode === 'signin' ? 'signup' : 'signin'); setError(null) }}
             >
               {mode === 'signin' ? 'Create one' : 'Sign in'}

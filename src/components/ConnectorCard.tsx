@@ -30,7 +30,7 @@ export function StatusPill({ status }: { status: ConnectorStatus }) {
   return (
     <span
       className={cx(
-        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.6875rem] font-[600]',
+        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.6875rem] font-[500]',
         m.className,
       )}
     >
@@ -58,7 +58,7 @@ export function ConnectorCard({ connector }: { connector: Connector }) {
           <Icon size={22} />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="font-display text-[1.0625rem] font-[600] leading-tight text-ink">
+          <div className="font-display text-[1.0625rem] font-[500] leading-tight text-ink">
             {connector.name}
           </div>
           <div className="text-[0.75rem] text-ink-muted">{connector.category}</div>
@@ -91,7 +91,7 @@ export function ConnectorCard({ connector }: { connector: Connector }) {
       )}
 
       <div className="mt-4 flex items-center justify-between border-t border-rule/70 pt-3">
-        <span className="inline-flex items-center gap-1.5 text-[0.6875rem] font-[600] text-evergreen">
+        <span className="inline-flex items-center gap-1.5 text-[0.6875rem] font-[500] text-evergreen">
           <Confirm size={13} /> inbound only
         </span>
         {connected === 'available' ? (
@@ -99,7 +99,7 @@ export function ConnectorCard({ connector }: { connector: Connector }) {
             Connect
           </Button>
         ) : (
-          <button className="text-[0.75rem] font-[600] text-ink-muted hover:text-ink">Manage</button>
+          <button className="text-[0.75rem] font-[500] text-ink-muted hover:text-ink">Manage</button>
         )}
       </div>
     </div>

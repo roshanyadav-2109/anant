@@ -14,20 +14,25 @@ local, private, and yours.
 
 ## Design language
 
-A deliberate, restrained aesthetic — a private archival ledger rather than a
-playful chatbot.
+A restrained, production-grade enterprise aesthetic — precise, monochrome, and
+quiet, with a single decisive accent.
 
-- **Typeface** — [Fraunces](https://fonts.google.com/specimen/Fraunces) only,
-  self-hosted via `@fontsource-variable`. Regular (400) for reading; semi-bold
-  (600) reserved for titles. Its optical, `SOFT`, and `WONK` axes give the
-  interface editorial warmth.
-- **Palette** — warm paper (`#f4f0e8`), deep ink, hairline rules, and a single
-  quiet **evergreen** accent. Intentionally not colourful.
-- **Provenance** — three tonal, low-chroma classes (User-stated / Inferred /
-  Aggregated) used consistently across cards, chips, and insights. This is the
-  product's signature and its answer to the trust problem.
+- **Typeface** — [Inter](https://rsms.me/inter/) only, self-hosted via
+  `@fontsource-variable`. Regular (400) throughout; medium (500) for gentle
+  hierarchy; semi-bold (600) reserved for the selected navigation tab.
+- **Canvas** — pure **white** surfaces, near-black ink, and hairline neutral
+  rules. No texture, no tint.
+- **Accent** — one **deep royal blue** (`#1e40af`) used sparingly for the
+  active tab, primary actions, and focus. Everything else is greyscale — no
+  multi-colour.
+- **Navigation** — a **black rail** with floating 2px-cornered tabs. The
+  selected tab fills deep royal blue, its label turns semi-bold white, and a
+  brighter-blue vertical line marks its left edge.
+- **Provenance** — three tonal greyscale classes (User-stated / Inferred /
+  Aggregated), distinguished by tone and icon rather than colour, used
+  consistently across cards, chips, and insights.
 - **Icons** — a **bespoke, monochrome, hairline icon family** drawn in-house
-  (`src/icons`). No third-party icon library; nothing generic.
+  (`src/icons`). No third-party icon library.
 - **Sovereignty** — a persistent "Local · no data leaves" indicator on every
   screen. A headline, never a footnote.
 

@@ -74,7 +74,7 @@ export function MemoryPage() {
             <FilterChip label="Provenance" />
             {selected.size > 0 && (
               <div className="ml-auto flex items-center gap-2 text-[0.8125rem] text-ink-muted">
-                <span className="font-[600] text-ink">{selected.size} selected</span>
+                <span className="font-[500] text-ink">{selected.size} selected</span>
                 <button className="rounded-full border border-rule px-3 py-1 hover:border-ink-faint">Confirm</button>
                 <button className="rounded-full border border-rule px-3 py-1 hover:border-ink-faint">Forget</button>
                 <button className="text-ink-faint hover:text-ink" onClick={() => setSelected(new Set())}>

@@ -51,7 +51,7 @@ export function ProvenanceBadge({
   return (
     <span
       className={cx(
-        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.6875rem] font-[600]',
+        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.6875rem] font-[500]',
         m.ring,
         m.bg,
         m.text,
@@ -116,7 +116,7 @@ export function ConfidenceMeter({ value, showLabel = true }: { value: number; sh
             key={i}
             className={cx(
               'w-[3px] rounded-full',
-              i < filled ? 'bg-evergreen' : 'bg-rule',
+              i < filled ? 'bg-ink' : 'bg-rule',
             )}
             style={{ height: `${6 + i * 2.5}px` }}
           />

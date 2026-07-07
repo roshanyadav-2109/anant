@@ -29,7 +29,7 @@ export function MemoryCard({
     return (
       <div className="rounded-[var(--radius-lg)] border border-dashed border-rule bg-transparent px-5 py-4 text-[0.875rem] text-ink-muted">
         Forgotten.{' '}
-        <button className="font-[600] text-evergreen hover:underline" onClick={() => setForgotten(false)}>
+        <button className="font-[500] text-evergreen hover:underline" onClick={() => setForgotten(false)}>
           Undo
         </button>
       </div>
@@ -48,7 +48,7 @@ export function MemoryCard({
           <Sync size={13} />
           <span>
             was <span className="line-through opacity-80">{memory.supersession.from}</span> → now{' '}
-            <span className="font-[600]">{memory.supersession.to}</span>
+            <span className="font-[500]">{memory.supersession.to}</span>
           </span>
           <span className="ml-auto text-ink-faint">kept as history</span>
         </div>
@@ -92,7 +92,7 @@ export function MemoryCard({
 
             <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2">
               <span className="text-[0.8125rem] text-ink-muted">
-                <span className="font-[600] text-ink-soft">{memory.subject}</span> · {memory.when}
+                <span className="font-[500] text-ink-soft">{memory.subject}</span> · {memory.when}
               </span>
               <ConfidenceMeter value={memory.confidence} />
 

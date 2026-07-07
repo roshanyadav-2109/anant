@@ -1,52 +1,61 @@
 @import 'tailwindcss';
-@import '@fontsource-variable/fraunces/full.css';
+@import '@fontsource-variable/inter/index.css';
 
 /* ============================================================
    Anant — design tokens
-   Aesthetic: a sovereign system of record. Warm paper, deep ink,
-   hairline rules, one quiet evergreen accent. Fraunces only.
+   Enterprise, restrained. A white canvas, a black floating rail,
+   and one deep royal-blue accent. Inter throughout, regular weight.
    ============================================================ */
 
 @theme {
-  /* Surfaces — warm paper */
-  --color-paper: #f4f0e8;
-  --color-paper-raised: #faf8f2;
-  --color-paper-sunk: #ede8dd;
-  --color-veil: #fbfaf6;
+  /* Surfaces — pure white, cool neutral greys */
+  --color-paper: #ffffff;
+  --color-paper-raised: #ffffff;
+  --color-paper-sunk: #f5f5f6;
+  --color-veil: #ffffff;
 
-  /* Ink — warm near-black through to soft grey */
-  --color-ink: #211d17;
-  --color-ink-soft: #46403a;
-  --color-ink-muted: #6f685d;
-  --color-ink-faint: #9b9488;
+  /* Ink — near-black through to soft grey */
+  --color-ink: #0b0b0d;
+  --color-ink-soft: #3f3f46;
+  --color-ink-muted: #71717a;
+  --color-ink-faint: #a1a1aa;
 
   /* Hairlines */
-  --color-rule: #ddd6c8;
-  --color-rule-soft: #e7e1d5;
+  --color-rule: #e6e6e9;
+  --color-rule-soft: #efeff1;
 
-  /* Evergreen — the single accent */
-  --color-evergreen: #2f4a3f;
-  --color-evergreen-deep: #223a30;
-  --color-evergreen-soft: #e5ebe4;
+  /* The single accent — deep royal blue.
+     (Named 'evergreen' for historical class-name reuse; value is royal.) */
+  --color-evergreen: #1e40af;
+  --color-evergreen-deep: #1a389d;
+  --color-evergreen-soft: #eef2fd;
+  --color-royal: #1e40af;
+  --color-royal-line: #74a4ff; /* brighter left indicator on the active tab */
 
-  /* Provenance — low-chroma, tonal, never bright */
-  --color-stated: #2f4a3f;   /* user-stated: evergreen, highest trust */
-  --color-inferred: #5a6b7a; /* inferred: muted slate */
-  --color-aggregated: #8a7f6c; /* aggregated: faint taupe */
-  --color-supersede: #9a7233; /* superseded ribbon: quiet ochre */
+  /* Sidebar — black */
+  --color-sidebar: #0b0b0c;
+  --color-sidebar-raised: #1a1a1d;
+  --color-sidebar-ink: #d4d4d8;
+  --color-sidebar-faint: #8a8a92;
 
-  /* Type */
-  --font-sans: 'Fraunces Variable', 'Fraunces', Georgia, 'Times New Roman', serif;
-  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
+  /* Provenance — monochrome, distinguished by tone + icon, never colour */
+  --color-stated: #18181b;
+  --color-inferred: #52525b;
+  --color-aggregated: #a1a1aa;
+  --color-supersede: #6b7280;
 
-  /* Radii — restrained */
-  --radius-sm: 4px;
-  --radius: 7px;
-  --radius-lg: 12px;
+  /* Type — Inter only */
+  --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
+  --font-display: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
 
-  /* Shadows — soft, warm, barely-there */
-  --shadow-card: 0 1px 2px rgba(33, 29, 23, 0.04), 0 8px 24px -16px rgba(33, 29, 23, 0.18);
-  --shadow-pop: 0 2px 8px rgba(33, 29, 23, 0.06), 0 24px 48px -24px rgba(33, 29, 23, 0.25);
+  /* Radii — tight, production */
+  --radius-sm: 2px;
+  --radius: 4px;
+  --radius-lg: 6px;
+
+  /* Shadows — crisp, neutral, minimal */
+  --shadow-card: 0 1px 2px rgba(11, 11, 13, 0.04), 0 1px 3px rgba(11, 11, 13, 0.06);
+  --shadow-pop: 0 4px 12px rgba(11, 11, 13, 0.08), 0 16px 40px -16px rgba(11, 11, 13, 0.24);
 }
 
 /* ============================================================
@@ -74,28 +83,24 @@
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-weight: 400;
-    font-optical-sizing: auto;
-    font-variation-settings: 'SOFT' 4, 'WONK' 0;
-    letter-spacing: 0.004em;
-    /* faint paper grain */
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    letter-spacing: -0.006em;
   }
 
   ::selection {
-    background: var(--color-evergreen);
-    color: var(--color-veil);
+    background: var(--color-royal);
+    color: #ffffff;
   }
 
+  /* Titles stay regular; hierarchy comes from size and space, not weight. */
   h1, h2, h3, h4 {
-    font-weight: 600;
-    letter-spacing: -0.012em;
-    line-height: 1.1;
+    font-weight: 400;
+    letter-spacing: -0.018em;
+    line-height: 1.15;
   }
 
-  /* Fraunces looks best a touch heavier on optical for display */
   .font-display {
     font-family: var(--font-display);
-    font-variation-settings: 'SOFT' 3, 'WONK' 1, 'opsz' 144;
+    letter-spacing: -0.02em;
   }
 
   input, textarea, select, button {
@@ -104,7 +109,7 @@
     letter-spacing: inherit;
   }
 
-  /* Custom scrollbars — thin, paper-toned */
+  /* Custom scrollbars — thin, neutral */
   * {
     scrollbar-width: thin;
     scrollbar-color: var(--color-rule) transparent;
@@ -124,11 +129,11 @@
    ============================================================ */
 
 @layer utilities {
-  /* Eyebrow / section label — small, tracked-out caps in Fraunces */
+  /* Eyebrow / section label — small, tracked caps */
   .eyebrow {
     font-size: 0.6875rem;
-    font-weight: 600;
-    letter-spacing: 0.18em;
+    font-weight: 500;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--color-ink-faint);
   }
@@ -137,30 +142,28 @@
 
   .hairline { border-color: var(--color-rule); }
 
-  /* focus ring — evergreen, calm */
   .focus-ring {
     outline: 2px solid transparent;
     outline-offset: 2px;
   }
   .focus-ring:focus-visible {
-    outline-color: var(--color-evergreen);
+    outline-color: var(--color-royal);
   }
 
   @keyframes anant-rise {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
   }
-  .rise { animation: anant-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .rise { animation: anant-rise 0.42s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 
   @keyframes anant-fade {
     from { opacity: 0; }
     to { opacity: 1; }
   }
-  .fade { animation: anant-fade 0.6s ease both; }
+  .fade { animation: anant-fade 0.5s ease both; }
 
-  /* gentle "consolidating" pulse for memory-forming moments */
   @keyframes anant-consolidate {
-    0%, 100% { opacity: 0.35; }
+    0%, 100% { opacity: 0.4; }
     50% { opacity: 1; }
   }
   .consolidating { animation: anant-consolidate 1.8s ease-in-out infinite; }
@@ -176,7 +179,7 @@
     height: 1.05em;
     margin-left: 1px;
     vertical-align: -0.15em;
-    background: var(--color-evergreen);
+    background: var(--color-royal);
     animation: anant-caret 1s step-end infinite;
   }
 }

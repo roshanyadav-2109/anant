@@ -12,7 +12,7 @@ export function InsightsPage() {
           <div className="mb-6 rounded-[var(--radius-lg)] border border-rule bg-paper-raised px-5 py-4">
             <p className="text-[0.9375rem] leading-relaxed text-ink-soft">
               While you were away, Anant reviewed what it knows and surfaced a few things. These are
-              <span className="font-[600] text-ink"> its own inferences</span> — confirm one to fold it into
+              <span className="font-[500] text-ink"> its own inferences</span> — confirm one to fold it into
               memory, or dismiss it.
             </p>
           </div>

@@ -22,7 +22,7 @@ export function EmptyState({
         <Icon size={26} />
       </span>
       <h3
-        className="font-display text-[1.25rem] font-[600] text-ink"
+        className="font-display text-[1.25rem] font-[500] text-ink"
         style={{ fontVariationSettings: "'SOFT' 2, 'opsz' 72" }}
       >
         {title}
