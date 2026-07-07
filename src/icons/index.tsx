@@ -123,14 +123,13 @@ export function Settings(p: IconProps) {
   )
 }
 
-// Sliders — a controls toggle; collapses the rail to icons only.
-export function Sliders(p: IconProps) {
+// Panel — a window with a side rail; toggles the sidebar to icons only.
+export function Panel(p: IconProps) {
   return (
     <Svg {...p}>
-      <path d="M4 8.5h5M13 8.5h7" />
-      <circle cx="11" cy="8.5" r="2.1" fill="currentColor" stroke="none" />
-      <path d="M4 15.5h11M19 15.5h1" />
-      <circle cx="17" cy="15.5" r="2.1" fill="currentColor" stroke="none" />
+      <rect x="3.5" y="5" width="17" height="14" rx="2.5" />
+      <path d="M9.5 5.2v13.6" />
+      <path d="M5.7 9h1.6M5.7 12h1.6" opacity={0.55} />
     </Svg>
   )
 }

@@ -11,9 +11,9 @@ import {
   Logout,
   Mark,
   Memory,
+  Panel,
   Search,
   Settings,
-  Sliders,
   Workspace,
   type IconProps,
 } from '@/icons'
@@ -62,7 +62,8 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
             <span className="absolute left-[3px] top-1/2 h-[64%] w-[3px] -translate-y-1/2 rounded-full bg-[var(--color-royal-line)]" />
           )}
           <Icon
-            size={18}
+            size={22}
+            strokeWidth={1.9}
             className={cx(isActive ? 'text-white' : 'text-[var(--color-sidebar-faint)] group-hover/nav:text-white')}
           />
           {!collapsed && <span>{item.label}</span>}
@@ -110,7 +111,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
             className="focus-ring flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] text-[var(--color-sidebar-faint)] transition-colors hover:bg-white/[0.08] hover:text-white"
           >
-            <Sliders size={18} />
+            <Panel size={19} />
           </button>
         </div>
 
