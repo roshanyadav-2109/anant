@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Connector, ConnectorStatus } from '@/lib/types'
 import { cx, Button } from '@/components/ui'
-import { Alert, Confirm, Sync } from '@/icons'
+import { Alert, Confirm, Sync } from '@/icons' // Confirm used by the connected status
 import { logoFor } from '@/lib/logos'
 
 const statusMeta: Record<ConnectorStatus, { label: string; className: string }> = {
@@ -77,10 +77,7 @@ export function ConnectorCard({ connector }: { connector: Connector }) {
         </div>
       )}
 
-      <div className="mt-4 flex items-center justify-between border-t border-rule/70 pt-3">
-        <span className="inline-flex items-center gap-1.5 text-[0.6875rem] font-[500] text-evergreen">
-          <Confirm size={13} /> Only reads, never sends
-        </span>
+      <div className="mt-4 flex items-center justify-end border-t border-rule/70 pt-3">
         {connected === 'available' ? (
           <Button size="sm" variant="primary" onClick={() => setConnected('syncing')}>
             Connect
