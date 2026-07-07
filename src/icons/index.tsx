@@ -46,45 +46,46 @@ export function Mark({ size = 24, ...p }: IconProps) {
 
 /* ---- Navigation -------------------------------------------------------- */
 
-// Chat — a single spoken line, opening.
+// Chat — a rounded bubble in conversation.
 export function Chat(p: IconProps) {
   return (
     <Svg {...p}>
-      <path d="M5 6.5h14a1.5 1.5 0 0 1 1.5 1.5v6a1.5 1.5 0 0 1-1.5 1.5H10l-4 3v-3H5A1.5 1.5 0 0 1 3.5 14V8A1.5 1.5 0 0 1 5 6.5Z" />
-      <path d="M8 10.5h8M8 13h5" opacity={0.5} />
+      <path d="M5 6.5h14A1.6 1.6 0 0 1 20.5 8v7A1.6 1.6 0 0 1 19 16.5h-7.1l-3.7 2.8a.55.55 0 0 1-.88-.44V16.5H5A1.6 1.6 0 0 1 3.5 15V8A1.6 1.6 0 0 1 5 6.5Z" />
+      <circle cx="9" cy="11.4" r="0.95" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="11.4" r="0.95" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="11.4" r="0.95" fill="currentColor" stroke="none" />
     </Svg>
   )
 }
 
-// Memory — stacked leaves of a ledger, the record.
+// Memory — a collection of records, kept.
 export function Memory(p: IconProps) {
   return (
     <Svg {...p}>
-      <path d="M6 4.5h9l3.5 3.5V19a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V5.5a1 1 0 0 1 1-1Z" />
-      <path d="M14.5 4.5V8h3.5" opacity={0.6} />
-      <path d="M8 12h7M8 15h7M8 9h3" opacity={0.5} />
+      <path d="M7.5 6.6V5.7A1.2 1.2 0 0 1 8.7 4.5h6.6A1.2 1.2 0 0 1 16.5 5.7v.9" opacity={0.55} />
+      <rect x="5" y="6.6" width="14" height="12.9" rx="2.4" />
+      <path d="M8.6 11h6.8M8.6 14h6.8M8.6 17h4" opacity={0.5} />
     </Svg>
   )
 }
 
-// Connectors — two nodes joined by a returning thread.
+// Connectors — two links joined, a connection.
 export function Connectors(p: IconProps) {
   return (
     <Svg {...p}>
-      <circle cx="6.5" cy="7" r="2.2" />
-      <circle cx="17.5" cy="17" r="2.2" />
-      <path d="M8.6 8.4C11 11 13 13 15.4 15.6" opacity={0.55} />
-      <path d="M15.3 7C13 7 12 8.4 12 12" opacity={0.35} />
+      <path d="M10.5 8H9a4 4 0 0 0 0 8h1.5" />
+      <path d="M13.5 8H15a4 4 0 0 1 0 8h-1.5" />
+      <path d="M8.9 12h6.2" opacity={0.55} />
     </Svg>
   )
 }
 
-// Insights — a noticing eye of light.
+// Insights — an idea, noticed.
 export function Insights(p: IconProps) {
   return (
     <Svg {...p}>
-      <path d="M12 5.5c-3.6 0-6.4 2.3-8 6 1.6 3.7 4.4 6 8 6s6.4-2.3 8-6c-1.6-3.7-4.4-6-8-6Z" />
-      <circle cx="12" cy="11.5" r="2.2" />
+      <path d="M12 4.2a5.4 5.4 0 0 0-3.4 9.6c.6.5.9 1.05 1 1.7h4.8c.1-.65.4-1.2 1-1.7A5.4 5.4 0 0 0 12 4.2Z" />
+      <path d="M9.8 18h4.4M10.5 20h3" opacity={0.6} />
     </Svg>
   )
 }
@@ -123,13 +124,13 @@ export function Settings(p: IconProps) {
   )
 }
 
-// Panel — a window with a side rail; toggles the sidebar to icons only.
+// Panel — a window with a highlighted side rail; toggles the sidebar.
 export function Panel(p: IconProps) {
   return (
     <Svg {...p}>
-      <rect x="3.5" y="5" width="17" height="14" rx="2.5" />
-      <path d="M9.5 5.2v13.6" />
-      <path d="M5.7 9h1.6M5.7 12h1.6" opacity={0.55} />
+      <rect x="4.6" y="6.1" width="3.4" height="11.8" rx="1.1" fill="currentColor" stroke="none" opacity={0.18} />
+      <rect x="3.5" y="5" width="17" height="14" rx="3" />
+      <path d="M9 5.3v13.4" />
     </Svg>
   )
 }
