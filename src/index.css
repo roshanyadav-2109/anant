@@ -1,0 +1,182 @@
+@import 'tailwindcss';
+@import '@fontsource-variable/fraunces/full.css';
+
+/* ============================================================
+   Anant — design tokens
+   Aesthetic: a sovereign system of record. Warm paper, deep ink,
+   hairline rules, one quiet evergreen accent. Fraunces only.
+   ============================================================ */
+
+@theme {
+  /* Surfaces — warm paper */
+  --color-paper: #f4f0e8;
+  --color-paper-raised: #faf8f2;
+  --color-paper-sunk: #ede8dd;
+  --color-veil: #fbfaf6;
+
+  /* Ink — warm near-black through to soft grey */
+  --color-ink: #211d17;
+  --color-ink-soft: #46403a;
+  --color-ink-muted: #6f685d;
+  --color-ink-faint: #9b9488;
+
+  /* Hairlines */
+  --color-rule: #ddd6c8;
+  --color-rule-soft: #e7e1d5;
+
+  /* Evergreen — the single accent */
+  --color-evergreen: #2f4a3f;
+  --color-evergreen-deep: #223a30;
+  --color-evergreen-soft: #e5ebe4;
+
+  /* Provenance — low-chroma, tonal, never bright */
+  --color-stated: #2f4a3f;   /* user-stated: evergreen, highest trust */
+  --color-inferred: #5a6b7a; /* inferred: muted slate */
+  --color-aggregated: #8a7f6c; /* aggregated: faint taupe */
+  --color-supersede: #9a7233; /* superseded ribbon: quiet ochre */
+
+  /* Type */
+  --font-sans: 'Fraunces Variable', 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-display: 'Fraunces Variable', 'Fraunces', Georgia, serif;
+
+  /* Radii — restrained */
+  --radius-sm: 4px;
+  --radius: 7px;
+  --radius-lg: 12px;
+
+  /* Shadows — soft, warm, barely-there */
+  --shadow-card: 0 1px 2px rgba(33, 29, 23, 0.04), 0 8px 24px -16px rgba(33, 29, 23, 0.18);
+  --shadow-pop: 0 2px 8px rgba(33, 29, 23, 0.06), 0 24px 48px -24px rgba(33, 29, 23, 0.25);
+}
+
+/* ============================================================
+   Base
+   ============================================================ */
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  * {
+    border-color: var(--color-rule);
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-weight: 400;
+    font-optical-sizing: auto;
+    font-variation-settings: 'SOFT' 4, 'WONK' 0;
+    letter-spacing: 0.004em;
+    /* faint paper grain */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+  }
+
+  ::selection {
+    background: var(--color-evergreen);
+    color: var(--color-veil);
+  }
+
+  h1, h2, h3, h4 {
+    font-weight: 600;
+    letter-spacing: -0.012em;
+    line-height: 1.1;
+  }
+
+  /* Fraunces looks best a touch heavier on optical for display */
+  .font-display {
+    font-family: var(--font-display);
+    font-variation-settings: 'SOFT' 3, 'WONK' 1, 'opsz' 144;
+  }
+
+  input, textarea, select, button {
+    font-family: inherit;
+    font-weight: inherit;
+    letter-spacing: inherit;
+  }
+
+  /* Custom scrollbars — thin, paper-toned */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-rule) transparent;
+  }
+  *::-webkit-scrollbar { width: 9px; height: 9px; }
+  *::-webkit-scrollbar-thumb {
+    background: var(--color-rule);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+  *::-webkit-scrollbar-thumb:hover { background: var(--color-ink-faint); background-clip: content-box; }
+}
+
+/* ============================================================
+   Utilities
+   ============================================================ */
+
+@layer utilities {
+  /* Eyebrow / section label — small, tracked-out caps in Fraunces */
+  .eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-ink-faint);
+  }
+
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  .hairline { border-color: var(--color-rule); }
+
+  /* focus ring — evergreen, calm */
+  .focus-ring {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+  .focus-ring:focus-visible {
+    outline-color: var(--color-evergreen);
+  }
+
+  @keyframes anant-rise {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .rise { animation: anant-rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+  @keyframes anant-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .fade { animation: anant-fade 0.6s ease both; }
+
+  /* gentle "consolidating" pulse for memory-forming moments */
+  @keyframes anant-consolidate {
+    0%, 100% { opacity: 0.35; }
+    50% { opacity: 1; }
+  }
+  .consolidating { animation: anant-consolidate 1.8s ease-in-out infinite; }
+
+  @keyframes anant-caret {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  .stream-caret::after {
+    content: '';
+    display: inline-block;
+    width: 0.5ch;
+    height: 1.05em;
+    margin-left: 1px;
+    vertical-align: -0.15em;
+    background: var(--color-evergreen);
+    animation: anant-caret 1s step-end infinite;
+  }
+}
