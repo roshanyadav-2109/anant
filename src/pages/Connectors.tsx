@@ -17,8 +17,8 @@ export function ConnectorsPage() {
           <div className="mb-8 flex items-center gap-3 rounded-[var(--radius-lg)] border border-rule bg-paper-sunk px-5 py-3.5">
             <Shield size={20} className="shrink-0 text-royal" />
             <p className="text-[0.875rem] text-ink-soft">
-              Every connector pulls <span className="font-[500] text-ink">inbound only</span>. Anant reads your
-              sources into local memory and never sends anything back out.
+              Every connector <span className="font-[500] text-ink">only reads — it never sends</span>. Anant
+              brings your sources into your private memory and never sends anything back out.
             </p>
           </div>
 
