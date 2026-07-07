@@ -1,6 +1,7 @@
 import type { Provenance, SourceRef } from '@/lib/types'
 import { Aggregated, Inferred, Stated } from '@/icons'
 import { sourceGlyph } from '@/lib/mockData'
+import { logoFor } from '@/lib/logos'
 import { cx } from '@/components/ui'
 
 const meta: Record<
@@ -83,6 +84,7 @@ export function SourceChip({
   onClick?: () => void
 }) {
   const Glyph = sourceGlyph[source.kind]
+  const logo = logoFor(source.kind)
   const Tag = onClick ? 'button' : 'span'
   return (
     <Tag
@@ -93,7 +95,11 @@ export function SourceChip({
         className,
       )}
     >
-      <Glyph size={14} className="text-ink-muted" />
+      {logo ? (
+        <img src={logo} alt="" className="h-3.5 w-3.5 object-contain" />
+      ) : (
+        <Glyph size={14} className="text-ink-muted" />
+      )}
       <span>{source.label}</span>
       {source.speaker && <span className="text-ink-faint">· {source.speaker}</span>}
       {source.when && <span className="text-ink-faint">· {source.when}</span>}

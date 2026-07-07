@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { Connector, ConnectorStatus } from '@/lib/types'
 import { cx, Button } from '@/components/ui'
 import { Alert, Confirm, Sync } from '@/icons'
+import { logoFor } from '@/lib/logos'
 
 const statusMeta: Record<
   ConnectorStatus,
@@ -44,6 +45,7 @@ export function StatusPill({ status }: { status: ConnectorStatus }) {
 
 export function ConnectorCard({ connector }: { connector: Connector }) {
   const { icon: Icon } = connector
+  const logo = logoFor(connector.id)
   const [connected, setConnected] = useState(connector.status)
 
   const progress =
@@ -54,8 +56,12 @@ export function ConnectorCard({ connector }: { connector: Connector }) {
   return (
     <div className="group flex flex-col rounded-[var(--radius-lg)] border border-rule bg-paper-raised p-4 transition-colors hover:border-ink-faint/60">
       <div className="flex items-start gap-3">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] border border-rule bg-veil text-ink">
-          <Icon size={22} />
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[6px] border border-rule bg-veil text-ink">
+          {logo ? (
+            <img src={logo} alt="" className="h-6 w-6 object-contain" />
+          ) : (
+            <Icon size={22} />
+          )}
         </span>
         <div className="min-w-0 flex-1">
           <div className="font-display text-[1.0625rem] font-[500] leading-tight text-ink">

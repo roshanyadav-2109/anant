@@ -13,6 +13,7 @@ import {
   Memory,
   Search,
   Settings,
+  Sliders,
   Workspace,
   type IconProps,
 } from '@/icons'
@@ -49,7 +50,7 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
           'focus-ring group/nav relative flex items-center gap-3 rounded-[2px] px-3 py-2 text-[0.9rem] transition-colors duration-150',
           collapsed && 'justify-center px-0',
           isActive
-            ? 'bg-royal font-[600] text-white'
+            ? 'bg-white/[0.07] font-[600] text-white'
             : 'font-[400] text-[var(--color-sidebar-ink)] hover:bg-white/[0.06] hover:text-white',
         )
       }
@@ -92,17 +93,25 @@ export function AppShell({ children }: { children: ReactNode }) {
           collapsed ? 'w-[68px]' : 'w-[236px]',
         )}
       >
-        {/* Brand */}
-        <div className={cx('flex items-center gap-3 px-4 pb-3 pt-5', collapsed && 'justify-center px-0')}>
+        {/* Brand + collapse toggle */}
+        <div className={cx('flex items-center gap-3 px-4 pb-3 pt-5', collapsed && 'flex-col gap-3 px-0')}>
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] bg-royal text-white">
             <Mark size={22} />
           </span>
           {!collapsed && (
-            <div className="leading-tight">
+            <div className="min-w-0 flex-1 leading-tight">
               <div className="text-[1.15rem] font-[500] tracking-[-0.02em] text-white">Anant</div>
               <div className="text-[0.6875rem] tracking-[0.04em] text-[var(--color-sidebar-faint)]">by Neural AI</div>
             </div>
           )}
+          <button
+            onClick={() => setCollapsed((v) => !v)}
+            title={collapsed ? 'Expand' : 'Collapse to icons'}
+            aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            className="focus-ring flex h-8 w-8 shrink-0 items-center justify-center rounded-[3px] text-[var(--color-sidebar-faint)] transition-colors hover:bg-white/[0.08] hover:text-white"
+          >
+            <Sliders size={18} />
+          </button>
         </div>
 
         <nav className="mt-3 flex flex-1 flex-col gap-1 px-2.5">
@@ -119,18 +128,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NavRow key={i.to} item={i} collapsed={collapsed} />
           ))}
         </nav>
-
-        {/* Collapse toggle */}
-        <div className={cx('px-2.5 pb-2', collapsed && 'flex justify-center px-0')}>
-          <button
-            onClick={() => setCollapsed((v) => !v)}
-            className="focus-ring flex w-full items-center justify-center gap-2 rounded-[2px] py-1.5 text-[0.75rem] text-[var(--color-sidebar-faint)] transition-colors hover:bg-white/[0.06] hover:text-white"
-            title={collapsed ? 'Expand' : 'Collapse'}
-          >
-            <ChevronDown size={15} className={cx('transition-transform', collapsed ? '-rotate-90' : 'rotate-90')} />
-            {!collapsed && <span>Collapse</span>}
-          </button>
-        </div>
 
         {/* Workspace / account switcher */}
         <div className="relative border-t border-white/[0.08] p-2.5">

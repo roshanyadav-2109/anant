@@ -1,6 +1,7 @@
 import { TopBar } from '@/components/AppShell'
 import { Button, Card, cx } from '@/components/ui'
 import { connectors } from '@/lib/mockData'
+import { logoFor } from '@/lib/logos'
 import { Lock, Person, Plus, Shield } from '@/icons'
 
 const members = [
@@ -82,12 +83,16 @@ export function WorkspacePage() {
               <div className="p-3">
                 {connectors.slice(0, 6).map((c) => (
                   <div key={c.id} className="flex items-center gap-3 rounded-[var(--radius)] px-2 py-2 hover:bg-paper-sunk/50">
-                    <c.icon size={18} className="text-ink-soft" />
+                    {logoFor(c.id) ? (
+                      <img src={logoFor(c.id)} alt="" className="h-[18px] w-[18px] object-contain" />
+                    ) : (
+                      <c.icon size={18} className="text-ink-soft" />
+                    )}
                     <span className="flex-1 text-[0.875rem] text-ink">{c.name}</span>
                     <span
                       className={cx(
                         'text-[0.75rem] font-[500]',
-                        c.status === 'available' ? 'text-ink-faint' : 'text-evergreen',
+                        c.status === 'available' ? 'text-ink-faint' : 'text-royal',
                       )}
                     >
                       {c.status === 'available' ? 'Permitted' : 'Active'}

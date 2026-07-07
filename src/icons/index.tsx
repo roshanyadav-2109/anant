@@ -12,7 +12,7 @@ export type IconProps = SVGProps<SVGSVGElement> & {
   strokeWidth?: number
 }
 
-function Svg({ size = 20, strokeWidth = 1.4, children, ...rest }: IconProps & { children: ReactNode }) {
+function Svg({ size = 20, strokeWidth = 1.8, children, ...rest }: IconProps & { children: ReactNode }) {
   return (
     <svg
       width={size}
@@ -119,6 +119,18 @@ export function Settings(p: IconProps) {
       <circle cx="15" cy="8" r="2" />
       <path d="M4 16h3M11 16h9" />
       <circle cx="9" cy="16" r="2" />
+    </Svg>
+  )
+}
+
+// Sliders — a controls toggle; collapses the rail to icons only.
+export function Sliders(p: IconProps) {
+  return (
+    <Svg {...p}>
+      <path d="M4 8.5h5M13 8.5h7" />
+      <circle cx="11" cy="8.5" r="2.1" fill="currentColor" stroke="none" />
+      <path d="M4 15.5h11M19 15.5h1" />
+      <circle cx="17" cy="15.5" r="2.1" fill="currentColor" stroke="none" />
     </Svg>
   )
 }
