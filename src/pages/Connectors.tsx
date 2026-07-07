@@ -39,8 +39,8 @@ export function ConnectorsPage() {
               ))}
             </div>
             <p className="mt-5 text-[0.8125rem] text-ink-faint">
-              Slack ships first. Gmail, Drive, Notion, Calendar, Linear, GitHub and the rest of the Tier-1
-              list follow. Connections are handled server-side — credentials never touch the browser.
+              Slack connects first. Gmail, Drive, Notion, Calendar, Linear, GitHub and more are on the way.
+              Connecting is safe — your passwords are never kept in your browser.
             </p>
           </section>
         </div>

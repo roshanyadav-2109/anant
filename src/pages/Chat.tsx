@@ -160,7 +160,7 @@ export function ChatPage() {
                     }
                   }}
                   rows={1}
-                  placeholder="Message Anant…  /  scope to a source"
+                  placeholder="Message Anant…  /  ask about one source"
                   className="max-h-40 flex-1 resize-none bg-transparent py-1.5 text-[0.9375rem] text-ink outline-none placeholder:text-ink-faint"
                 />
                 {streaming ? (
@@ -179,7 +179,7 @@ export function ChatPage() {
                 )}
               </div>
               <p className="mt-2 text-center text-[0.6875rem] text-ink-faint">
-                Answers stay on your machine. Scope retrieval with a source, e.g. “from Slack”.
+                Answers stay on your machine. Ask about one source, e.g. “from Slack”.
               </p>
             </div>
           </div>

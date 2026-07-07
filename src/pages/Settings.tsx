@@ -39,9 +39,9 @@ export function SettingsPage() {
             </div>
             <div className="grid grid-cols-1 gap-px border-t border-rule bg-rule sm:grid-cols-3">
               {[
-                { icon: Lock, label: 'Data location', value: 'This device · encrypted' },
-                { icon: Node, label: 'Reasoning model', value: 'Local · on-device' },
-                { icon: Shield, label: 'Outbound calls', value: 'None' },
+                { icon: Lock, label: 'Where your data lives', value: 'On this device · encrypted' },
+                { icon: Node, label: 'AI model', value: 'Runs on this device' },
+                { icon: Shield, label: 'Data sent out', value: 'None' },
               ].map((s) => (
                 <div key={s.label} className="bg-paper-raised p-4">
                   <s.icon size={18} className="text-royal" />
@@ -67,11 +67,11 @@ export function SettingsPage() {
 
           {/* Model */}
           <Card className="p-6">
-            <h3 className="mb-1 font-display text-[1.125rem] font-[500] text-ink">Model</h3>
-            <p className="mb-2 text-[0.875rem] text-ink-muted">How Anant reasons and consolidates.</p>
-            <Row label="Reasoning model" value="Anant Local · v1" />
-            <Row label="Consolidation" value="Nightly" />
-            <Row label="Response streaming">
+            <h3 className="mb-1 font-display text-[1.125rem] font-[500] text-ink">How Anant works</h3>
+            <p className="mb-2 text-[0.875rem] text-ink-muted">How it thinks and learns over time.</p>
+            <Row label="AI model" value="Anant · on this device" />
+            <Row label="Learns from new activity" value="Every night" />
+            <Row label="Show answers as they type">
               <Toggle on />
             </Row>
           </Card>

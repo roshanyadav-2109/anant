@@ -32,6 +32,10 @@
   --color-royal: #1e40af;
   --color-royal-line: #74a4ff; /* brighter left indicator on the active tab */
 
+  /* Status — used only as plain coloured text, never a filled capsule */
+  --color-ok: #15803d;    /* connected / available — a calm, deep green */
+  --color-alert: #b4442e; /* needs attention — a muted brick */
+
   /* Sidebar — black */
   --color-sidebar: #0b0b0c;
   --color-sidebar-raised: #1a1a1d;

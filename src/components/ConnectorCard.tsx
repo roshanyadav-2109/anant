@@ -4,40 +4,21 @@ import { cx, Button } from '@/components/ui'
 import { Alert, Confirm, Sync } from '@/icons'
 import { logoFor } from '@/lib/logos'
 
-const statusMeta: Record<
-  ConnectorStatus,
-  { label: string; className: string; pulse?: boolean }
-> = {
-  connected: {
-    label: 'Connected',
-    className:
-      'border-[color-mix(in_srgb,var(--color-evergreen)_30%,transparent)] bg-evergreen-soft text-evergreen',
-  },
-  syncing: {
-    label: 'Syncing',
-    className: 'border-rule bg-paper-sunk text-ink-soft',
-    pulse: true,
-  },
-  error: {
-    label: 'Error',
-    className:
-      'border-[color-mix(in_srgb,var(--color-supersede)_35%,transparent)] bg-[color-mix(in_srgb,var(--color-supersede)_10%,transparent)] text-[var(--color-supersede)]',
-  },
-  available: { label: 'Available', className: 'border-rule bg-veil text-ink-muted' },
+const statusMeta: Record<ConnectorStatus, { label: string; className: string }> = {
+  connected: { label: 'Connected', className: 'text-[var(--color-ok)]' },
+  syncing: { label: 'Bringing in…', className: 'text-ink-muted' },
+  error: { label: 'Needs attention', className: 'text-[var(--color-alert)]' },
+  available: { label: 'Available', className: 'text-[var(--color-ok)]' },
 }
 
+/** Status shown as plain coloured text — no capsule, no background. */
 export function StatusPill({ status }: { status: ConnectorStatus }) {
   const m = statusMeta[status]
   return (
-    <span
-      className={cx(
-        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[0.6875rem] font-[500]',
-        m.className,
-      )}
-    >
-      {status === 'syncing' && <Sync size={12} className="consolidating" />}
-      {status === 'connected' && <Confirm size={12} />}
-      {status === 'error' && <Alert size={12} />}
+    <span className={cx('inline-flex items-center gap-1.5 text-[0.75rem] font-[500]', m.className)}>
+      {status === 'syncing' && <Sync size={13} className="consolidating" />}
+      {status === 'connected' && <Confirm size={14} />}
+      {status === 'error' && <Alert size={13} />}
       {m.label}
     </span>
   )
@@ -75,7 +56,7 @@ export function ConnectorCard({ connector }: { connector: Connector }) {
       <div className="mt-3.5 min-h-[1.25rem] text-[0.8125rem] text-ink-muted">
         {connected === 'connected' && (
           <span>
-            Synced {connector.lastSync} · <span className="tnum">{connector.items?.toLocaleString()}</span> items
+            Updated {connector.lastSync} · <span className="tnum">{connector.items?.toLocaleString()}</span> items
           </span>
         )}
         {connected === 'syncing' && (

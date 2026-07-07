@@ -97,7 +97,7 @@ export function MemoryPage() {
                 </div>
               ))}
               <p className="pt-6 text-center text-[0.8125rem] text-ink-faint">
-                {filtered.length} of {memories.length} memories · a virtualised list keeps this fast as it grows.
+                {filtered.length} of {memories.length} memories · stays fast as your memory grows.
               </p>
             </div>
           ) : (
