@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { TopBar } from '@/components/AppShell'
-import { ProvenanceBadge } from '@/components/Provenance'
+import { ProvenanceDot } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
-import { Attach, ChevronDown, Dismiss, Mark, Plus, Send, Stop } from '@/icons'
-import { conversations as seed, oliverCitations, sourceGlyph } from '@/lib/mockData'
+import { ArrowRight, Attach, ChevronDown, Dismiss, Mark, Plus, Send, Stop } from '@/icons'
+import { conversations as seed, oliverCitations, provenanceLabel, sourceGlyph } from '@/lib/mockData'
 import { logoFor } from '@/lib/logos'
-import type { ChatMessage, Citation, Conversation, SourceKind } from '@/lib/types'
+import type { ChatMessage, Citation, Conversation, Provenance, SourceKind } from '@/lib/types'
 
 const CANNED: { text: string; citations: Citation[] } = {
   text: "Oliver now leads design. He moved off the backend team last month, so he's running the design work for your team rather than backend development.",
@@ -224,7 +224,10 @@ export function ChatPage() {
                   <div key={i}>
                     <button
                       onClick={() => toggleSrc(i)}
-                      className="focus-ring flex w-full items-center gap-3 rounded-[4px] px-3 py-2.5 text-left transition-colors hover:bg-paper-sunk"
+                      className={cx(
+                        'focus-ring flex w-full items-center gap-3 rounded-[4px] px-3 py-2.5 text-left transition-colors',
+                        !open && 'hover:bg-paper-sunk',
+                      )}
                     >
                       <span className="flex w-5 shrink-0 justify-center">
                         <SourceLogo kind={c.source.kind} />
@@ -238,19 +241,29 @@ export function ChatPage() {
 
                     {open && (
                       <div className="fade space-y-3 px-3 pb-4 pl-10">
-                        <ProvenanceBadge provenance={c.provenance} />
+                        <ProvenanceTag p={c.provenance} />
                         <p className="text-[0.85rem] leading-relaxed text-ink">{describeSource(c)}</p>
                         <dl className="space-y-1.5 text-[0.8125rem]">
                           {c.date && <DetailRow label="When" value={c.date} />}
                           {c.conversation && <DetailRow label="Conversation" value={c.conversation} />}
                           {c.source.speaker && <DetailRow label="Said by" value={c.source.speaker} />}
                         </dl>
-                        <button
-                          onClick={() => askFromSource(c)}
-                          className="focus-ring mt-1 inline-flex items-center gap-1.5 rounded-[4px] border border-rule bg-paper-raised px-3 py-1.5 text-[0.8rem] font-[500] text-ink transition-colors hover:border-ink-faint"
-                        >
-                          Ask a follow-up from this source
-                        </button>
+                        <div className="flex flex-wrap gap-2 pt-0.5">
+                          <button
+                            onClick={() => askFromSource(c)}
+                            className="focus-ring inline-flex items-center gap-1.5 rounded-[4px] border border-rule bg-paper-raised px-3 py-1.5 text-[0.8rem] font-[500] text-ink transition-colors hover:border-ink-faint"
+                          >
+                            Ask a follow-up
+                          </button>
+                          <button
+                            onClick={() => {}}
+                            title="Jump to this message in its source"
+                            className="focus-ring inline-flex items-center gap-1.5 rounded-[4px] px-2.5 py-1.5 text-[0.8rem] font-[500] text-[var(--color-royal)] transition-colors hover:underline"
+                          >
+                            Open original
+                            <ArrowRight size={15} />
+                          </button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -280,6 +293,25 @@ function describeSource(c: Citation): string {
     return `Anant worked this out on its own — it wasn't said outright${c.context ? `, ${c.context.toLowerCase()}` : ''}. Treat it as Anant's reasoning, not a stated fact.`
   }
   return `Anant noticed this as a pattern across many items rather than a single message${c.context ? ` (${c.context.toLowerCase()})` : ''}. It summarises a trend, not one quote.`
+}
+
+const provVar: Record<Provenance, string> = {
+  stated: '--color-stated',
+  inferred: '--color-inferred',
+  aggregated: '--color-aggregated',
+}
+
+/** Provenance shown as a small coloured dot + label — no capsule. */
+function ProvenanceTag({ p }: { p: Provenance }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 text-[0.72rem] font-[500] uppercase tracking-[0.08em]"
+      style={{ color: `var(${provVar[p]})` }}
+    >
+      <ProvenanceDot provenance={p} />
+      {provenanceLabel[p]}
+    </span>
+  )
 }
 
 function DetailRow({ label, value }: { label: string; value: string }) {
