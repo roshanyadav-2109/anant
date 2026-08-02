@@ -68,7 +68,7 @@ function Entry({ ins, last }: { ins: Insight; last: boolean }) {
           <span className="font-[500]" style={{ color }}>
             Anant {verb[ins.kind]}
           </span>
-          <span className="text-ink-faint">{ins.when}</span>
+          {/today/i.test(ins.when) && <span className="text-ink-soft">today</span>}
         </div>
 
         <p className="mt-1.5 max-w-xl text-[1rem] leading-snug text-ink">{ins.title}</p>
@@ -129,10 +129,9 @@ function Entry({ ins, last }: { ins: Insight; last: boolean }) {
 export function InsightsPage() {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-2xl px-8 py-10">
+      <div className="max-w-2xl px-9 py-10">
         <header className="mb-9">
           <h1 className="text-[1.375rem] tracking-[-0.02em] text-ink">What Anant has been noticing</h1>
-          <p className="mt-1.5 text-[0.875rem] text-ink-faint">Newest first</p>
         </header>
 
         {/* the thread */}
