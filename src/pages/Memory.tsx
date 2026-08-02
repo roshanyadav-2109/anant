@@ -4,7 +4,7 @@ import { ConfidenceMeter, ProvenanceDot } from '@/components/Provenance'
 import { Button, cx } from '@/components/ui'
 import {
   Aggregated, ArrowRight, Confirm, Dismiss, Edit, Forget, GraphView, Inferred, ListView,
-  Memory as MemoryGlyph, Plus, Search as SearchGlyph, Stated,
+  Plus, Search as SearchGlyph, Stated,
 } from '@/icons'
 import { memories as seedMemories, sourceGlyph } from '@/lib/mockData'
 import { logoFor } from '@/lib/logos'
@@ -322,9 +322,9 @@ export function MemoryPage() {
         {view === 'graph' ? (
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5"><MemoryGraph /></div>
         ) : (
-          <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_400px]">
+          <div className={cx('grid min-h-0 flex-1', selected ? 'grid-cols-[minmax(0,1fr)_400px]' : 'grid-cols-1')}>
             {/* Middle column: the list */}
-            <div className="flex min-h-0 flex-col border-r border-rule">
+            <div className="flex min-h-0 flex-col">
               <div className="min-h-0 flex-1 overflow-y-auto">
               {filtered.length === 0 ? (
                 <p className="px-5 py-12 text-center text-[0.875rem] text-ink-faint">No memories match these filters.</p>
@@ -355,9 +355,9 @@ export function MemoryPage() {
             </div>
           </div>
 
-          {/* Detail pane */}
-          <div className="min-h-0 overflow-y-auto bg-paper-raised">
-            {selected ? (
+          {/* Detail pane — collapses (reflows) when closed */}
+          {selected && (
+            <div className="slide-in-right min-h-0 overflow-y-auto border-l border-rule bg-paper-raised">
               <MemoryDetail
                 key={selected.id}
                 memory={selected}
@@ -367,16 +367,8 @@ export function MemoryPage() {
                 onForget={forgetMemory}
                 onClose={() => setSelectedId(null)}
               />
-            ) : (
-              <div className="flex h-full flex-col items-center justify-center px-6 text-center">
-                <span className="mb-4 flex h-12 w-12 items-center justify-center rounded-[10px] border border-rule bg-paper-sunk text-evergreen">
-                  <MemoryGlyph size={24} />
-                </span>
-                <p className="text-[0.9375rem] font-[500] text-ink">Select a memory</p>
-                <p className="mt-1 text-[0.8125rem] text-ink-muted">Pick one from the list to see its full provenance and controls.</p>
-              </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
         )}
       </div>
