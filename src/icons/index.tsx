@@ -1,5 +1,6 @@
 import type { ReactNode, SVGProps } from 'react'
 import { solar } from './solar-data'
+import { solarOutline } from './solar-outline'
 
 /**
  * Anant icon set.
@@ -11,12 +12,15 @@ import { solar } from './solar-data'
 export type IconProps = SVGProps<SVGSVGElement> & {
   size?: number
   strokeWidth?: number
+  /** Nav glyphs: outline when false, solid when true. Ignored by other icons. */
+  filled?: boolean
 }
 
 /** Render a Solar glyph by key from the generated data. */
 function solarIcon(key: string) {
   const d = solar[key]
-  return function Icon({ size = 20, className, ...rest }: IconProps) {
+  return function Icon({ size = 20, className, filled: _filled, ...rest }: IconProps) {
+    void _filled
     return (
       <svg
         width={size}
@@ -32,15 +36,39 @@ function solarIcon(key: string) {
   }
 }
 
+/**
+ * A navigation glyph that renders its Solar Linear (outline) twin by default
+ * and the Bold (filled) version when `filled` is set — used to fill the icon
+ * of the selected sidebar tab. Defaults to filled so non-nav usages stay solid.
+ */
+function navIcon(key: string) {
+  return function Icon({ size = 20, className, filled = true, strokeWidth, ...rest }: IconProps) {
+    const d = (filled ? solar[key] : solarOutline[key]) ?? solar[key]
+    return (
+      <svg
+        width={size}
+        height={size}
+        viewBox={d?.vb ?? '0 0 24 24'}
+        fill="currentColor"
+        strokeWidth={strokeWidth}
+        className={className}
+        aria-hidden="true"
+        {...rest}
+        dangerouslySetInnerHTML={{ __html: d?.inner ?? '' }}
+      />
+    )
+  }
+}
+
 /* ---- Navigation & UI (Solar Bold) -------------------------------------- */
 
-export const Chat = solarIcon('Chat')
-export const Memory = solarIcon('Memory')
-export const Connectors = solarIcon('Connectors')
-export const Insights = solarIcon('Insights')
-export const Search = solarIcon('Search')
-export const Workspace = solarIcon('Workspace')
-export const Settings = solarIcon('Settings')
+export const Chat = navIcon('Chat')
+export const Memory = navIcon('Memory')
+export const Connectors = navIcon('Connectors')
+export const Insights = navIcon('Insights')
+export const Search = navIcon('Search')
+export const Workspace = navIcon('Workspace')
+export const Settings = navIcon('Settings')
 export const Panel = solarIcon('Panel')
 export const Sovereign = solarIcon('Sovereign')
 

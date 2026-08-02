@@ -63,6 +63,7 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
           <Icon
             size={22}
             strokeWidth={1.9}
+            filled={isActive}
             className={cx(isActive ? 'text-white' : 'text-[var(--color-sidebar-faint)] group-hover/nav:text-white')}
           />
           {!collapsed && <span>{item.label}</span>}
