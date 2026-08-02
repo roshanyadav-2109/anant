@@ -42,6 +42,7 @@ export interface Memory {
   when: string
   confidence: number // 0..1
   supersession?: Supersession
+  confirmed?: boolean
 }
 
 export interface Insight {
