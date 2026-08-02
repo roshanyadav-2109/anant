@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { memories } from '@/lib/mockData'
 import { MemoryCard } from '@/components/MemoryCard'
+import { Dismiss } from '@/icons'
 
 type NodeType = 'you' | 'person' | 'project'
 
@@ -82,6 +83,7 @@ function edgePath(a: GNode, b: GNode) {
 export function MemoryGraph() {
   const [active, setActive] = useState<string>('oliver')
   const [hover, setHover] = useState<string | null>(null)
+  const [open, setOpen] = useState(false)
 
   const focus = hover ?? active
 
@@ -104,8 +106,8 @@ export function MemoryGraph() {
   }, [active])
 
   return (
-    <div className="grid grid-cols-1 gap-4 pb-16 lg:grid-cols-[1.45fr_1fr]">
-      <div className="overflow-hidden rounded-[var(--radius-lg)] border border-rule bg-paper-raised">
+    <div className="flex gap-4 pb-16">
+      <div className="min-w-0 flex-1 overflow-hidden rounded-[var(--radius-lg)] border border-rule bg-paper-raised">
         {/* Legend */}
         <div className="flex items-center gap-4 border-b border-rule px-4 py-2.5 text-[0.72rem] text-ink-muted">
           <span className="inline-flex items-center gap-1.5">
@@ -203,7 +205,7 @@ export function MemoryGraph() {
                 style={{ transition: 'opacity 0.2s' }}
                 onMouseEnter={() => setHover(n.id)}
                 onMouseLeave={() => setHover(null)}
-                onClick={() => setActive(n.id)}
+                onClick={() => { setActive(n.id); setOpen(true) }}
               >
                 {n.type === 'you' && (
                   <>
@@ -260,17 +262,26 @@ export function MemoryGraph() {
         </div>
       </div>
 
-      {/* Memory cards for the selected node */}
-      <div className="space-y-3">
-        <div className="eyebrow">Memories about {nodeById(active).label}</div>
-        {related.length > 0 ? (
-          related.map((m) => <MemoryCard key={m.id} memory={m} />)
-        ) : (
-          <p className="rounded-[var(--radius-lg)] border border-dashed border-rule px-5 py-8 text-center text-[0.875rem] text-ink-muted">
-            Nothing recorded against this node yet.
-          </p>
-        )}
-      </div>
+      {/* Selected node's memories — slides in from the right, reflows the graph */}
+      {open && (
+        <aside className="slide-in-right w-[360px] shrink-0 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="text-[0.8125rem] font-[500] uppercase tracking-[0.1em] text-ink">
+              {nodeById(active).label}
+            </div>
+            <button aria-label="Close" onClick={() => setOpen(false)} className="focus-ring text-ink-muted transition-colors hover:text-ink">
+              <Dismiss size={18} />
+            </button>
+          </div>
+          {related.length > 0 ? (
+            related.map((m) => <MemoryCard key={m.id} memory={m} />)
+          ) : (
+            <p className="rounded-[var(--radius-lg)] border border-dashed border-rule px-5 py-8 text-center text-[0.875rem] text-ink-muted">
+              Nothing recorded against this node yet.
+            </p>
+          )}
+        </aside>
+      )}
     </div>
   )
 }

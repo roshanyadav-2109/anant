@@ -178,6 +178,12 @@
   }
   .slide-in-right { animation: anant-slide-right 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 
+  @keyframes anant-slide-left {
+    from { transform: translateX(-100%); }
+    to { transform: translateX(0); }
+  }
+  .slide-in-left { animation: anant-slide-left 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
   @keyframes anant-consolidate {
     0%, 100% { opacity: 0.4; }
     50% { opacity: 1; }

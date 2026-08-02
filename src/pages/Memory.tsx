@@ -101,24 +101,19 @@ function MemoryDetail({
         <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">{memory.detail}</p>
       )}
 
-      {/* Where this came from — plain-language provenance */}
+      {/* Where this came from — plain text, no block */}
       <div className="mt-6">
-        <div className="eyebrow mb-2">Where this came from</div>
-        <div
-          className="rounded-[var(--radius)] border border-rule bg-paper-sunk/60 p-3.5"
-          style={{ borderLeft: `3px solid var(--color-${memory.provenance})` }}
-        >
-          <div className="flex items-center gap-2">
-            <ProvenanceDot provenance={memory.provenance} />
-            <span className="text-[0.9rem] font-[600] text-ink">{provTitle[memory.provenance]}</span>
-          </div>
-          <p className="mt-1 text-[0.8125rem] leading-relaxed text-ink-soft">{provNote[memory.provenance]}</p>
-          <div className="mt-2.5 inline-flex items-center gap-1.5 text-[0.8125rem] text-ink">
-            <SourceMark kind={memory.source.kind} size={16} />
-            <span>{memory.source.label}</span>
-            {memory.source.speaker && <span className="text-ink-muted">· {memory.source.speaker}</span>}
-            {memory.source.when && <span className="text-ink-muted">· {memory.source.when}</span>}
-          </div>
+        <div className="mb-2 text-[0.8125rem] font-[500] uppercase tracking-[0.1em] text-ink">Where this came from</div>
+        <div className="flex items-center gap-2">
+          <ProvenanceDot provenance={memory.provenance} />
+          <span className="text-[0.95rem] font-[600] text-ink">{provTitle[memory.provenance]}</span>
+        </div>
+        <p className="mt-1 text-[0.875rem] leading-relaxed text-ink">{provNote[memory.provenance]}</p>
+        <div className="mt-2 inline-flex items-center gap-1.5 text-[0.875rem] text-ink">
+          <SourceMark kind={memory.source.kind} size={16} />
+          <span>{memory.source.label}</span>
+          {memory.source.speaker && <span>· {memory.source.speaker}</span>}
+          {memory.source.when && <span>· {memory.source.when}</span>}
         </div>
       </div>
 

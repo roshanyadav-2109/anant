@@ -122,9 +122,9 @@ export function ChatPage() {
 
   return (
     <>
-      <div className="grid min-h-0 flex-1 grid-cols-[240px_1fr]">
+      <div className="flex min-h-0 flex-1">
         {/* Conversation history */}
-        <aside className="flex min-h-0 flex-col border-r border-rule bg-paper-sunk/30">
+        <aside className="flex min-h-0 w-[240px] shrink-0 flex-col border-r border-rule bg-paper-sunk/30">
           <div className="space-y-2.5 p-3">
             <Button variant="primary" size="sm" className="w-full justify-center" leading={<Plus size={16} />} onClick={newConversation}>
               New conversation
@@ -175,8 +175,56 @@ export function ChatPage() {
           </div>
         </aside>
 
+        {/* Sources — a panel that reflows the thread, sliding in from the left */}
+        {sourcesOpen && (
+          <aside className="slide-in-left flex min-h-0 w-[360px] shrink-0 flex-col border-r border-rule bg-paper-raised">
+            <header className="flex items-center justify-between gap-3 px-5 pb-2 pt-5">
+              <div className="text-[1rem] font-[500] text-ink">Sources for this answer</div>
+              <button aria-label="Close" onClick={() => setSourcesOpen(false)} className="focus-ring text-ink-muted transition-colors hover:text-ink">
+                <Dismiss size={18} />
+              </button>
+            </header>
+            <div className="min-h-0 flex-1 overflow-y-auto px-2 py-2">
+              {sourceList.map((c, i) => {
+                const open = openSrc.has(i)
+                return (
+                  <div key={i}>
+                    <button
+                      onClick={() => toggleSrc(i)}
+                      className={cx('focus-ring flex w-full items-center gap-3 rounded-[4px] px-3 py-2.5 text-left transition-colors', !open && 'hover:bg-paper-sunk')}
+                    >
+                      <span className="flex w-5 shrink-0 justify-center"><SourceLogo kind={c.source.kind} /></span>
+                      <span className="min-w-0 flex-1 truncate text-[0.9rem] text-ink">{c.quote}</span>
+                      <ChevronDown size={16} className={cx('shrink-0 text-ink-muted transition-transform', open && 'rotate-180')} />
+                    </button>
+                    {open && (
+                      <div className="fade space-y-3 px-3 pb-4 pl-10">
+                        <ProvenanceTag p={c.provenance} />
+                        <p className="text-[0.85rem] leading-relaxed text-ink">{describeSource(c)}</p>
+                        <dl className="space-y-1.5 text-[0.8125rem]">
+                          {c.date && <DetailRow label="When" value={c.date} />}
+                          {c.conversation && <DetailRow label="Conversation" value={c.conversation} />}
+                          {c.source.speaker && <DetailRow label="Said by" value={c.source.speaker} />}
+                        </dl>
+                        <div className="flex flex-wrap gap-2 pt-0.5">
+                          <button onClick={() => askFromSource(c)} className="focus-ring inline-flex items-center gap-1.5 rounded-[4px] border border-rule bg-paper-raised px-3 py-1.5 text-[0.8rem] font-[500] text-ink transition-colors hover:border-ink-faint">
+                            Ask a follow-up
+                          </button>
+                          <button onClick={() => {}} title="Jump to this message in its source" className="focus-ring inline-flex items-center gap-1.5 rounded-[4px] px-2.5 py-1.5 text-[0.8rem] font-[500] text-[var(--color-royal)] transition-colors hover:underline">
+                            Open original <ArrowRight size={15} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </aside>
+        )}
+
         {/* Thread */}
-        <section className="relative flex min-h-0 flex-col">
+        <section className="relative flex min-h-0 flex-1 flex-col">
           <div ref={threadRef} className="min-h-0 flex-1 overflow-y-auto px-8 pb-32 pt-6">
             {active.messages.length === 0 ? (
               <div className="mx-auto flex h-full max-w-lg flex-col items-center justify-center text-center">
@@ -244,83 +292,6 @@ export function ChatPage() {
           </div>
         </section>
       </div>
-
-      {/* Sources — a drawer that slides in from the right */}
-      {sourcesOpen && (
-        <div className="fixed inset-0 z-50">
-          <button
-            aria-label="Close sources"
-            onClick={() => setSourcesOpen(false)}
-            className="absolute inset-0 bg-ink/20"
-          />
-          <aside className="slide-in-right absolute right-0 top-0 bottom-0 z-10 flex w-[400px] max-w-[92vw] flex-col border-l border-rule bg-paper-raised shadow-[var(--shadow-pop)]">
-            <header className="flex items-center justify-between gap-3 px-5 pt-5 pb-2">
-              <div className="text-[1rem] font-[500] text-ink">Sources for this answer</div>
-              <button
-                aria-label="Close"
-                onClick={() => setSourcesOpen(false)}
-                className="focus-ring text-ink-muted transition-colors hover:text-ink"
-              >
-                <Dismiss size={18} />
-              </button>
-            </header>
-
-            <div className="flex-1 overflow-y-auto px-2 py-2">
-              {sourceList.map((c, i) => {
-                const open = openSrc.has(i)
-                return (
-                  <div key={i}>
-                    <button
-                      onClick={() => toggleSrc(i)}
-                      className={cx(
-                        'focus-ring flex w-full items-center gap-3 rounded-[4px] px-3 py-2.5 text-left transition-colors',
-                        !open && 'hover:bg-paper-sunk',
-                      )}
-                    >
-                      <span className="flex w-5 shrink-0 justify-center">
-                        <SourceLogo kind={c.source.kind} />
-                      </span>
-                      <span className="min-w-0 flex-1 truncate text-[0.9rem] text-ink">{c.quote}</span>
-                      <ChevronDown
-                        size={16}
-                        className={cx('shrink-0 text-ink-muted transition-transform', open && 'rotate-180')}
-                      />
-                    </button>
-
-                    {open && (
-                      <div className="fade space-y-3 px-3 pb-4 pl-10">
-                        <ProvenanceTag p={c.provenance} />
-                        <p className="text-[0.85rem] leading-relaxed text-ink">{describeSource(c)}</p>
-                        <dl className="space-y-1.5 text-[0.8125rem]">
-                          {c.date && <DetailRow label="When" value={c.date} />}
-                          {c.conversation && <DetailRow label="Conversation" value={c.conversation} />}
-                          {c.source.speaker && <DetailRow label="Said by" value={c.source.speaker} />}
-                        </dl>
-                        <div className="flex flex-wrap gap-2 pt-0.5">
-                          <button
-                            onClick={() => askFromSource(c)}
-                            className="focus-ring inline-flex items-center gap-1.5 rounded-[4px] border border-rule bg-paper-raised px-3 py-1.5 text-[0.8rem] font-[500] text-ink transition-colors hover:border-ink-faint"
-                          >
-                            Ask a follow-up
-                          </button>
-                          <button
-                            onClick={() => {}}
-                            title="Jump to this message in its source"
-                            className="focus-ring inline-flex items-center gap-1.5 rounded-[4px] px-2.5 py-1.5 text-[0.8rem] font-[500] text-[var(--color-royal)] transition-colors hover:underline"
-                          >
-                            Open original
-                            <ArrowRight size={15} />
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </aside>
-        </div>
-      )}
     </>
   )
 }
