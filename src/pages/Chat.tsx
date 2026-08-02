@@ -5,6 +5,7 @@ import { ProvenanceDot } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
 import { ArrowRight, Attach, ChevronDown, Dismiss, Mark, Plus, Search, Send, Stop } from '@/icons'
 import { conversations as seed, oliverCitations, provenanceLabel, sourceGlyph } from '@/lib/mockData'
+import { randomGreeting } from '@/lib/greetings'
 import { logoFor } from '@/lib/logos'
 import { bucketFor, relativeShort } from '@/lib/time'
 import type { ChatMessage, Citation, Conversation, Provenance, SourceKind } from '@/lib/types'
@@ -17,6 +18,7 @@ const CANNED: { text: string; citations: Citation[] } = {
 export function ChatPage() {
   const location = useLocation()
   const focusId = (location.state as { focusId?: string } | null)?.focusId
+  const [greeting] = useState(randomGreeting)
   const [convos, setConvos] = useState<Conversation[]>(seed)
   const [activeId, setActiveId] = useState(
     focusId && seed.some((c) => c.id === focusId) ? focusId : seed[0].id,
@@ -233,8 +235,7 @@ export function ChatPage() {
           <div ref={threadRef} className="min-h-0 flex-1 overflow-y-auto px-8 pb-32 pt-6">
             {active.messages.length === 0 ? (
               <div className="mx-auto flex h-full max-w-lg flex-col items-center justify-center text-center">
-                <Mark size={40} className="mb-4 text-ink" />
-                <h2 className="text-[1.5rem] tracking-[-0.02em] text-ink">How can I help?</h2>
+                <h2 className="text-[1.5rem] tracking-[-0.02em] text-ink">{greeting}</h2>
               </div>
             ) : (
               <div className="mx-auto max-w-2xl space-y-6">

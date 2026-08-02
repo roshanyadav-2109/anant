@@ -1,0 +1,68 @@
+/**
+ * Empty-chat greetings. One is picked at random each time the blank thread
+ * shows, so it feels alive and personal — warm, a little witty, occasionally
+ * sarcastic, always in Anant's voice: the thing that remembers for you.
+ */
+export const greetings: string[] = [
+  'What’s on your mind?',
+  'Where were we?',
+  'Ask me anything — I actually remember.',
+  'Go on, test my memory.',
+  'I forget nothing. Try me.',
+  'Pick up where you left off?',
+  'What do you need to recall?',
+  'Let’s dig something up.',
+  'Your move.',
+  'Ready when you are.',
+  'What are we figuring out today?',
+  'Think of me as your other brain.',
+  'No sticky notes required.',
+  'I remember so you don’t have to.',
+  'What did you want to know again?',
+  'Say the word.',
+  'Curious about something?',
+  'Let’s connect some dots.',
+  'Back for more?',
+  'Missed me?',
+  'I’ve got receipts. Ask.',
+  'Everything you told me is still here.',
+  'Where should we start?',
+  'What are you trying to remember?',
+  'Hit me with it.',
+  'Nothing slips past me. Ask.',
+  'Good to see you. What’s up?',
+  'Let’s make sense of things.',
+  'Ask, and I’ll show my work.',
+  'You bring the question, I bring the memory.',
+  'What can I dig up for you?',
+  'Still here, still remembering.',
+  'Shall we?',
+  'What’s the mission today?',
+  'Wondering about something?',
+  'I kept notes. Ask me.',
+  'What would you like to know?',
+  'Let’s remember together.',
+  'Fire away.',
+  'Need to recall something?',
+  'What’s puzzling you?',
+  'One question, coming up.',
+  'I’m all ears — and memory.',
+  'Refresh your memory? That’s my job.',
+  'What are we chasing today?',
+  'Ask me about anyone, anything.',
+  'The floor is yours.',
+  'What’s the story you need?',
+  'Let’s find it.',
+  'You think it, I’ll remember it.',
+  'Ready to jog a memory?',
+  'So… what did you forget?',
+  'Don’t worry, I remember even if you don’t.',
+  'Something on the tip of your tongue?',
+  'Let’s pick up the thread.',
+  'What should we look into?',
+]
+
+/** A random greeting. */
+export function randomGreeting() {
+  return greetings[Math.floor(Math.random() * greetings.length)]
+}
