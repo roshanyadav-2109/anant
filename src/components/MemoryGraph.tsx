@@ -115,7 +115,7 @@ export function MemoryGraph() {
 
   return (
     <div className="flex h-full">
-      <div className="min-w-0 flex-1 px-6 py-4">
+      <div className="min-w-0 flex-1 px-2 py-3">
         <svg viewBox="0 0 660 480" className="fade w-full select-none" style={{ maxHeight: '100%' }}>
           <defs>
             <pattern id="grid-dots" width="22" height="22" patternUnits="userSpaceOnUse">
@@ -247,7 +247,7 @@ export function MemoryGraph() {
 
       {/* Selected node — one section block: name + cross + description */}
       {open && (
-        <aside className="slide-in-right w-[360px] shrink-0 overflow-y-auto p-4">
+        <aside className="slide-in-right w-[360px] shrink-0 overflow-y-auto py-3 pl-2 pr-3">
           <div className="overflow-hidden rounded-[var(--radius-lg)] border border-rule bg-paper-raised">
             <header className="flex items-center justify-between px-4 pb-1 pt-3">
               <div className="text-[0.95rem] font-[500] text-ink">{nodeById(active).label}</div>
