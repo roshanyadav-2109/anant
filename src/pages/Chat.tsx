@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react'
-import { TopBar } from '@/components/AppShell'
 import { useAuth } from '@/lib/auth'
 import { ProvenanceDot } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
@@ -107,8 +106,6 @@ export function ChatPage() {
 
   return (
     <>
-      <TopBar title="Chat" intent="Ask anything — every answer shows the memory behind it." />
-
       <div className="grid min-h-0 flex-1 grid-cols-[240px_1fr]">
         {/* Conversation list */}
         <aside className="flex min-h-0 flex-col border-r border-rule bg-paper-sunk/30">
