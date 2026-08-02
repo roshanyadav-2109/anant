@@ -8,22 +8,22 @@
    ============================================================ */
 
 @theme {
-  /* ===== Polish Direction 2 · Warm — editorial off-white, warm greys ===== */
-  /* Surfaces — warm off-white page, white panels */
-  --color-paper: #faf9f6;
+  /* ===== Polish Direction 3 · Soft depth — greyer desk, floating panels ===== */
+  /* Surfaces — a distinctly grey canvas so white panels lift off it */
+  --color-paper: #e8eaf0;
   --color-paper-raised: #ffffff;
-  --color-paper-sunk: #f2f0ea;
+  --color-paper-sunk: #dfe1ea;
   --color-veil: #ffffff;
 
-  /* Ink — warm greys (a considered warm neutral, not pure grey) */
-  --color-ink: #17140d;
-  --color-ink-soft: #3d3931;
-  --color-ink-muted: #6b6659;
-  --color-ink-faint: #a8a396;
+  /* Ink — cool slate */
+  --color-ink: #0f1117;
+  --color-ink-soft: #383c48;
+  --color-ink-muted: #5f6473;
+  --color-ink-faint: #9297a6;
 
   /* Hairlines */
-  --color-rule: #ebe7df;
-  --color-rule-soft: #f3f0ea;
+  --color-rule: #dcdfe9;
+  --color-rule-soft: #e7e9f1;
 
   /* Accent — indigo, gradient CTA */
   --color-evergreen: #4f46e5;
@@ -57,9 +57,9 @@
   --radius: 6px;
   --radius-lg: 8px;
 
-  /* Shadows — soft depth */
-  --shadow-card: 0 1px 2px rgba(12, 14, 20, 0.05), 0 10px 28px -18px rgba(12, 14, 20, 0.22);
-  --shadow-pop: 0 4px 12px rgba(12, 14, 20, 0.08), 0 24px 48px -20px rgba(12, 14, 20, 0.28);
+  /* Shadows — pronounced depth (panels float off the grey canvas) */
+  --shadow-card: 0 1px 2px rgba(12, 14, 20, 0.06), 0 14px 32px -14px rgba(12, 14, 20, 0.32);
+  --shadow-pop: 0 6px 16px rgba(12, 14, 20, 0.1), 0 28px 56px -18px rgba(12, 14, 20, 0.34);
 
   /* Primary CTA gradient */
   --brand-grad: linear-gradient(135deg, #6366f1, #4f46e5);
