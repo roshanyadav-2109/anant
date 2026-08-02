@@ -386,41 +386,21 @@ function TeamView({ onOpenActivity }: { onOpenActivity: (a: Activity) => void })
 
 export function WorkspacePage() {
   const { user } = useAuth()
-  const [mode, setMode] = useState<'personal' | 'team'>('team')
+  // Entitlement decides the whole surface — a personal account never sees team UI.
+  const isTeam = user?.accountType === 'team'
   const [openActivity, setOpenActivity] = useState<Activity | null>(null)
-
-  const modes: { key: 'personal' | 'team'; label: string }[] = [
-    { key: 'personal', label: 'Personal' },
-    { key: 'team', label: 'Team' },
-  ]
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="max-w-5xl px-9 py-9 pb-16">
-        {/* Account switch — a personal space and a team space, like Google */}
-        <div className="mb-8 inline-flex gap-1 rounded-full bg-paper-sunk p-1">
-          {modes.map((m) => (
-            <button
-              key={m.key}
-              onClick={() => setMode(m.key)}
-              className={
-                'focus-ring rounded-full px-4 py-1.5 text-[0.8125rem] transition-colors ' +
-                (mode === m.key ? 'bg-paper-raised font-[500] text-ink shadow-sm' : 'text-ink-soft hover:text-ink')
-              }
-            >
-              {m.label}
-            </button>
-          ))}
-        </div>
-
-        {mode === 'personal' ? (
-          <PersonalView name={user?.name ?? 'You'} email={user?.email ?? 'you@local'} />
-        ) : (
+        {isTeam ? (
           <TeamView onOpenActivity={setOpenActivity} />
+        ) : (
+          <PersonalView name={user?.name ?? 'You'} email={user?.email ?? 'you@local'} />
         )}
       </div>
 
-      {openActivity && <ActivityModal item={openActivity} onClose={() => setOpenActivity(null)} />}
+      {isTeam && openActivity && <ActivityModal item={openActivity} onClose={() => setOpenActivity(null)} />}
     </div>
   )
 }

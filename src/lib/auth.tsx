@@ -14,7 +14,24 @@ export interface AnantUser {
   name: string
   role: 'Admin' | 'Member' | 'Viewer'
   workspace: string
+  /** Entitlement — whether this email has workspace (team) access or is a
+   *  personal account. In production this comes from the purchase / access
+   *  record; here it's derived from the email domain as a stand-in. */
+  accountType: 'personal' | 'team'
   demo?: boolean
+}
+
+/** Free/consumer email providers → personal; anything else → workspace/team. */
+const PERSONAL_DOMAINS = new Set([
+  'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'live.com', 'msn.com',
+  'yahoo.com', 'ymail.com', 'icloud.com', 'me.com', 'mac.com', 'proton.me', 'protonmail.com',
+  'aol.com', 'gmx.com', 'zoho.com', 'mail.com', 'yandex.com',
+])
+
+export function accountTypeForEmail(email: string): 'personal' | 'team' {
+  const domain = email.split('@')[1]?.toLowerCase() ?? ''
+  if (!domain) return 'personal'
+  return PERSONAL_DOMAINS.has(domain) ? 'personal' : 'team'
 }
 
 interface AuthValue {
@@ -36,11 +53,13 @@ function nameFromEmail(email: string) {
 function userFromSession(session: Session): AnantUser {
   const email = session.user.email ?? 'you@local'
   const meta = session.user.user_metadata ?? {}
+  const accountType = accountTypeForEmail(email)
   return {
     email,
     name: (meta.name as string) || nameFromEmail(email),
     role: 'Admin',
-    workspace: 'Neural AI',
+    workspace: accountType === 'team' ? 'Neural AI' : 'Personal',
+    accountType,
   }
 }
 
@@ -52,7 +71,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Restore a prior demo session first (survives refresh without Supabase).
     const demo = localStorage.getItem('anant.demo')
     if (demo) {
-      setUser(JSON.parse(demo))
+      const u = JSON.parse(demo) as AnantUser
+      if (!u.accountType) u.accountType = accountTypeForEmail(u.email) // backfill older sessions
+      setUser(u)
       setLoading(false)
       return
     }
@@ -109,11 +130,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   function signInDemoInternal(email: string, name?: string) {
+    const accountType = accountTypeForEmail(email)
     const u: AnantUser = {
       email,
       name: name || nameFromEmail(email),
       role: 'Admin',
-      workspace: 'Neural AI',
+      workspace: accountType === 'team' ? 'Neural AI' : 'Personal',
+      accountType,
       demo: true,
     }
     localStorage.setItem('anant.demo', JSON.stringify(u))

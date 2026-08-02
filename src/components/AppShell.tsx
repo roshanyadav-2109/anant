@@ -126,7 +126,13 @@ export function AppShell({ children }: { children: ReactNode }) {
           ))}
           <div className="my-3 h-px bg-white/[0.08]" />
           {secondary.map((i) => (
-            <NavRow key={i.to} item={i} collapsed={collapsed} />
+            <NavRow
+              key={i.to}
+              item={
+                i.to === '/workspace' && user?.accountType !== 'team' ? { ...i, label: 'Account' } : i
+              }
+              collapsed={collapsed}
+            />
           ))}
         </nav>
 
