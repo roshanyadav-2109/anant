@@ -233,16 +233,8 @@ export function ChatPage() {
           <div ref={threadRef} className="min-h-0 flex-1 overflow-y-auto px-8 pb-32 pt-6">
             {active.messages.length === 0 ? (
               <div className="mx-auto flex h-full max-w-lg flex-col items-center justify-center text-center">
-                <p className="eyebrow mb-3">A blank page that remembers</p>
-                <h2
-                  className="font-display text-[1.75rem] font-[500] text-ink"
-                  style={{ fontVariationSettings: "'SOFT' 3, 'WONK' 1, 'opsz' 90" }}
-                >
-                  Ask a question, or connect a source
-                </h2>
-                <p className="mt-2 text-[0.9375rem] text-ink-muted">
-                  Every answer is backed by memory you can inspect. Try <span className="text-ink-soft">“What is Oliver working on now?”</span>
-                </p>
+                <Mark size={40} className="mb-4 text-ink" />
+                <h2 className="text-[1.5rem] tracking-[-0.02em] text-ink">How can I help?</h2>
               </div>
             ) : (
               <div className="mx-auto max-w-2xl space-y-6">
