@@ -6,11 +6,16 @@ import {
   ArrowRight, Confirm, Dismiss, Edit, Forget, GraphView, ListView,
   Memory as MemoryGlyph, Plus, Search as SearchGlyph, Sync,
 } from '@/icons'
-import { memories as seedMemories, provenanceLabel, sourceGlyph } from '@/lib/mockData'
+import { memories as seedMemories, sourceGlyph } from '@/lib/mockData'
 import { logoFor } from '@/lib/logos'
 import type { Memory, Provenance, SourceKind } from '@/lib/types'
 
 const provOrder: Provenance[] = ['stated', 'inferred', 'aggregated']
+const provShort: Record<Provenance, string> = {
+  stated: 'Said directly',
+  inferred: "Anant's guess",
+  aggregated: 'Patterns',
+}
 const provTitle: Record<Provenance, string> = {
   stated: 'Said directly',
   inferred: 'Anant figured this out',
@@ -167,21 +172,8 @@ export function MemoryPage() {
     )
   }, [items, query, prov, src, subject])
 
-  const provCounts = useMemo(() => {
-    const by: Record<Provenance, number> = { stated: 0, inferred: 0, aggregated: 0 }
-    items.forEach((m) => (by[m.provenance] += 1))
-    return by
-  }, [items])
-  const sources = useMemo(() => {
-    const map = new Map<SourceKind, number>()
-    items.forEach((m) => map.set(m.source.kind, (map.get(m.source.kind) ?? 0) + 1))
-    return [...map.entries()]
-  }, [items])
-  const subjects = useMemo(() => {
-    const map = new Map<string, number>()
-    items.forEach((m) => map.set(m.subject, (map.get(m.subject) ?? 0) + 1))
-    return [...map.entries()]
-  }, [items])
+  const sources = useMemo(() => [...new Set(items.map((m) => m.source.kind))], [items])
+  const subjects = useMemo(() => [...new Set(items.map((m) => m.subject))], [items])
 
   const selected = items.find((m) => m.id === selectedId) ?? null
   const filtersActive = prov !== 'all' || src !== 'all' || subject !== 'all' || query.trim() !== ''
@@ -214,19 +206,18 @@ export function MemoryPage() {
   }
   function clearFilters() { setProv('all'); setSrc('all'); setSubject('all'); setQuery('') }
 
-  function FacetItem({ active, label, count, onClick, dot, kind }: {
-    active: boolean; label: string; count: number; onClick: () => void; dot?: Provenance; kind?: SourceKind
+  function FacetItem({ active, label, onClick, dot, kind }: {
+    active: boolean; label: string; onClick: () => void; dot?: Provenance; kind?: SourceKind
   }) {
     return (
       <button
         onClick={onClick}
-        className={cx('flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[0.8125rem] transition-colors',
-          active ? 'bg-evergreen-soft font-[600] text-evergreen' : 'text-ink-soft hover:bg-paper-sunk')}
+        className={cx('flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[0.9375rem] text-ink transition-colors',
+          active ? 'bg-paper-sunk font-[500]' : 'font-[400] hover:bg-paper-sunk/60')}
       >
         {dot && <ProvenanceDot provenance={dot} />}
         {kind && <SourceMark kind={kind} size={14} />}
         <span className="flex-1 truncate">{label}</span>
-        <span className="tnum text-[0.6875rem] text-ink-faint">{count}</span>
       </button>
     )
   }
@@ -260,32 +251,35 @@ export function MemoryPage() {
       ) : (
         <div className="grid min-h-0 flex-1 grid-cols-[216px_minmax(0,1fr)_400px]">
           {/* Facet rail */}
-          <aside className="min-h-0 space-y-4 overflow-y-auto border-r border-rule bg-paper-sunk/40 p-3">
+          <aside className="min-h-0 overflow-y-auto border-r border-rule bg-paper-sunk/40 p-3">
+            {filtersActive && (
+              <button onClick={clearFilters} className="mb-1.5 flex w-full items-center justify-between rounded-[6px] px-2.5 py-1.5 text-left text-[0.8125rem] font-[500] text-[var(--color-royal)] hover:bg-paper-sunk">
+                Clear filters
+              </button>
+            )}
             <div>
-              <div className="mb-1.5 flex items-center justify-between px-2.5">
-                <span className="eyebrow">Provenance</span>
-                {filtersActive && (
-                  <button onClick={clearFilters} className="text-[0.6875rem] font-[500] text-evergreen hover:underline">Clear</button>
-                )}
+              <div className="mb-1 px-2.5 text-[0.9375rem] font-[600] text-ink">Type</div>
+              <div className="space-y-0.5">
+                {provOrder.map((p) => (
+                  <FacetItem key={p} active={prov === p} label={provShort[p]} dot={p} onClick={() => setProv(prov === p ? 'all' : p)} />
+                ))}
               </div>
-              <FacetItem active={prov === 'all'} label="All" count={items.length} onClick={() => setProv('all')} />
-              {provOrder.map((p) => (
-                <FacetItem key={p} active={prov === p} label={provenanceLabel[p]} count={provCounts[p]} dot={p} onClick={() => setProv(p)} />
-              ))}
             </div>
-            <div>
-              <div className="eyebrow mb-1.5 px-2.5">Sources</div>
-              <FacetItem active={src === 'all'} label="All sources" count={items.length} onClick={() => setSrc('all')} />
-              {sources.map(([k, n]) => (
-                <FacetItem key={k} active={src === k} label={k[0].toUpperCase() + k.slice(1)} count={n} kind={k} onClick={() => setSrc(k)} />
-              ))}
+            <div className="mt-4">
+              <div className="mb-1 px-2.5 text-[0.9375rem] font-[600] text-ink">Sources</div>
+              <div className="space-y-0.5">
+                {sources.map((k) => (
+                  <FacetItem key={k} active={src === k} label={k[0].toUpperCase() + k.slice(1)} kind={k} onClick={() => setSrc(src === k ? 'all' : k)} />
+                ))}
+              </div>
             </div>
-            <div>
-              <div className="eyebrow mb-1.5 px-2.5">People</div>
-              <FacetItem active={subject === 'all'} label="Everyone" count={items.length} onClick={() => setSubject('all')} />
-              {subjects.map(([s, n]) => (
-                <FacetItem key={s} active={subject === s} label={s} count={n} onClick={() => setSubject(s)} />
-              ))}
+            <div className="mt-4">
+              <div className="mb-1 px-2.5 text-[0.9375rem] font-[600] text-ink">People</div>
+              <div className="space-y-0.5">
+                {subjects.map((s) => (
+                  <FacetItem key={s} active={subject === s} label={s} onClick={() => setSubject(subject === s ? 'all' : s)} />
+                ))}
+              </div>
             </div>
           </aside>
 
