@@ -4,7 +4,7 @@ import { ConfidenceMeter, ProvenanceDot } from '@/components/Provenance'
 import { Button, cx, Segmented } from '@/components/ui'
 import {
   Aggregated, ArrowRight, Confirm, Dismiss, Edit, Forget, GraphView, Inferred, ListView,
-  Memory as MemoryGlyph, Plus, Search as SearchGlyph, Stated, Sync,
+  Memory as MemoryGlyph, Plus, Search as SearchGlyph, Stated,
 } from '@/icons'
 import { memories as seedMemories, sourceGlyph } from '@/lib/mockData'
 import { logoFor } from '@/lib/logos'
@@ -71,13 +71,6 @@ function MemoryDetail({
 
   return (
     <div className="flex min-h-full flex-col p-6">
-      {memory.supersession && (
-        <div className="mb-4 flex items-center gap-2 rounded-[var(--radius)] border border-[color-mix(in_srgb,var(--color-supersede)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-supersede)_9%,transparent)] px-3 py-1.5 text-[0.75rem] text-[var(--color-supersede)]">
-          <Sync size={13} />
-          <span>was <span className="line-through opacity-80">{memory.supersession.from}</span> → now <span className="font-[500]">{memory.supersession.to}</span></span>
-        </div>
-      )}
-
       {editing ? (
         <textarea
           autoFocus
@@ -101,9 +94,15 @@ function MemoryDetail({
         <p className="mt-3 text-[0.9375rem] leading-relaxed text-ink-soft">{memory.detail}</p>
       )}
 
+      {memory.supersession && !editing && (
+        <p className="mt-3 text-[0.9rem] italic text-[var(--color-royal)]">
+          Was {memory.supersession.from} — now {memory.supersession.to}. The earlier version is kept as history.
+        </p>
+      )}
+
       {/* Where this came from — plain text, no block */}
       <div className="mt-6">
-        <div className="mb-2 text-[0.8125rem] font-[500] uppercase tracking-[0.1em] text-ink">Where this came from</div>
+        <div className="mb-2 text-[0.9rem] font-[500] text-ink">Where this came from</div>
         <div className="flex items-center gap-2">
           <ProvenanceDot provenance={memory.provenance} />
           <span className="text-[0.95rem] font-[500] text-ink">{provTitle[memory.provenance]}</span>

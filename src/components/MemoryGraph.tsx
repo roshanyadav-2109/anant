@@ -1,7 +1,15 @@
 import { useMemo, useState } from 'react'
-import { memories } from '@/lib/mockData'
-import { MemoryCard } from '@/components/MemoryCard'
+import { memories, sourceGlyph } from '@/lib/mockData'
+import { logoFor } from '@/lib/logos'
 import { Dismiss } from '@/icons'
+import type { SourceKind } from '@/lib/types'
+
+function SourceMark({ kind, size = 15 }: { kind: SourceKind; size?: number }) {
+  const logo = logoFor(kind)
+  if (logo) return <img src={logo} alt="" style={{ width: size, height: size }} className="object-contain" />
+  const Glyph = sourceGlyph[kind]
+  return <Glyph size={size} className="text-ink-muted" />
+}
 
 type NodeType = 'you' | 'person' | 'project'
 
@@ -106,8 +114,8 @@ export function MemoryGraph() {
   }, [active])
 
   return (
-    <div className="flex h-full gap-4">
-      <div className="min-w-0 flex-1">
+    <div className="flex h-full">
+      <div className="min-w-0 flex-1 px-6 py-4">
         <svg viewBox="0 0 660 480" className="fade w-full select-none" style={{ maxHeight: '100%' }}>
           <defs>
             <pattern id="grid-dots" width="22" height="22" patternUnits="userSpaceOnUse">
@@ -237,24 +245,37 @@ export function MemoryGraph() {
         </svg>
       </div>
 
-      {/* Selected node's memories — slides in from the right, reflows the graph */}
+      {/* Selected node — one section block: name + cross + description */}
       {open && (
-        <aside className="slide-in-right w-[360px] shrink-0 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="text-[0.8125rem] font-[500] uppercase tracking-[0.1em] text-ink">
-              {nodeById(active).label}
-            </div>
-            <button aria-label="Close" onClick={() => setOpen(false)} className="focus-ring text-ink-muted transition-colors hover:text-ink">
-              <Dismiss size={18} />
-            </button>
+        <aside className="slide-in-right w-[360px] shrink-0 overflow-y-auto p-4">
+          <div className="overflow-hidden rounded-[var(--radius-lg)] border border-rule bg-paper-raised">
+            <header className="flex items-center justify-between border-b border-rule px-4 py-3">
+              <div className="text-[0.95rem] font-[500] text-ink">{nodeById(active).label}</div>
+              <button aria-label="Close" onClick={() => setOpen(false)} className="focus-ring text-ink-muted transition-colors hover:text-ink">
+                <Dismiss size={18} />
+              </button>
+            </header>
+            {related.length > 0 ? (
+              <div className="divide-y divide-rule/70">
+                {related.map((m) => (
+                  <div key={m.id} className="px-4 py-3.5">
+                    <div className="mb-1.5 flex items-center gap-2 text-[0.72rem] text-ink-muted">
+                      <span className="h-2 w-2 rounded-full" style={{ background: `var(--color-${m.provenance})` }} />
+                      <span>{m.when}</span>
+                    </div>
+                    <p className="text-[0.95rem] leading-snug text-ink">{m.fact}</p>
+                    <div className="mt-2 flex items-center gap-1.5 text-[0.8125rem] text-ink-muted">
+                      <SourceMark kind={m.source.kind} size={15} />
+                      <span>{m.source.label}</span>
+                      <span className="tnum ml-auto">{Math.round(m.confidence * 100)}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="px-4 py-8 text-center text-[0.875rem] text-ink-muted">Nothing recorded against this node yet.</p>
+            )}
           </div>
-          {related.length > 0 ? (
-            related.map((m) => <MemoryCard key={m.id} memory={m} />)
-          ) : (
-            <p className="rounded-[var(--radius-lg)] border border-dashed border-rule px-5 py-8 text-center text-[0.875rem] text-ink-muted">
-              Nothing recorded against this node yet.
-            </p>
-          )}
         </aside>
       )}
     </div>
