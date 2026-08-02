@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { useAuth } from '@/lib/auth'
 import { connectors } from '@/lib/mockData'
 import { logoFor } from '@/lib/logos'
-import { Dismiss, Dots, Plus } from '@/icons'
+import { Dismiss, Dots, Export, Forget, Plus } from '@/icons'
 
 /* ============================================================
    Workspace — an enterprise console.
@@ -175,34 +176,103 @@ function Tile({ value, label, sub }: { value: string; label: string; sub?: strin
   )
 }
 
-export function WorkspacePage() {
+/* ---- Personal — for individuals, solo founders, public figures --------- */
+function PersonalView({ name, email }: { name: string; email: string }) {
   const allowed = connectors.filter((c) => c.status === 'connected' || c.status === 'syncing')
-  const [openActivity, setOpenActivity] = useState<Activity | null>(null)
-
   return (
-    <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="max-w-5xl px-9 py-9 pb-16">
-        {/* Identity */}
-        <header className="flex flex-wrap items-center gap-4">
-          <span className="flex h-11 w-11 items-center justify-center rounded-[8px] bg-royal text-[1.125rem] font-[500] text-white">
-            N
-          </span>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2.5">
-              <h1 className="text-[1.375rem] tracking-[-0.02em] text-ink">Neural AI</h1>
-              <span className="rounded-full bg-[var(--color-royal-soft)] px-2.5 py-0.5 text-[0.75rem] font-[500] text-[var(--color-royal)]">
-                Team plan
-              </span>
-            </div>
-            <div className="text-[0.875rem] text-ink-soft">{members.length} people · neural.ai</div>
+    <>
+      <header className="flex flex-wrap items-center gap-4">
+        <Avatar name={name} />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-[1.375rem] tracking-[-0.02em] text-ink">{name}</h1>
+            <span className="rounded-full bg-[var(--color-royal-soft)] px-2.5 py-0.5 text-[0.75rem] font-[500] text-[var(--color-royal)]">
+              Pro plan
+            </span>
           </div>
-          <button className="focus-ring ml-auto inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-royal px-3.5 py-2 text-[0.875rem] font-[500] text-white transition-opacity hover:opacity-90">
-            <Plus size={16} />
-            Invite people
-          </button>
-        </header>
+          <div className="text-[0.875rem] text-ink-soft">{email} · just you</div>
+        </div>
+        <button className="focus-ring ml-auto rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] text-ink-soft ring-1 ring-rule transition-colors hover:text-ink">
+          Manage plan
+        </button>
+      </header>
 
-        {/* Overview */}
+      <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Tile value="Pro" label="Your plan" sub="renews Jan 2027" />
+        <Tile value="342" label="Your memories" sub="growing daily" />
+        <Tile value={String(allowed.length)} label="Connected apps" sub="all yours" />
+        <Tile value="Jan 2026" label="Member since" />
+      </div>
+
+      {/* Create a team — the upgrade path for solo → startup */}
+      <section className="mt-9 flex flex-wrap items-center gap-4 rounded-[3px] bg-paper-raised p-5 shadow-[0_1px_2px_rgba(12,14,20,0.05)] ring-1 ring-rule/70">
+        <span className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-[var(--color-royal-soft)] text-[var(--color-royal)]">
+          <Plus size={20} />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="text-[0.95rem] font-[500] text-ink">Working with others?</h2>
+          <p className="text-[0.8125rem] text-ink-soft">
+            Create a team to share memory, set roles, and manage who can connect what. Your private
+            memory always stays yours.
+          </p>
+        </div>
+        <button className="focus-ring inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-royal px-3.5 py-2 text-[0.875rem] font-[500] text-white transition-opacity hover:opacity-90">
+          <Plus size={16} />
+          Create a team
+        </button>
+      </section>
+
+      {/* Your data */}
+      <section className="mt-9">
+        <div className="mb-3 flex items-baseline gap-2">
+          <h2 className="text-[0.95rem] font-[500] text-ink">Your data</h2>
+        </div>
+        <div className="rounded-[3px] bg-paper-raised p-5 shadow-[0_1px_2px_rgba(12,14,20,0.05)] ring-1 ring-rule/70">
+          <div className="flex flex-wrap items-center gap-2">
+            <button className="focus-ring inline-flex items-center gap-2 rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] text-ink-soft ring-1 ring-rule transition-colors hover:text-ink">
+              <Export size={16} />
+              Export everything
+            </button>
+            <button className="focus-ring inline-flex items-center gap-2 rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] font-[500] text-[var(--color-alert)] transition-colors hover:bg-[color-mix(in_srgb,var(--color-alert)_10%,transparent)]">
+              <Forget size={16} />
+              Delete everything
+            </button>
+          </div>
+          <p className="mt-3 text-[0.8125rem] text-ink-soft">
+            Your memory is yours — take a full copy or clear it whenever you want.
+          </p>
+        </div>
+      </section>
+    </>
+  )
+}
+
+/* ---- Team — for startups and enterprises ------------------------------- */
+function TeamView({ onOpenActivity }: { onOpenActivity: (a: Activity) => void }) {
+  const allowed = connectors.filter((c) => c.status === 'connected' || c.status === 'syncing')
+  return (
+    <>
+      {/* Identity */}
+      <header className="flex flex-wrap items-center gap-4">
+        <span className="flex h-11 w-11 items-center justify-center rounded-[8px] bg-royal text-[1.125rem] font-[500] text-white">
+          N
+        </span>
+        <div className="min-w-0">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-[1.375rem] tracking-[-0.02em] text-ink">Neural AI</h1>
+            <span className="rounded-full bg-[var(--color-royal-soft)] px-2.5 py-0.5 text-[0.75rem] font-[500] text-[var(--color-royal)]">
+              Team plan
+            </span>
+          </div>
+          <div className="text-[0.875rem] text-ink-soft">{members.length} people · neural.ai</div>
+        </div>
+        <button className="focus-ring ml-auto inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-royal px-3.5 py-2 text-[0.875rem] font-[500] text-white transition-opacity hover:opacity-90">
+          <Plus size={16} />
+          Invite people
+        </button>
+      </header>
+
+      {/* Overview */}
         <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
           <Tile value={String(members.length)} label="People" sub="1 admin" />
           <Tile value="4 / 10" label="Seats used" sub="6 available" />
@@ -276,7 +346,7 @@ export function WorkspacePage() {
               {activity.map((a, i) => (
                 <button
                   key={i}
-                  onClick={() => setOpenActivity(a)}
+                  onClick={() => onOpenActivity(a)}
                   className="focus-ring -mx-2 flex items-baseline gap-2 rounded-[var(--radius)] px-2 py-1.5 text-left text-[0.875rem] transition-colors hover:bg-paper-sunk/60"
                 >
                   <span className="font-[500] text-ink">{a.who}</span>
@@ -310,6 +380,44 @@ export function WorkspacePage() {
             </span>
           </div>
         </section>
+    </>
+  )
+}
+
+export function WorkspacePage() {
+  const { user } = useAuth()
+  const [mode, setMode] = useState<'personal' | 'team'>('team')
+  const [openActivity, setOpenActivity] = useState<Activity | null>(null)
+
+  const modes: { key: 'personal' | 'team'; label: string }[] = [
+    { key: 'personal', label: 'Personal' },
+    { key: 'team', label: 'Team' },
+  ]
+
+  return (
+    <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="max-w-5xl px-9 py-9 pb-16">
+        {/* Account switch — a personal space and a team space, like Google */}
+        <div className="mb-8 inline-flex gap-1 rounded-full bg-paper-sunk p-1">
+          {modes.map((m) => (
+            <button
+              key={m.key}
+              onClick={() => setMode(m.key)}
+              className={
+                'focus-ring rounded-full px-4 py-1.5 text-[0.8125rem] transition-colors ' +
+                (mode === m.key ? 'bg-paper-raised font-[500] text-ink shadow-sm' : 'text-ink-soft hover:text-ink')
+              }
+            >
+              {m.label}
+            </button>
+          ))}
+        </div>
+
+        {mode === 'personal' ? (
+          <PersonalView name={user?.name ?? 'You'} email={user?.email ?? 'you@local'} />
+        ) : (
+          <TeamView onOpenActivity={setOpenActivity} />
+        )}
       </div>
 
       {openActivity && <ActivityModal item={openActivity} onClose={() => setOpenActivity(null)} />}
