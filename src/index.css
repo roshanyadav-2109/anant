@@ -8,22 +8,22 @@
    ============================================================ */
 
 @theme {
-  /* ===== Polish Direction 1 · Crisp — clean near-white, cool-slate ink ===== */
-  /* Surfaces — crisp near-white page, pure white panels */
-  --color-paper: #fbfcfe;
+  /* ===== Polish Direction 2 · Warm — editorial off-white, warm greys ===== */
+  /* Surfaces — warm off-white page, white panels */
+  --color-paper: #faf9f6;
   --color-paper-raised: #ffffff;
-  --color-paper-sunk: #f0f2f7;
+  --color-paper-sunk: #f2f0ea;
   --color-veil: #ffffff;
 
-  /* Ink — cool-slate greys with a faint indigo bias (chosen, not default) */
-  --color-ink: #10121a;
-  --color-ink-soft: #383c48;
-  --color-ink-muted: #5f6473;
-  --color-ink-faint: #9ea3b2;
+  /* Ink — warm greys (a considered warm neutral, not pure grey) */
+  --color-ink: #17140d;
+  --color-ink-soft: #3d3931;
+  --color-ink-muted: #6b6659;
+  --color-ink-faint: #a8a396;
 
   /* Hairlines */
-  --color-rule: #e6e8f1;
-  --color-rule-soft: #eef0f6;
+  --color-rule: #ebe7df;
+  --color-rule-soft: #f3f0ea;
 
   /* Accent — indigo, gradient CTA */
   --color-evergreen: #4f46e5;
