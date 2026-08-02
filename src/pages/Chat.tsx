@@ -364,7 +364,7 @@ function Message({
           {me.slice(0, 1).toUpperCase()}
         </span>
       ) : (
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-royal text-white">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-white text-ink ring-1 ring-rule">
           <Mark size={22} />
         </span>
       )}
