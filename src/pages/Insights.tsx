@@ -1,14 +1,13 @@
 import { useState } from 'react'
-import { insights, provenanceLabel } from '@/lib/mockData'
+import { insights } from '@/lib/mockData'
 import { SourceChip } from '@/components/Provenance'
 import { Dismiss } from '@/icons'
 import type { Insight } from '@/lib/types'
 
 /* ============================================================
-   Insights — Direction 04 · "The Ledger"
-   A chronological spine — like watching the engine think. Each
-   entry, newest first, records the link Anant made and lets you
-   keep or dismiss it inline. Quiet, dense, always-on.
+   Insights — "The Ledger"
+   A chronological spine — newest first, each entry the link Anant
+   made, kept short. Keep or dismiss inline.
    ============================================================ */
 
 const verb: Record<Insight['kind'], string> = {
@@ -31,35 +30,26 @@ function Entry({ ins, last }: { ins: Insight; last: boolean }) {
     <div className={'relative pl-8 ' + (last ? '' : 'pb-7')}>
       {/* spine node */}
       <span
-        className="absolute left-[1px] top-1 h-[13px] w-[13px] rounded-full border-2 bg-paper-raised"
+        className="absolute left-[1px] top-[3px] h-[13px] w-[13px] rounded-full border-2 bg-paper-raised"
         style={{ borderColor: color }}
       />
 
-      <div className={resolved ? 'opacity-55 transition-opacity' : 'transition-opacity'}>
+      <div className={resolved ? 'opacity-50 transition-opacity' : 'transition-opacity'}>
         <div className="flex items-center gap-2.5 text-[0.75rem]">
-          <span className="text-ink-faint">{ins.when}</span>
-          <span className="inline-flex items-center gap-1.5 font-[500]" style={{ color }}>
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: color }} />
+          <span className="font-[500]" style={{ color }}>
             Anant {verb[ins.kind]}
           </span>
-          {ins.provenanceNote && (
-            <span className="rounded-full bg-paper-sunk px-2 py-0.5 text-[0.6875rem] text-ink-muted">
-              {ins.provenanceNote}
-            </span>
-          )}
+          <span className="text-ink-faint">{ins.when}</span>
         </div>
 
-        <p className="mt-2 max-w-xl text-[0.9375rem] leading-relaxed text-ink">{ins.body}</p>
+        <p className="mt-1.5 max-w-xl text-[1rem] leading-snug text-ink">{ins.title}</p>
 
         <div className="mt-3 flex flex-wrap items-center gap-3">
           {ins.source && <SourceChip source={ins.source} />}
-          <span className="text-[0.75rem] text-ink-faint">
-            {provenanceLabel[ins.provenance]} · {Math.round(ins.confidence * 100)}% sure
-          </span>
 
           <span className="ml-auto flex items-center gap-3">
             {resolved ? (
-              <span className="text-[0.8125rem] text-ink-muted">
+              <span className="text-[0.8125rem]" style={{ color }}>
                 {resolved === 'kept' ? 'Kept.' : 'Dismissed.'}{' '}
                 <button className="font-[500] text-[var(--color-royal)] hover:underline" onClick={() => setResolved(null)}>
                   Undo
@@ -74,7 +64,7 @@ function Entry({ ins, last }: { ins: Insight; last: boolean }) {
                   {keepLabel[ins.kind]}
                 </button>
                 <button
-                  className="inline-flex items-center gap-1 text-[0.8125rem] text-ink-muted transition-colors hover:text-ink"
+                  className="inline-flex items-center gap-1 text-[0.8125rem] text-ink-soft transition-colors hover:text-ink"
                   onClick={() => setResolved('dismissed')}
                 >
                   <Dismiss size={14} />
@@ -95,22 +85,16 @@ export function InsightsPage() {
       <div className="mx-auto max-w-2xl px-8 py-10">
         <header className="mb-8">
           <h1 className="text-[1.375rem] tracking-[-0.02em] text-ink">What Anant has been noticing</h1>
-          <p className="mt-1.5 text-[0.875rem] text-ink-faint">
-            Newest first · {insights.length} need a decision
-          </p>
+          <p className="mt-1.5 text-[0.875rem] text-ink-faint">Newest first</p>
         </header>
 
         {/* the thread */}
         <div className="relative">
-          <div className="absolute bottom-2 left-[7px] top-2 w-px bg-rule" />
+          <div className="absolute bottom-2 left-[7px] top-2 w-px bg-royal-line/70" />
           {insights.map((ins, i) => (
             <Entry key={ins.id} ins={ins} last={i === insights.length - 1} />
           ))}
         </div>
-
-        <p className="mt-4 pl-8 text-[0.8125rem] text-ink-faint">
-          Anant keeps reviewing your memory as new things arrive — new noticings appear at the top.
-        </p>
       </div>
     </div>
   )
