@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { TopBar } from '@/components/AppShell'
+import { useAuth } from '@/lib/auth'
 import { ProvenanceDot } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
 import { ArrowRight, Attach, ChevronDown, Dismiss, Mark, Plus, Send, Stop } from '@/icons'
@@ -21,13 +22,18 @@ export function ChatPage() {
   const [sourceList, setSourceList] = useState<Citation[]>([])
   const [openSrc, setOpenSrc] = useState<Set<number>>(new Set())
   const threadRef = useRef<HTMLDivElement>(null)
-  const composerRef = useRef<HTMLTextAreaElement>(null)
+  const { user } = useAuth()
+  const me = user?.name ?? 'You'
   const active = convos.find((c) => c.id === activeId)!
 
   function askFromSource(c: Citation) {
     setSourcesOpen(false)
-    setDraft(`Tell me more about “${c.quote}” `)
-    requestAnimationFrame(() => composerRef.current?.focus())
+    const related = oliverCitations.filter((x) => x.quote !== c.quote).slice(0, 3)
+    stream(
+      `Tell me more about “${c.quote}”`,
+      `${describeSource(c)} Here are the closest related memories.`,
+      [c, ...related],
+    )
   }
 
   function openSources(list: Citation[]) {
@@ -52,23 +58,20 @@ export function ChatPage() {
     setConvos((cs) => cs.map((c) => (c.id === activeId ? fn(c) : c)))
   }
 
-  function send() {
-    const text = draft.trim()
-    if (!text || streaming) return
-    const userMsg: ChatMessage = { id: `u_${Date.now()}`, role: 'user', text }
+  /** Append a user turn and stream an Anant reply with its citations. */
+  function stream(question: string, answerText: string, citations: Citation[]) {
+    if (streaming) return
+    const userMsg: ChatMessage = { id: `u_${Date.now()}`, role: 'user', text: question }
     patchActive((c) => ({ ...c, messages: [...c.messages, userMsg] }))
-    setDraft('')
 
-    // Simulated token-by-token streaming.
     const answerId = `a_${Date.now()}`
-    const answer = CANNED.text
     setStreaming(true)
     patchActive((c) => ({
       ...c,
       messages: [...c.messages, { id: answerId, role: 'anant', text: '', streaming: true }],
     }))
 
-    const words = answer.split(' ')
+    const words = answerText.split(' ')
     let i = 0
     const timer = setInterval(() => {
       i++
@@ -78,7 +81,7 @@ export function ChatPage() {
         ...c,
         messages: c.messages.map((m) =>
           m.id === answerId
-            ? { ...m, text: partial, streaming: !done, citations: done ? CANNED.citations : undefined }
+            ? { ...m, text: partial, streaming: !done, citations: done ? citations : undefined }
             : m,
         ),
       }))
@@ -87,6 +90,13 @@ export function ChatPage() {
         setStreaming(false)
       }
     }, 55)
+  }
+
+  function send() {
+    const text = draft.trim()
+    if (!text || streaming) return
+    setDraft('')
+    stream(text, CANNED.text, CANNED.citations)
   }
 
   function newConversation() {
@@ -146,7 +156,7 @@ export function ChatPage() {
               <div className="mx-auto max-w-2xl space-y-6">
                 <div className="eyebrow text-center">Conversation</div>
                 {active.messages.map((m) => (
-                  <Message key={m.id} message={m} onSeeSources={openSources} />
+                  <Message key={m.id} message={m} me={me} onSeeSources={openSources} />
                 ))}
               </div>
             )}
@@ -164,7 +174,6 @@ export function ChatPage() {
                   <Attach size={18} />
                 </IconButton>
                 <textarea
-                  ref={composerRef}
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={(e) => {
@@ -325,32 +334,29 @@ function DetailRow({ label, value }: { label: string; value: string }) {
 
 function Message({
   message,
+  me,
   onSeeSources,
 }: {
   message: ChatMessage
+  me: string // current user's name (own turns are labelled "You")
   onSeeSources: (list: Citation[]) => void
 }) {
-  if (message.role === 'user') {
-    return (
-      <div className="flex justify-end">
-        <div className="max-w-[80%] rounded-[var(--radius-lg)] rounded-br-sm border border-rule bg-paper-raised px-4 py-2.5 text-[0.9375rem] text-ink">
-          {message.text}
-        </div>
-      </div>
-    )
-  }
+  const isUser = message.role === 'user'
   return (
     <div className="flex gap-3">
-      <span className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-[6px] bg-royal text-white">
-        <Mark size={26} />
-      </span>
-      <div className="min-w-0">
+      {isUser ? (
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-ink text-[0.85rem] font-[600] text-white">
+          {me.slice(0, 1).toUpperCase()}
+        </span>
+      ) : (
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-royal text-white">
+          <Mark size={22} />
+        </span>
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="mb-1 text-[0.85rem] font-[600] text-ink">{isUser ? 'You' : 'Anant'}</div>
         <p
-          className={cx(
-            'font-display text-[1.0625rem] leading-relaxed text-ink',
-            message.streaming && 'stream-caret',
-          )}
-          style={{ fontVariationSettings: "'SOFT' 2, 'opsz' 40" }}
+          className={cx('text-[1.0625rem] leading-relaxed text-ink', message.streaming && 'stream-caret')}
         >
           {message.text}
         </p>
