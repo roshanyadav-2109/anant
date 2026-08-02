@@ -144,7 +144,7 @@ export function ChatPage() {
             {convGroups.map((g) => (
               <div key={g.label} className="mb-1.5">
                 {g.label !== 'Today' && (
-                  <div className="px-2.5 pb-1 pt-2.5 text-[0.72rem] font-[600] text-ink-faint">{g.label}</div>
+                  <div className="px-2.5 pb-1 pt-2.5 text-[0.72rem] font-[500] text-ink-faint">{g.label}</div>
                 )}
                 {g.items.map((c) => {
                   const isActive = c.id === activeId
@@ -160,7 +160,7 @@ export function ChatPage() {
                       {isActive && (
                         <span className="absolute left-0 top-1/2 h-5 w-[2.5px] -translate-y-1/2 rounded-r-full bg-[var(--color-royal)]" />
                       )}
-                      <span className={cx('flex-1 truncate text-[0.875rem] text-ink', isActive ? 'font-[600]' : 'font-[500]')}>
+                      <span className={cx('flex-1 truncate text-[0.875rem] text-ink', isActive ? 'font-[500]' : 'font-[500]')}>
                         {c.title}
                       </span>
                       <span className="shrink-0 text-[0.6875rem] text-ink-faint">{relativeShort(c.at)}</span>
@@ -355,7 +355,7 @@ function Message({
   return (
     <div className="flex gap-3">
       {isUser ? (
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-ink text-[0.85rem] font-[600] text-white">
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-ink text-[0.85rem] font-[500] text-white">
           {me.slice(0, 1).toUpperCase()}
         </span>
       ) : (
@@ -365,9 +365,9 @@ function Message({
       )}
       <div className="min-w-0 flex-1">
         <div className="mb-1 flex items-center gap-2">
-          <span className="text-[0.875rem] font-[600] text-ink">{isUser ? 'You' : 'Anant'}</span>
+          <span className="text-[0.875rem] font-[500] text-ink">{isUser ? 'You' : 'Anant'}</span>
           {!isUser && (
-            <span className="rounded-[3px] bg-royal px-1.5 py-[1px] text-[0.6rem] font-[600] uppercase tracking-[0.08em] text-white">
+            <span className="rounded-[3px] bg-royal px-1.5 py-[1px] text-[0.6rem] font-[500] uppercase tracking-[0.08em] text-white">
               Agent
             </span>
           )}

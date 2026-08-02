@@ -74,7 +74,7 @@ function MemoryDetail({
       {memory.supersession && (
         <div className="mb-4 flex items-center gap-2 rounded-[var(--radius)] border border-[color-mix(in_srgb,var(--color-supersede)_28%,transparent)] bg-[color-mix(in_srgb,var(--color-supersede)_9%,transparent)] px-3 py-1.5 text-[0.75rem] text-[var(--color-supersede)]">
           <Sync size={13} />
-          <span>was <span className="line-through opacity-80">{memory.supersession.from}</span> → now <span className="font-[600]">{memory.supersession.to}</span></span>
+          <span>was <span className="line-through opacity-80">{memory.supersession.from}</span> → now <span className="font-[500]">{memory.supersession.to}</span></span>
         </div>
       )}
 
@@ -106,7 +106,7 @@ function MemoryDetail({
         <div className="mb-2 text-[0.8125rem] font-[500] uppercase tracking-[0.1em] text-ink">Where this came from</div>
         <div className="flex items-center gap-2">
           <ProvenanceDot provenance={memory.provenance} />
-          <span className="text-[0.95rem] font-[600] text-ink">{provTitle[memory.provenance]}</span>
+          <span className="text-[0.95rem] font-[500] text-ink">{provTitle[memory.provenance]}</span>
         </div>
         <p className="mt-1 text-[0.875rem] leading-relaxed text-ink">{provNote[memory.provenance]}</p>
         <div className="mt-2 inline-flex items-center gap-1.5 text-[0.875rem] text-ink">
@@ -234,7 +234,7 @@ export function MemoryPage() {
         </button>
       )}
       <div>
-        <div className="mb-1 px-2.5 text-[0.9375rem] font-[600] text-ink">Type</div>
+        <div className="mb-1 px-2.5 text-[0.9375rem] font-[500] text-ink">Type</div>
         <div className="space-y-0.5">
           {provOrder.map((p) => (
             <FacetItem key={p} active={prov === p} label={provShort[p]} dot={p} onClick={() => setProv(prov === p ? 'all' : p)} />
@@ -242,7 +242,7 @@ export function MemoryPage() {
         </div>
       </div>
       <div className="mt-4">
-        <div className="mb-1 px-2.5 text-[0.9375rem] font-[600] text-ink">Sources</div>
+        <div className="mb-1 px-2.5 text-[0.9375rem] font-[500] text-ink">Sources</div>
         <div className="space-y-0.5">
           {sources.map((k) => (
             <FacetItem key={k} active={src === k} label={k[0].toUpperCase() + k.slice(1)} kind={k} onClick={() => setSrc(src === k ? 'all' : k)} />
@@ -250,7 +250,7 @@ export function MemoryPage() {
         </div>
       </div>
       <div className="mt-4">
-        <div className="mb-1 px-2.5 text-[0.9375rem] font-[600] text-ink">People</div>
+        <div className="mb-1 px-2.5 text-[0.9375rem] font-[500] text-ink">People</div>
         <div className="space-y-0.5">
           {subjects.map((s) => (
             <FacetItem key={s} active={subject === s} label={s} onClick={() => setSubject(subject === s ? 'all' : s)} />
@@ -286,17 +286,17 @@ export function MemoryPage() {
     <div className="flex h-full min-h-0">
       {rail}
 
-      {view === 'graph' ? (
-        <div className="flex min-h-0 flex-1 flex-col bg-paper-raised">
-          {middleHeader}
+      {/* Content region — header spans the middle + right columns */}
+      <div className="flex min-h-0 flex-1 flex-col bg-paper-raised">
+        {middleHeader}
+
+        {view === 'graph' ? (
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5"><MemoryGraph /></div>
-        </div>
-      ) : (
-        <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_400px]">
-          {/* Middle column: search + toggle, then the list */}
-          <div className="flex min-h-0 flex-col border-r border-rule bg-paper-raised">
-            {middleHeader}
-            <div className="min-h-0 flex-1 overflow-y-auto">
+        ) : (
+          <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_400px]">
+            {/* Middle column: the list */}
+            <div className="flex min-h-0 flex-col border-r border-rule">
+              <div className="min-h-0 flex-1 overflow-y-auto">
               {filtered.length === 0 ? (
                 <p className="px-5 py-12 text-center text-[0.875rem] text-ink-faint">No memories match these filters.</p>
               ) : (
@@ -348,12 +348,13 @@ export function MemoryPage() {
             )}
           </div>
         </div>
-      )}
+        )}
+      </div>
 
       {undo && (
         <div className="rise fixed bottom-6 left-1/2 z-40 flex -translate-x-1/2 items-center gap-3 rounded-[var(--radius)] border border-rule bg-ink px-4 py-2.5 text-[0.8125rem] text-white shadow-[var(--shadow-pop)]">
           <span>{undo.label}</span>
-          <button onClick={() => { setItems(undo.items); setUndo(null) }} className="font-[600] text-white underline underline-offset-2">Undo</button>
+          <button onClick={() => { setItems(undo.items); setUndo(null) }} className="font-[500] text-white underline underline-offset-2">Undo</button>
           <button aria-label="Dismiss" onClick={() => setUndo(null)} className="text-white/70 hover:text-white"><Dismiss size={15} /></button>
         </div>
       )}

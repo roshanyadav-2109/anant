@@ -106,30 +106,9 @@ export function MemoryGraph() {
   }, [active])
 
   return (
-    <div className="flex gap-4 pb-16">
-      <div className="min-w-0 flex-1 overflow-hidden rounded-[var(--radius-lg)] border border-rule bg-paper-raised">
-        {/* Legend */}
-        <div className="flex items-center gap-4 border-b border-rule px-4 py-2.5 text-[0.72rem] text-ink-muted">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-royal" /> You
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full border border-ink-faint bg-veil" /> Person
-          </span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="h-2.5 w-3.5 rounded-[4px] border border-ink-faint bg-veil" /> Project
-          </span>
-          <span className="ml-auto inline-flex items-center gap-3">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="inline-block h-px w-5 bg-ink-soft" /> active
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <span className="inline-block h-px w-5 border-t border-dashed border-ink-faint" /> superseded
-            </span>
-          </span>
-        </div>
-
-        <svg viewBox="0 0 660 480" className="fade w-full select-none" style={{ maxHeight: 500 }}>
+    <div className="flex h-full gap-4">
+      <div className="min-w-0 flex-1">
+        <svg viewBox="0 0 660 480" className="fade w-full select-none" style={{ maxHeight: '100%' }}>
           <defs>
             <pattern id="grid-dots" width="22" height="22" patternUnits="userSpaceOnUse">
               <circle cx="1" cy="1" r="1" fill="var(--color-rule)" />
@@ -256,10 +235,6 @@ export function MemoryGraph() {
             )
           })}
         </svg>
-
-        <div className="border-t border-rule px-4 py-2 text-[0.72rem] text-ink-faint">
-          Hover to trace a thread · click a node to read its memories
-        </div>
       </div>
 
       {/* Selected node's memories — slides in from the right, reflows the graph */}
