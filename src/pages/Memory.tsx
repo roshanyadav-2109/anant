@@ -329,13 +329,14 @@ export function MemoryPage() {
               {filtered.length === 0 ? (
                 <p className="px-5 py-12 text-center text-[0.875rem] text-ink-faint">No memories match these filters.</p>
               ) : (
-                filtered.map((m) => {
+                filtered.map((m, i) => {
                   const active = m.id === selectedId
                   return (
                     <button
                       key={m.id}
                       onClick={() => setSelectedId(m.id)}
-                      className={cx('relative flex w-full items-start gap-2.5 border-b border-rule/60 px-4 py-3 text-left transition-colors',
+                      style={{ animationDelay: `${Math.min(i, 12) * 28}ms` }}
+                      className={cx('rise relative flex w-full items-start gap-2.5 border-b border-rule/60 px-4 py-3 text-left transition-colors',
                         active ? 'bg-evergreen-soft' : 'hover:bg-paper-sunk')}
                     >
                       {active && <span className="absolute left-0 top-0 h-full w-[2.5px] bg-[var(--color-royal)]" />}
