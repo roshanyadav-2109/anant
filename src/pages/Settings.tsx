@@ -18,7 +18,7 @@ function Section({
   children: React.ReactNode
 }) {
   return (
-    <section className="grid grid-cols-1 gap-x-10 gap-y-4 border-t border-rule pt-8 md:grid-cols-[220px_1fr]">
+    <section className="grid grid-cols-1 gap-x-10 gap-y-4 md:grid-cols-[220px_1fr]">
       <div>
         <h2 className="text-[0.95rem] font-[500] text-ink">{title}</h2>
         <p className="mt-1 text-[0.8125rem] leading-relaxed text-ink-soft">{desc}</p>
@@ -67,9 +67,7 @@ export function SettingsPage() {
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="max-w-4xl px-9 py-9 pb-16">
-        <h1 className="mb-8 text-[1.375rem] tracking-[-0.02em] text-ink">Settings</h1>
-
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-10">
           {/* Account */}
           <Section title="Account" desc="Your profile in this workspace.">
             <div className="mb-4 flex items-center gap-3 border-b border-rule/70 pb-4">
