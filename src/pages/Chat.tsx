@@ -354,7 +354,7 @@ function Message({
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <div className="mb-1 text-[0.75rem] font-[600] text-ink">{isUser ? 'You' : 'Anant'}</div>
+        <div className="mb-1 text-[0.875rem] font-[600] text-ink">{isUser ? 'You' : 'Anant'}</div>
         <p
           className={cx('text-[1.0625rem] leading-relaxed text-ink', message.streaming && 'stream-caret')}
         >
