@@ -1,5 +1,5 @@
 import { ConnectorCard } from '@/components/ConnectorCard'
-import { connectors } from '@/lib/mockData'
+import { useData } from '@/lib/dataStore'
 import { Attach, Connectors as LinkGlyph, Edit, Plus, type IconProps } from '@/icons'
 import type { ComponentType } from 'react'
 
@@ -42,6 +42,7 @@ function cxTile(accent?: boolean) {
 }
 
 export function ConnectorsPage() {
+  const { connectors } = useData()
   const connected = connectors.filter((c) => c.status === 'connected' || c.status === 'syncing')
   const available = connectors.filter((c) => c.status === 'available' || c.status === 'error')
 

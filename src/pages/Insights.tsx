@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { insights, sourceGlyph } from '@/lib/mockData'
+import { sourceGlyph } from '@/lib/mockData'
+import { useData } from '@/lib/dataStore'
 import { logoFor } from '@/lib/logos'
 import { Dismiss } from '@/icons'
 import type { Insight, Provenance } from '@/lib/types'
@@ -141,6 +142,7 @@ function Entry({ ins, last }: { ins: Insight; last: boolean }) {
 }
 
 export function InsightsPage() {
+  const { insights, loading } = useData()
   // counts for the rail
   const byProv = insights.reduce<Record<string, number>>((acc, i) => {
     acc[i.provenance] = (acc[i.provenance] ?? 0) + 1
@@ -152,6 +154,8 @@ export function InsightsPage() {
     .map((i) => i.source)
     .filter((s): s is NonNullable<typeof s> => Boolean(s))
     .filter((s) => (seenKind.has(s.kind) ? false : (seenKind.add(s.kind), true)))
+
+  if (loading) return <div className="flex-1 px-9 py-11 text-[0.9375rem] text-ink-faint">Loading…</div>
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">

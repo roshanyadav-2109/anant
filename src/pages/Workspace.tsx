@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '@/lib/auth'
-import { connectors } from '@/lib/mockData'
+import { useData } from '@/lib/dataStore'
 import { logoFor } from '@/lib/logos'
 import { Dismiss, Dots, Export, Forget, Plus } from '@/icons'
 
@@ -10,13 +10,6 @@ import { Dismiss, Dots, Export, Forget, Plus } from '@/icons'
    Workspace identity + plan, overview tiles, a people table, and
    friendly access / activity panels. Left-aligned, plain language.
    ============================================================ */
-
-const members = [
-  { name: 'Tejash Meh', email: 'tejash@neural.ai', role: 'Admin' as const, access: 'Private + shared', you: true },
-  { name: 'Grace Okafor', email: 'grace@neural.ai', role: 'Member' as const, access: 'Private + shared' },
-  { name: 'Oliver Reed', email: 'oliver@neural.ai', role: 'Member' as const, access: 'Private + shared' },
-  { name: 'Dara Singh', email: 'dara@neural.ai', role: 'Viewer' as const, access: 'Shared only' },
-]
 
 interface Activity {
   who: string
@@ -178,6 +171,7 @@ function Tile({ value, label, sub }: { value: string; label: string; sub?: strin
 
 /* ---- Personal — for individuals, solo founders, public figures --------- */
 function PersonalView({ name, email }: { name: string; email: string }) {
+  const { connectors } = useData()
   const allowed = connectors.filter((c) => c.status === 'connected' || c.status === 'syncing')
   return (
     <>
@@ -249,6 +243,7 @@ function PersonalView({ name, email }: { name: string; email: string }) {
 
 /* ---- Team — for startups and enterprises ------------------------------- */
 function TeamView({ onOpenActivity }: { onOpenActivity: (a: Activity) => void }) {
+  const { connectors, members } = useData()
   const allowed = connectors.filter((c) => c.status === 'connected' || c.status === 'syncing')
   return (
     <>

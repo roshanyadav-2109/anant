@@ -1,15 +1,38 @@
 import { supabase } from '@/lib/supabase'
-import type { Memory, Provenance, SourceKind } from '@/lib/types'
+import { CoGeneric } from '@/icons'
+import type {
+  ChatMessage,
+  Citation,
+  Connector,
+  ConnectorStatus,
+  Conversation,
+  Insight,
+  Memory,
+  Provenance,
+  SourceKind,
+} from '@/lib/types'
 
 /**
  * Typed data access over the Supabase schema (see supabase/schema.sql).
  * Every query is workspace-scoped; Row Level Security enforces tenant
- * isolation server-side, so these helpers never need to filter by user.
- *
- * The screens currently render seeded demo content (per the spec, the
- * Memory / Insights read surface is served by the local engine). These
- * helpers are the ready path to swap that for live rows.
+ * isolation server-side, so these helpers never filter by user. Rows are
+ * mapped into the app's domain types here, at the boundary.
  */
+
+/* ---- workspace ---------------------------------------------------------- */
+
+export async function getActiveWorkspaceId(): Promise<string | null> {
+  if (!supabase) return null
+  const { data } = await supabase
+    .from('workspace_members')
+    .select('workspace_id, role')
+    .order('role', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  return data?.workspace_id ?? null
+}
+
+/* ---- memories ----------------------------------------------------------- */
 
 interface MemoryRow {
   id: string
@@ -26,6 +49,7 @@ interface MemoryRow {
   confidence: number
   superseded_from: string | null
   superseded_to: string | null
+  when_label: string | null
 }
 
 function rowToMemory(r: MemoryRow): Memory {
@@ -43,7 +67,7 @@ function rowToMemory(r: MemoryRow): Memory {
       speaker: r.source_speaker ?? undefined,
       when: r.source_when ?? undefined,
     },
-    when: r.source_when ?? '',
+    when: r.when_label ?? r.source_when ?? '',
     confidence: r.confidence,
     supersession:
       r.superseded_from && r.superseded_to
@@ -52,24 +76,12 @@ function rowToMemory(r: MemoryRow): Memory {
   }
 }
 
-/** The active workspace for the signed-in user (their admin workspace first). */
-export async function getActiveWorkspaceId(): Promise<string | null> {
-  if (!supabase) return null
-  const { data } = await supabase
-    .from('workspace_members')
-    .select('workspace_id, role')
-    .order('role', { ascending: true })
-    .limit(1)
-    .maybeSingle()
-  return data?.workspace_id ?? null
-}
-
 export async function fetchMemories(workspaceId: string): Promise<Memory[]> {
   if (!supabase) return []
   const { data, error } = await supabase
     .from('memories')
     .select(
-      'id, fact, detail, subject, category, provenance, provenance_note, source_kind, source_label, source_speaker, source_when, confidence, superseded_from, superseded_to',
+      'id, fact, detail, subject, category, provenance, provenance_note, source_kind, source_label, source_speaker, source_when, confidence, superseded_from, superseded_to, when_label',
     )
     .eq('workspace_id', workspaceId)
     .eq('forgotten', false)
@@ -84,6 +96,31 @@ export async function forgetMemory(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function createMemory(workspaceId: string): Promise<Memory | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('memories')
+    .insert({
+      workspace_id: workspaceId,
+      scope: 'shared',
+      fact: '',
+      subject: 'You',
+      category: 'Note',
+      provenance: 'stated',
+      source_kind: 'chat',
+      source_label: 'Chat',
+      source_speaker: 'You',
+      confidence: 0.9,
+      when_label: 'just now',
+    })
+    .select(
+      'id, fact, detail, subject, category, provenance, provenance_note, source_kind, source_label, source_speaker, source_when, confidence, superseded_from, superseded_to, when_label',
+    )
+    .single()
+  if (error) throw error
+  return rowToMemory(data as MemoryRow)
+}
+
 export async function correctMemory(id: string, fact: string): Promise<void> {
   if (!supabase) return
   const { error } = await supabase
@@ -91,4 +128,190 @@ export async function correctMemory(id: string, fact: string): Promise<void> {
     .update({ fact, updated_at: new Date().toISOString() })
     .eq('id', id)
   if (error) throw error
+}
+
+/* ---- insights ----------------------------------------------------------- */
+
+interface InsightRow {
+  id: string
+  kind: Insight['kind']
+  title: string
+  body: string
+  provenance: Provenance
+  provenance_note: string | null
+  source_kind: SourceKind | null
+  source_label: string | null
+  confidence: number
+  when_label: string | null
+  at_label: string | null
+}
+
+export async function fetchInsights(workspaceId: string): Promise<Insight[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('insights')
+    .select('id, kind, title, body, provenance, provenance_note, source_kind, source_label, confidence, when_label, at_label')
+    .eq('workspace_id', workspaceId)
+    .eq('status', 'open')
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  return (data as InsightRow[]).map((r) => ({
+    id: r.id,
+    kind: r.kind,
+    title: r.title,
+    body: r.body,
+    provenance: r.provenance,
+    provenanceNote: r.provenance_note ?? undefined,
+    source: r.source_kind && r.source_label ? { kind: r.source_kind, label: r.source_label } : undefined,
+    when: r.when_label ?? '',
+    at: r.at_label ?? undefined,
+    confidence: r.confidence,
+  }))
+}
+
+/* ---- connectors --------------------------------------------------------- */
+
+interface ConnectorRow {
+  key: string
+  name: string
+  category: string
+  status: ConnectorStatus
+  items: number
+  items_target: number | null
+  scopes: string[] | null
+  official: boolean
+  last_sync_label: string | null
+}
+
+export async function fetchConnectors(workspaceId: string): Promise<Connector[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('connectors')
+    .select('key, name, category, status, items, items_target, scopes, official, last_sync_label')
+    .eq('workspace_id', workspaceId)
+    .order('created_at', { ascending: true })
+  if (error) throw error
+  return (data as ConnectorRow[]).map((r) => ({
+    id: r.key,
+    name: r.name,
+    category: r.category,
+    status: r.status,
+    icon: CoGeneric,
+    lastSync: r.last_sync_label ?? undefined,
+    items: r.items || undefined,
+    itemsTarget: r.items_target ?? undefined,
+    scopes: r.scopes ?? undefined,
+    official: r.official,
+  }))
+}
+
+/* ---- conversations + messages ------------------------------------------ */
+
+interface ConversationRow {
+  id: string
+  title: string
+  created_at: string
+}
+interface MessageRow {
+  id: string
+  conversation_id: string
+  role: ChatMessage['role']
+  text: string
+  citations: Citation[]
+  at_label: string | null
+  created_at: string
+}
+
+export async function fetchConversations(workspaceId: string): Promise<Conversation[]> {
+  if (!supabase) return []
+  const { data: convs, error } = await supabase
+    .from('conversations')
+    .select('id, title, created_at')
+    .eq('workspace_id', workspaceId)
+    .order('created_at', { ascending: false })
+  if (error) throw error
+  const rows = (convs ?? []) as ConversationRow[]
+  const ids = rows.map((c) => c.id)
+  let msgs: MessageRow[] = []
+  if (ids.length) {
+    const { data: m, error: me } = await supabase
+      .from('messages')
+      .select('id, conversation_id, role, text, citations, at_label, created_at')
+      .in('conversation_id', ids)
+      .order('created_at', { ascending: true })
+    if (me) throw me
+    msgs = (m ?? []) as MessageRow[]
+  }
+  return rows.map((c) => ({
+    id: c.id,
+    title: c.title,
+    at: new Date(c.created_at).getTime(),
+    messages: msgs
+      .filter((m) => m.conversation_id === c.id)
+      .map((m) => ({
+        id: m.id,
+        role: m.role,
+        text: m.text,
+        citations: m.citations?.length ? m.citations : undefined,
+        at: m.at_label ?? '',
+      })),
+  }))
+}
+
+export async function createConversation(workspaceId: string, title = 'New conversation'): Promise<string | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('conversations')
+    .insert({ workspace_id: workspaceId, title })
+    .select('id')
+    .single()
+  if (error) throw error
+  return data.id
+}
+
+export async function addMessage(
+  conversationId: string,
+  role: ChatMessage['role'],
+  text: string,
+  citations: Citation[] = [],
+  atLabel = '',
+): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase
+    .from('messages')
+    .insert({ conversation_id: conversationId, role, text, citations, at_label: atLabel })
+  if (error) throw error
+}
+
+/* ---- members ------------------------------------------------------------ */
+
+export interface Member {
+  name: string
+  email: string
+  role: 'Admin' | 'Member' | 'Viewer'
+  access: string
+  you: boolean
+}
+
+interface MemberRow {
+  role: 'admin' | 'member' | 'viewer'
+  user_id: string
+  profiles: { full_name: string | null; email: string | null } | null
+}
+
+export async function fetchMembers(workspaceId: string, meEmail?: string): Promise<Member[]> {
+  if (!supabase) return []
+  const { data, error } = await supabase
+    .from('workspace_members')
+    .select('role, user_id, profiles(full_name, email)')
+    .eq('workspace_id', workspaceId)
+  if (error) throw error
+  const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
+  return (data as unknown as MemberRow[]).map((m) => ({
+    name: m.profiles?.full_name ?? (m.profiles?.email ?? 'Member').split('@')[0],
+    email: m.profiles?.email ?? '',
+    role: cap(m.role) as Member['role'],
+    access: m.role === 'viewer' ? 'Shared only' : 'Private + shared',
+    you: !!meEmail && m.profiles?.email === meEmail,
+  }))
 }

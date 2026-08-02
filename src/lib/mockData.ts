@@ -1,17 +1,9 @@
-import type {
-  Citation,
-  Connector,
-  Conversation,
-  Insight,
-  Memory,
-  SourceKind,
-} from '@/lib/types'
+import type { Citation, Provenance, SourceKind } from '@/lib/types'
 import {
   Chat as ChatGlyph,
   CoCalendar,
   CoDrive,
   CoFireflies,
-  CoGeneric,
   CoGithub,
   CoGmail,
   CoLinear,
@@ -22,6 +14,11 @@ import {
 } from '@/icons'
 import type { ComponentType } from 'react'
 import type { IconProps } from '@/icons'
+
+/**
+ * Presentation-only helpers (icons + labels). All *content* now comes from
+ * the database via src/lib/data.ts + the DataProvider — nothing here is data.
+ */
 
 /* Source glyphs, keyed for reuse by chips across the app. */
 export const sourceGlyph: Record<SourceKind, ComponentType<IconProps>> = {
@@ -38,210 +35,17 @@ export const sourceGlyph: Record<SourceKind, ComponentType<IconProps>> = {
   fireflies: CoFireflies,
 }
 
-export const memories: Memory[] = [
-  {
-    id: 'm_oliver_design',
-    fact: 'Oliver now leads design — he moved off the backend team last month.',
-    detail:
-      'Announced in #engineering; he is running the design work for the team rather than backend development. Reports still route through the platform pod for hand-off.',
-    subject: 'Oliver',
-    category: 'Role',
-    provenance: 'stated',
-    source: { kind: 'slack', label: 'Slack · #engineering', speaker: 'Priya', when: '6 days ago' },
-    when: 'updated 6 days ago',
-    confidence: 0.94,
-    supersession: { from: 'backend developer', to: 'design lead' },
-  },
-  {
-    id: 'm_async_standups',
-    fact: 'Prefers async standups; finds daily live standups draining.',
-    detail: 'Wants written updates in the morning and a short live sync only twice a week.',
-    subject: 'You',
-    category: 'Working style',
-    provenance: 'stated',
-    source: { kind: 'chat', label: 'Chat', speaker: 'You', when: '2 weeks ago' },
-    when: '2 weeks ago',
-    confidence: 0.88,
-  },
-  {
-    id: 'm_late_evening',
-    fact: 'Tends to do focused work in the late evening rather than the morning.',
-    detail: 'Message and commit timestamps cluster between 9pm and 1am across the last six weeks.',
-    subject: 'You',
-    category: 'Working style',
-    provenance: 'inferred',
-    provenanceNote: 'from 14 signals',
-    source: { kind: 'chat', label: "Anant's inference" },
-    when: 'noticed over time',
-    confidence: 0.62,
-  },
-  {
-    id: 'm_thornbury',
-    fact: 'Coordinates frequently with the Thornbury account team.',
-    detail: 'A recurring thread of scheduling, scope, and delivery messages over the last quarter.',
-    subject: 'You',
-    category: 'Relationships',
-    provenance: 'aggregated',
-    provenanceNote: '31 messages',
-    source: { kind: 'gmail', label: 'Gmail' },
-    when: 'pattern · this quarter',
-    confidence: 0.71,
-  },
-  {
-    id: 'm_grace_onboard',
-    fact: 'Grace joined the platform pod as a senior engineer this week.',
-    detail: 'Start date confirmed; needs repo access and an intro to the Thornbury account.',
-    subject: 'Grace',
-    category: 'Role',
-    provenance: 'stated',
-    source: { kind: 'slack', label: 'Slack · #team-platform', speaker: 'You', when: '3 days ago' },
-    when: '3 days ago',
-    confidence: 0.96,
-  },
-  {
-    id: 'm_q3_launch',
-    fact: 'Q3 launch is targeted for the second week of September.',
-    detail: 'Date discussed in the roadmap review; not yet locked pending security sign-off.',
-    subject: 'Q3 launch',
-    category: 'Project',
-    provenance: 'stated',
-    source: { kind: 'notion', label: 'Notion · Roadmap', when: '1 week ago' },
-    when: '1 week ago',
-    confidence: 0.79,
-  },
-  {
-    id: 'm_prefers_linear',
-    fact: 'The team tracks delivery work in Linear, not Jira.',
-    subject: 'Team',
-    category: 'Tooling',
-    provenance: 'aggregated',
-    provenanceNote: '48 issues',
-    source: { kind: 'linear', label: 'Linear' },
-    when: 'pattern · ongoing',
-    confidence: 0.83,
-  },
-  {
-    id: 'm_security_review',
-    fact: 'A security review must clear before any external launch.',
-    detail: 'Raised as a hard gate in the roadmap review; owned by the platform pod.',
-    subject: 'Process',
-    category: 'Policy',
-    provenance: 'stated',
-    source: { kind: 'gmail', label: 'Gmail', speaker: 'Dara', when: '9 days ago' },
-    when: '9 days ago',
-    confidence: 0.9,
-  },
-]
+export const provenanceLabel: Record<Provenance, string> = {
+  stated: 'User-stated',
+  inferred: 'Inferred',
+  aggregated: 'Aggregated',
+}
 
-export const insights: Insight[] = [
-  {
-    id: 'i_oliver_grace',
-    kind: 'connection',
-    title: 'Oliver and Grace will likely need a hand-off',
-    body: "Oliver moved to design and Grace just joined the pod he left. I noticed nobody has been named to bridge the backend work between them.",
-    provenance: 'inferred',
-    provenanceNote: 'links 2 memories',
-    source: { kind: 'slack', label: 'Slack · #engineering' },
-    when: 'noticed today',
-    at: '9:42am',
-    confidence: 0.58,
-  },
-  {
-    id: 'i_evening_meetings',
-    kind: 'pattern',
-    title: 'Morning meetings sit against your focus hours',
-    body: 'Your focused work clusters late in the evening, yet most invitations land before 11am. It may be worth protecting mornings.',
-    provenance: 'aggregated',
-    provenanceNote: 'over 6 weeks',
-    source: { kind: 'calendar', label: 'Calendar' },
-    when: 'noticed this week',
-    confidence: 0.64,
-  },
-  {
-    id: 'i_launch_conflict',
-    kind: 'contradiction',
-    title: 'Two launch dates are in play',
-    body: 'The roadmap note says the second week of September, but a recent email to Thornbury promised late August. I kept both and flagged the conflict rather than choosing.',
-    provenance: 'inferred',
-    provenanceNote: 'resolved to a flag',
-    source: { kind: 'notion', label: 'Notion · Roadmap' },
-    when: 'noticed 2 days ago',
-    confidence: 0.7,
-  },
-]
-
-export const connectors: Connector[] = [
-  {
-    id: 'slack',
-    name: 'Slack',
-    category: 'Messaging',
-    status: 'connected',
-    icon: CoSlack,
-    lastSync: '2 min ago',
-    items: 1204,
-    scopes: ['Read channels you are in', 'Read message history'],
-  },
-  {
-    id: 'gmail',
-    name: 'Gmail',
-    category: 'Email',
-    status: 'syncing',
-    icon: CoGmail,
-    items: 3051,
-    itemsTarget: 4200,
-    scopes: ['Read messages', 'Read labels'],
-  },
-  { id: 'outlook', name: 'Outlook', category: 'Email', status: 'available', icon: CoOutlook },
-  { id: 'drive', name: 'Google Drive', category: 'Documents', status: 'available', icon: CoDrive, official: true },
-  { id: 'notion', name: 'Notion', category: 'Documents', status: 'available', icon: CoNotion, official: true },
-  { id: 'calendar', name: 'Google Calendar', category: 'Calendar', status: 'available', icon: CoCalendar, official: true },
-  { id: 'linear', name: 'Linear', category: 'Tasks', status: 'available', icon: CoLinear, official: true },
-  { id: 'github', name: 'GitHub', category: 'Code', status: 'available', icon: CoGithub, official: true },
-  { id: 'teams', name: 'Teams', category: 'Messaging', status: 'available', icon: CoTeams },
-  { id: 'fireflies', name: 'Fireflies', category: 'Transcripts', status: 'available', icon: CoFireflies },
-  { id: 'calendly', name: 'Calendly', category: 'Scheduling', status: 'available', icon: CoGeneric, official: true },
-  { id: 'zoom', name: 'Zoom', category: 'Meetings', status: 'available', icon: CoGeneric, official: true },
-  { id: 'meet', name: 'Google Meet', category: 'Meetings', status: 'available', icon: CoGeneric, official: true },
-  { id: 'dropbox', name: 'Dropbox', category: 'Documents', status: 'available', icon: CoGeneric, official: true },
-  { id: 'figma', name: 'Figma', category: 'Design', status: 'available', icon: CoGeneric, official: true },
-  { id: 'jira', name: 'Jira', category: 'Tasks', status: 'available', icon: CoGeneric, official: true },
-  { id: 'asana', name: 'Asana', category: 'Tasks', status: 'available', icon: CoGeneric, official: true },
-  { id: 'confluence', name: 'Confluence', category: 'Documents', status: 'available', icon: CoGeneric, official: true },
-  { id: 'trello', name: 'Trello', category: 'Tasks', status: 'available', icon: CoGeneric, official: true },
-  { id: 'hubspot', name: 'HubSpot', category: 'CRM', status: 'available', icon: CoGeneric, official: true },
-  { id: 'salesforce', name: 'Salesforce', category: 'CRM', status: 'available', icon: CoGeneric, official: true },
-  { id: 'discord', name: 'Discord', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
-  // Messaging
-  { id: 'telegram', name: 'Telegram', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
-  { id: 'whatsapp', name: 'WhatsApp Business', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
-  { id: 'messenger', name: 'Messenger', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
-  { id: 'wechat', name: 'WeChat', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
-  { id: 'signal', name: 'Signal', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
-  // Documents & notes
-  { id: 'box', name: 'Box', category: 'Documents', status: 'available', icon: CoGeneric, official: true },
-  { id: 'onedrive', name: 'OneDrive', category: 'Documents', status: 'available', icon: CoGeneric, official: true },
-  { id: 'gdocs', name: 'Google Docs', category: 'Documents', status: 'available', icon: CoGeneric, official: true },
-  { id: 'evernote', name: 'Evernote', category: 'Notes', status: 'available', icon: CoGeneric, official: true },
-  // Tasks & databases
-  { id: 'clickup', name: 'ClickUp', category: 'Tasks', status: 'available', icon: CoGeneric, official: true },
-  { id: 'monday', name: 'monday.com', category: 'Tasks', status: 'available', icon: CoGeneric, official: true },
-  { id: 'todoist', name: 'Todoist', category: 'Tasks', status: 'available', icon: CoGeneric, official: true },
-  { id: 'airtable', name: 'Airtable', category: 'Databases', status: 'available', icon: CoGeneric, official: true },
-  // Support & CRM
-  { id: 'zendesk', name: 'Zendesk', category: 'Support', status: 'available', icon: CoGeneric, official: true },
-  { id: 'intercom', name: 'Intercom', category: 'Support', status: 'available', icon: CoGeneric, official: true },
-  { id: 'zoho', name: 'Zoho CRM', category: 'CRM', status: 'available', icon: CoGeneric, official: true },
-  { id: 'pipedrive', name: 'Pipedrive', category: 'CRM', status: 'available', icon: CoGeneric, official: true },
-  // Code
-  { id: 'gitlab', name: 'GitLab', category: 'Code', status: 'available', icon: CoGeneric, official: true },
-  { id: 'bitbucket', name: 'Bitbucket', category: 'Code', status: 'available', icon: CoGeneric, official: true },
-  // Meetings
-  { id: 'loom', name: 'Loom', category: 'Meetings', status: 'available', icon: CoGeneric, official: true },
-]
-
-/* Detailed provenance for the sample answer — dates, the conversation each
-   came from, and how it was captured. Shared by the seed thread and the live
-   composer's canned reply. */
+/**
+ * Citations attached to Anant's canned reply in the live composer (there is no
+ * LLM wired yet — sending "What is Oliver working on now?" replays this answer).
+ * The seed thread stores its own copy of these in the database.
+ */
 export const oliverCitations: Citation[] = [
   {
     memoryId: 'm_oliver_design',
@@ -289,36 +93,3 @@ export const oliverCitations: Citation[] = [
     context: 'Thread reply from Priya',
   },
 ]
-
-const NOW = Date.now()
-const HOUR = 3_600_000
-const DAY = 86_400_000
-
-export const conversations: Conversation[] = [
-  {
-    id: 'c_design',
-    title: 'Design team changes',
-    at: NOW - 2 * HOUR,
-    messages: [
-      { id: 'c_design_q', role: 'user', text: 'What is Oliver working on now?', at: 'Today at 11:34 AM' },
-      {
-        id: 'c_design_a',
-        role: 'anant',
-        text: "Oliver now leads design. He moved off the backend team last month, so he's running the design work for your team rather than backend development.",
-        citations: oliverCitations,
-        at: 'Today at 11:34 AM',
-      },
-    ],
-  },
-  { id: 'c_q3', title: 'Q3 planning notes', at: NOW - 27 * HOUR, messages: [] },
-  { id: 'c_thornbury', title: 'Thornbury account', at: NOW - 3 * DAY, messages: [] },
-  { id: 'c_grace', title: 'Onboarding Grace', at: NOW - 9 * DAY, messages: [] },
-  { id: 'c_roadmap', title: 'Roadmap review', at: NOW - 20 * DAY, messages: [] },
-  { id: 'c_kickoff', title: 'Project kickoff', at: NOW - 65 * DAY, messages: [] },
-]
-
-export const provenanceLabel: Record<Memory['provenance'], string> = {
-  stated: 'User-stated',
-  inferred: 'Inferred',
-  aggregated: 'Aggregated',
-}

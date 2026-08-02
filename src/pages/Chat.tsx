@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { ProvenanceDot } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
 import { ArrowRight, Attach, ChevronDown, Dismiss, Mark, Plus, Search, Send, Stop } from '@/icons'
-import { conversations as seed, memories, oliverCitations, provenanceLabel, sourceGlyph } from '@/lib/mockData'
+import { oliverCitations, provenanceLabel, sourceGlyph } from '@/lib/mockData'
+import { useData } from '@/lib/dataStore'
 import { randomGreeting } from '@/lib/greetings'
 
 /**
@@ -12,7 +13,7 @@ import { randomGreeting } from '@/lib/greetings'
  * memory. Empty when there's no history yet, so a fresh account just sees the
  * greeting.
  */
-function suggestionsFromHistory(): string[] {
+function suggestionsFromHistory(memories: Memory[]): string[] {
   const templates = [
     (s: string) => `What is ${s} working on now?`,
     (s: string) => `Catch me up on ${s}.`,
@@ -24,7 +25,7 @@ function suggestionsFromHistory(): string[] {
 }
 import { logoFor } from '@/lib/logos'
 import { bucketFor, relativeShort } from '@/lib/time'
-import type { ChatMessage, Citation, Conversation, Provenance, SourceKind } from '@/lib/types'
+import type { ChatMessage, Citation, Conversation, Memory, Provenance, SourceKind } from '@/lib/types'
 
 const CANNED: { text: string; citations: Citation[] } = {
   text: "Oliver now leads design. He moved off the backend team last month, so he's running the design work for your team rather than backend development.",
@@ -34,12 +35,11 @@ const CANNED: { text: string; citations: Citation[] } = {
 export function ChatPage() {
   const location = useLocation()
   const focusId = (location.state as { focusId?: string } | null)?.focusId
+  const { conversations: seedConvos, memories } = useData()
   const [greeting] = useState(randomGreeting)
-  const [suggestions] = useState(suggestionsFromHistory)
-  const [convos, setConvos] = useState<Conversation[]>(seed)
-  const [activeId, setActiveId] = useState(
-    focusId && seed.some((c) => c.id === focusId) ? focusId : seed[0].id,
-  )
+  const suggestions = useMemo(() => suggestionsFromHistory(memories), [memories])
+  const [convos, setConvos] = useState<Conversation[]>([])
+  const [activeId, setActiveId] = useState<string>('')
   const [draft, setDraft] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [sourcesOpen, setSourcesOpen] = useState(false)
@@ -49,7 +49,20 @@ export function ChatPage() {
   const threadRef = useRef<HTMLDivElement>(null)
   const { user } = useAuth()
   const me = user?.name ?? 'You'
-  const active = convos.find((c) => c.id === activeId)!
+
+  // Load conversations from the database, then pick the active one.
+  useEffect(() => {
+    setConvos(seedConvos)
+  }, [seedConvos])
+  useEffect(() => {
+    if (!convos.length) return
+    setActiveId((cur) => {
+      if (cur && convos.some((c) => c.id === cur)) return cur
+      return (focusId && convos.some((c) => c.id === focusId) ? focusId : convos[0].id) ?? ''
+    })
+  }, [convos, focusId])
+
+  const active = convos.find((c) => c.id === activeId)
 
   // Conversation history, filtered by search and grouped by recency (newest first).
   const convGroups: { label: string; items: Conversation[] }[] = []
@@ -91,7 +104,7 @@ export function ChatPage() {
 
   useEffect(() => {
     threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: 'smooth' })
-  }, [active.messages.length, streaming])
+  }, [active?.messages.length, streaming])
 
   function patchActive(fn: (c: Conversation) => Conversation) {
     setConvos((cs) => cs.map((c) => (c.id === activeId ? fn(c) : c)))
@@ -143,6 +156,9 @@ export function ChatPage() {
     setConvos((cs) => [c, ...cs])
     setActiveId(c.id)
   }
+
+  if (!active)
+    return <div className="flex-1 px-8 py-6 text-[0.9375rem] text-ink-faint">Loading…</div>
 
   return (
     <>

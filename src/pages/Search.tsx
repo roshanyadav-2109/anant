@@ -3,13 +3,14 @@ import { useNavigate } from 'react-router-dom'
 import { ProvenanceBadge, SourceChip } from '@/components/Provenance'
 import { EmptyState } from '@/components/States'
 import { Search as SearchGlyph } from '@/icons'
-import { conversations, memories } from '@/lib/mockData'
+import { useData } from '@/lib/dataStore'
 import { relativeShort } from '@/lib/time'
 
 type Scope = 'all' | 'memories' | 'conversations'
 
 export function SearchPage() {
   const navigate = useNavigate()
+  const { memories, conversations } = useData()
   const [q, setQ] = useState('')
   const [scope, setScope] = useState<Scope>('all')
   const query = q.trim().toLowerCase()
@@ -20,11 +21,11 @@ export function SearchPage() {
       query
         ? memories.filter((m) => (m.fact + m.subject + m.category).toLowerCase().includes(query))
         : memories,
-    [query],
+    [query, memories],
   )
   const convHits = useMemo(
     () => (query ? conversations.filter((c) => c.title.toLowerCase().includes(query)) : conversations),
-    [query],
+    [query, conversations],
   )
 
   const showMem = scope !== 'conversations'

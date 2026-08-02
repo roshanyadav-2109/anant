@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
-import { memories, sourceGlyph } from '@/lib/mockData'
+import { sourceGlyph } from '@/lib/mockData'
+import { useData } from '@/lib/dataStore'
 import { logoFor } from '@/lib/logos'
 import { Dismiss } from '@/icons'
 import type { SourceKind } from '@/lib/types'
@@ -89,6 +90,7 @@ function edgePath(a: GNode, b: GNode) {
 }
 
 export function MemoryGraph({ query = '' }: { query?: string }) {
+  const { memories } = useData()
   const [active, setActive] = useState<string>('oliver')
   const [hover, setHover] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
@@ -113,7 +115,7 @@ export function MemoryGraph({ query = '' }: { query?: string }) {
     return memories.filter(
       (m) => m.subject.toLowerCase() === key || m.fact.toLowerCase().includes(key),
     )
-  }, [active])
+  }, [active, memories])
 
   return (
     <div className="flex h-full">

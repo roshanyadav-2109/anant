@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
+import { DataProvider } from '@/lib/dataStore'
 import { AppShell } from '@/components/AppShell'
 import { Login } from '@/pages/Login'
 import { ChatPage } from '@/pages/Chat'
@@ -26,7 +27,11 @@ function Protected({ children }: { children: React.ReactNode }) {
   const location = useLocation()
   if (loading) return <Booting />
   if (!user) return <Navigate to="/login" replace state={{ from: location }} />
-  return <AppShell>{children}</AppShell>
+  return (
+    <DataProvider>
+      <AppShell>{children}</AppShell>
+    </DataProvider>
+  )
 }
 
 export function App() {

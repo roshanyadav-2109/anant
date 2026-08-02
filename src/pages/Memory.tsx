@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { MemoryGraph } from '@/components/MemoryGraph'
 import { ConfidenceMeter, ProvenanceDot } from '@/components/Provenance'
@@ -7,7 +7,9 @@ import {
   Aggregated, ArrowRight, Confirm, Dismiss, Edit, Forget, GraphView, Inferred, ListView,
   Plus, Search as SearchGlyph, Stated,
 } from '@/icons'
-import { memories as seedMemories, sourceGlyph } from '@/lib/mockData'
+import { sourceGlyph } from '@/lib/mockData'
+import { useData } from '@/lib/dataStore'
+import { correctMemory, createMemory, forgetMemory as dbForgetMemory } from '@/lib/data'
 import { logoFor } from '@/lib/logos'
 import type { Memory, Provenance, SourceKind } from '@/lib/types'
 
@@ -191,17 +193,30 @@ function MemoryDetail({
 export function MemoryPage() {
   const location = useLocation()
   const focusId = (location.state as { focusId?: string } | null)?.focusId
-  const [items, setItems] = useState<Memory[]>(seedMemories)
+  const { memories, loading, workspaceId } = useData()
+  const [items, setItems] = useState<Memory[]>([])
   const [view, setView] = useState<'list' | 'graph'>('list')
   const [query, setQuery] = useState('')
   const [prov, setProv] = useState<Provenance | 'all'>('all')
   const [src, setSrc] = useState<SourceKind | 'all'>('all')
   const [subject, setSubject] = useState<string | 'all'>('all')
-  const [selectedId, setSelectedId] = useState<string | null>(
-    (focusId && seedMemories.some((m) => m.id === focusId) ? focusId : seedMemories[0]?.id) ?? null,
-  )
+  const [selectedId, setSelectedId] = useState<string | null>(null)
   const [newId, setNewId] = useState<string | null>(null)
   const [undo, setUndo] = useState<{ items: Memory[]; label: string } | null>(null)
+
+  // Load memories from the database into local working state.
+  useEffect(() => {
+    setItems(memories)
+  }, [memories])
+
+  // Default selection once data is in (focused item from Search, else first).
+  useEffect(() => {
+    if (!items.length) return
+    setSelectedId((cur) => {
+      if (cur && items.some((m) => m.id === cur)) return cur
+      return (focusId && items.some((m) => m.id === focusId) ? focusId : items[0].id) ?? null
+    })
+  }, [items, focusId])
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase()
@@ -223,6 +238,7 @@ export function MemoryPage() {
   function editMemory(id: string, fact: string) {
     setItems((xs) => xs.map((m) => (m.id === id ? { ...m, fact } : m)))
     if (newId === id) setNewId(null)
+    void correctMemory(id, fact).catch(() => {})
   }
   function confirmMemory(id: string) {
     setItems((xs) => xs.map((m) => (m.id === id ? { ...m, confirmed: true, confidence: 1 } : m)))
@@ -233,13 +249,24 @@ export function MemoryPage() {
     setItems(rest)
     if (selectedId === id) setSelectedId(rest[0]?.id ?? null)
     if (newId === id) setNewId(null)
+    void dbForgetMemory(id).catch(() => {})
   }
-  function addMemory() {
-    const id = `m_${Date.now()}`
-    const fresh: Memory = {
-      id, fact: '', subject: 'You', category: 'Note', provenance: 'stated',
-      source: { kind: 'chat', label: 'Chat', speaker: 'You' }, when: 'just now', confidence: 0.9,
+  async function addMemory() {
+    // Persist a blank memory, then edit it in place with the real DB id.
+    let fresh: Memory
+    if (workspaceId) {
+      const created = await createMemory(workspaceId).catch(() => null)
+      fresh = created ?? {
+        id: `m_${Date.now()}`, fact: '', subject: 'You', category: 'Note', provenance: 'stated',
+        source: { kind: 'chat', label: 'Chat', speaker: 'You' }, when: 'just now', confidence: 0.9,
+      }
+    } else {
+      fresh = {
+        id: `m_${Date.now()}`, fact: '', subject: 'You', category: 'Note', provenance: 'stated',
+        source: { kind: 'chat', label: 'Chat', speaker: 'You' }, when: 'just now', confidence: 0.9,
+      }
     }
+    const id = fresh.id
     setItems((xs) => [fresh, ...xs])
     setNewId(id)
     setSelectedId(id)
@@ -315,6 +342,9 @@ export function MemoryPage() {
       <ViewToggle value={view} onChange={setView} />
     </div>
   )
+
+  if (loading && !items.length)
+    return <div className="flex-1 px-6 py-6 text-[0.9375rem] text-ink-faint">Loading…</div>
 
   return (
     <div className="flex h-full min-h-0">
