@@ -57,12 +57,17 @@ async function request<T>(path: string, opts: Opts = {}): Promise<T> {
     const t = getToken()
     if (t) headers.Authorization = `Bearer ${t}`
   }
-  const res = await fetch(`${BASE}${path}`, {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-    signal,
-  })
+  let res: Response
+  try {
+    res = await fetch(`${BASE}${path}`, {
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal,
+    })
+  } catch {
+    throw new ApiError(0, `Can’t reach the Anant engine at ${BASE}. Is it running and reachable (CORS)?`)
+  }
   if (res.status === 401 && auth) {
     setToken(null)
     throw new ApiError(401, 'Session expired — please sign in again.')
