@@ -81,13 +81,14 @@ function MetaRow({ label, children }: { label: string; children: React.ReactNode
 
 /* ---- The detail pane: a dedicated, designed record view ---------------- */
 function MemoryDetail({
-  memory, autoEdit, onEdit, onConfirm, onForget,
+  memory, autoEdit, onEdit, onConfirm, onForget, onClose,
 }: {
   memory: Memory
   autoEdit: boolean
   onEdit: (id: string, fact: string) => void
   onConfirm: (id: string) => void
   onForget: (id: string) => void
+  onClose: () => void
 }) {
   const [editing, setEditing] = useState(autoEdit)
   const [draft, setDraft] = useState(memory.fact)
@@ -101,6 +102,12 @@ function MemoryDetail({
 
   return (
     <div className="flex min-h-full flex-col p-6">
+      <div className="mb-2 flex justify-end">
+        <button aria-label="Close" onClick={onClose} className="focus-ring text-ink-muted transition-colors hover:text-ink">
+          <Dismiss size={18} />
+        </button>
+      </div>
+
       {editing ? (
         <textarea
           autoFocus
@@ -358,6 +365,7 @@ export function MemoryPage() {
                 onEdit={editMemory}
                 onConfirm={confirmMemory}
                 onForget={forgetMemory}
+                onClose={() => setSelectedId(null)}
               />
             ) : (
               <div className="flex h-full flex-col items-center justify-center px-6 text-center">
