@@ -4,8 +4,24 @@ import { useAuth } from '@/lib/auth'
 import { ProvenanceDot } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
 import { ArrowRight, Attach, ChevronDown, Dismiss, Mark, Plus, Search, Send, Stop } from '@/icons'
-import { conversations as seed, oliverCitations, provenanceLabel, sourceGlyph } from '@/lib/mockData'
+import { conversations as seed, memories, oliverCitations, provenanceLabel, sourceGlyph } from '@/lib/mockData'
 import { randomGreeting } from '@/lib/greetings'
+
+/**
+ * Suggestions drawn from what Anant already knows — the people and topics in
+ * memory. Empty when there's no history yet, so a fresh account just sees the
+ * greeting.
+ */
+function suggestionsFromHistory(): string[] {
+  const templates = [
+    (s: string) => `What is ${s} working on now?`,
+    (s: string) => `Catch me up on ${s}.`,
+    (s: string) => `What do I know about ${s}?`,
+    (s: string) => `Any recent updates on ${s}?`,
+  ]
+  const subjects = Array.from(new Set(memories.map((m) => m.subject).filter(Boolean))) as string[]
+  return subjects.slice(0, 3).map((s, i) => templates[i % templates.length](s))
+}
 import { logoFor } from '@/lib/logos'
 import { bucketFor, relativeShort } from '@/lib/time'
 import type { ChatMessage, Citation, Conversation, Provenance, SourceKind } from '@/lib/types'
@@ -19,6 +35,7 @@ export function ChatPage() {
   const location = useLocation()
   const focusId = (location.state as { focusId?: string } | null)?.focusId
   const [greeting] = useState(randomGreeting)
+  const [suggestions] = useState(suggestionsFromHistory)
   const [convos, setConvos] = useState<Conversation[]>(seed)
   const [activeId, setActiveId] = useState(
     focusId && seed.some((c) => c.id === focusId) ? focusId : seed[0].id,
@@ -234,8 +251,21 @@ export function ChatPage() {
         <section className="relative flex min-h-0 flex-1 flex-col">
           <div ref={threadRef} className="min-h-0 flex-1 overflow-y-auto px-8 pb-32 pt-6">
             {active.messages.length === 0 ? (
-              <div className="mx-auto flex h-full max-w-lg flex-col items-center justify-center text-center">
+              <div className="mx-auto flex h-full max-w-xl flex-col items-center justify-center text-center">
                 <h2 className="text-[1.5rem] tracking-[-0.02em] text-ink">{greeting}</h2>
+                {suggestions.length > 0 && (
+                  <div className="mt-6 flex flex-wrap justify-center gap-2">
+                    {suggestions.map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => setDraft(s)}
+                        className="focus-ring rounded-full bg-paper-raised px-3.5 py-1.5 text-[0.8125rem] text-ink-soft ring-1 ring-rule transition-colors hover:text-ink"
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             ) : (
               <div className="mx-auto max-w-2xl space-y-6">
