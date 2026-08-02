@@ -199,9 +199,9 @@ export function ChatPage() {
           </div>
         </aside>
 
-        {/* Sources — a panel that reflows the thread, sliding in from the left */}
+        {/* Sources — a panel that reflows the thread, sliding in from the right */}
         {sourcesOpen && (
-          <aside className="slide-in-left flex min-h-0 w-[360px] shrink-0 flex-col border-r border-rule bg-paper-raised">
+          <aside className="order-last slide-in-right flex min-h-0 w-[360px] shrink-0 flex-col border-l border-rule bg-paper-raised">
             <header className="flex items-center justify-between gap-3 px-5 pb-2 pt-5">
               <div className="text-[1rem] font-[500] text-ink">Sources for this answer</div>
               <button aria-label="Close" onClick={() => setSourcesOpen(false)} className="focus-ring text-ink-muted transition-colors hover:text-ink">
