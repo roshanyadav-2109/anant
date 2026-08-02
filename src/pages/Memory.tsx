@@ -213,7 +213,7 @@ export function MemoryPage() {
       <button
         onClick={onClick}
         className={cx('flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[0.9375rem] text-ink transition-colors',
-          active ? 'bg-paper-sunk font-[500]' : 'font-[400] hover:bg-paper-sunk/60')}
+          active ? 'bg-paper-raised font-[500] shadow-[0_1px_2px_rgba(12,14,20,0.06)]' : 'font-[400] hover:bg-paper-raised/70')}
       >
         {dot && <ProvenanceDot provenance={dot} />}
         {kind && <SourceMark kind={kind} size={14} />}
@@ -223,7 +223,7 @@ export function MemoryPage() {
   }
 
   const rail = (
-    <aside className="flex min-h-0 w-[224px] shrink-0 flex-col overflow-y-auto border-r border-rule bg-paper-raised p-3">
+    <aside className="flex min-h-0 w-[224px] shrink-0 flex-col overflow-y-auto border-r border-rule bg-paper-sunk/70 p-3">
       <Button variant="primary" className="mb-4 w-full justify-center" leading={<Plus size={16} />} onClick={addMemory}>
         Add memory
       </Button>
@@ -286,14 +286,14 @@ export function MemoryPage() {
       {rail}
 
       {view === 'graph' ? (
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col bg-paper-raised">
           {middleHeader}
           <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5"><MemoryGraph /></div>
         </div>
       ) : (
         <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_400px]">
           {/* Middle column: search + toggle, then the list */}
-          <div className="flex min-h-0 flex-col border-r border-rule">
+          <div className="flex min-h-0 flex-col border-r border-rule bg-paper-raised">
             {middleHeader}
             <div className="min-h-0 flex-1 overflow-y-auto">
               {filtered.length === 0 ? (
