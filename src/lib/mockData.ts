@@ -11,6 +11,7 @@ import {
   CoCalendar,
   CoDrive,
   CoFireflies,
+  CoGeneric,
   CoGithub,
   CoGmail,
   CoLinear,
@@ -198,6 +199,18 @@ export const connectors: Connector[] = [
   { id: 'github', name: 'GitHub', category: 'Code', status: 'available', icon: CoGithub, official: true },
   { id: 'teams', name: 'Teams', category: 'Messaging', status: 'available', icon: CoTeams },
   { id: 'fireflies', name: 'Fireflies', category: 'Transcripts', status: 'available', icon: CoFireflies },
+  { id: 'calendly', name: 'Calendly', category: 'Scheduling', status: 'available', icon: CoGeneric, official: true },
+  { id: 'zoom', name: 'Zoom', category: 'Meetings', status: 'available', icon: CoGeneric, official: true },
+  { id: 'meet', name: 'Google Meet', category: 'Meetings', status: 'available', icon: CoGeneric, official: true },
+  { id: 'dropbox', name: 'Dropbox', category: 'Documents', status: 'available', icon: CoGeneric, official: true },
+  { id: 'figma', name: 'Figma', category: 'Design', status: 'available', icon: CoGeneric, official: true },
+  { id: 'jira', name: 'Jira', category: 'Tasks', status: 'available', icon: CoGeneric, official: true },
+  { id: 'asana', name: 'Asana', category: 'Tasks', status: 'available', icon: CoGeneric, official: true },
+  { id: 'confluence', name: 'Confluence', category: 'Documents', status: 'available', icon: CoGeneric, official: true },
+  { id: 'trello', name: 'Trello', category: 'Tasks', status: 'available', icon: CoGeneric, official: true },
+  { id: 'hubspot', name: 'HubSpot', category: 'CRM', status: 'available', icon: CoGeneric, official: true },
+  { id: 'salesforce', name: 'Salesforce', category: 'CRM', status: 'available', icon: CoGeneric, official: true },
+  { id: 'discord', name: 'Discord', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
 ]
 
 /* Detailed provenance for the sample answer — dates, the conversation each
