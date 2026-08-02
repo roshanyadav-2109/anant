@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { TopBar } from '@/components/AppShell'
 import { ProvenanceBadge, SourceChip } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
-import { Attach, Chat as ChatGlyph, Dismiss, Node, Person, Plus, Send, Stop, Time } from '@/icons'
+import { Attach, Chat as ChatGlyph, Dismiss, Mark, Node, Person, Plus, Send, Stop, Time } from '@/icons'
 import { conversations as seed, oliverCitations } from '@/lib/mockData'
 import type { ChatMessage, Citation, Conversation } from '@/lib/types'
 
@@ -262,8 +262,8 @@ function Message({
   }
   return (
     <div className="flex gap-3">
-      <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-evergreen text-[0.75rem] font-[500] text-veil">
-        a
+      <span className="mt-0.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-[6px] bg-royal text-white">
+        <Mark size={26} />
       </span>
       <div className="min-w-0">
         <p

@@ -31,8 +31,9 @@ quiet, with a single decisive accent.
 - **Provenance** — three tonal greyscale classes (User-stated / Inferred /
   Aggregated), distinguished by tone and icon rather than colour, used
   consistently across cards, chips, and insights.
-- **Icons** — a **bespoke, monochrome, hairline icon family** drawn in-house
-  (`src/icons`). No third-party icon library.
+- **Icons** — the **Solar** icon set (Bold style), embedded locally
+  (`src/icons/solar-data.ts`, CC BY 4.0 — see `NOTICE.md`). The Anant brand
+  mark and neutral connector stand-ins remain bespoke.
 - **Sovereignty** — a persistent "Local · no data leaves" indicator on every
   screen. A headline, never a footnote.
 
