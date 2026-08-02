@@ -85,6 +85,7 @@ export interface ChatMessage {
   text: string
   citations?: Citation[]
   streaming?: boolean
+  at?: string // timestamp label, e.g. "Today at 11:34 AM" / "Just now"
 }
 
 export interface Conversation {

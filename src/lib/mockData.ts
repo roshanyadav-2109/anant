@@ -256,12 +256,13 @@ export const conversations: Conversation[] = [
     title: 'Design team changes',
     when: 'last week',
     messages: [
-      { id: 'c_design_q', role: 'user', text: 'What is Oliver working on now?' },
+      { id: 'c_design_q', role: 'user', text: 'What is Oliver working on now?', at: 'Today at 11:34 AM' },
       {
         id: 'c_design_a',
         role: 'anant',
         text: "Oliver now leads design. He moved off the backend team last month, so he's running the design work for your team rather than backend development.",
         citations: oliverCitations,
+        at: 'Today at 11:34 AM',
       },
     ],
   },

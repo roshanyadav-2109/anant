@@ -61,14 +61,14 @@ export function ChatPage() {
   /** Append a user turn and stream an Anant reply with its citations. */
   function stream(question: string, answerText: string, citations: Citation[]) {
     if (streaming) return
-    const userMsg: ChatMessage = { id: `u_${Date.now()}`, role: 'user', text: question }
+    const userMsg: ChatMessage = { id: `u_${Date.now()}`, role: 'user', text: question, at: 'Just now' }
     patchActive((c) => ({ ...c, messages: [...c.messages, userMsg] }))
 
     const answerId = `a_${Date.now()}`
     setStreaming(true)
     patchActive((c) => ({
       ...c,
-      messages: [...c.messages, { id: answerId, role: 'anant', text: '', streaming: true }],
+      messages: [...c.messages, { id: answerId, role: 'anant', text: '', streaming: true, at: 'Just now' }],
     }))
 
     const words = answerText.split(' ')
@@ -354,7 +354,15 @@ function Message({
         </span>
       )}
       <div className="min-w-0 flex-1">
-        <div className="mb-1 text-[0.875rem] font-[600] text-ink">{isUser ? 'You' : 'Anant'}</div>
+        <div className="mb-1 flex items-center gap-2">
+          <span className="text-[0.875rem] font-[600] text-ink">{isUser ? 'You' : 'Anant'}</span>
+          {!isUser && (
+            <span className="rounded-[3px] bg-royal px-1.5 py-[1px] text-[0.6rem] font-[600] uppercase tracking-[0.08em] text-white">
+              Agent
+            </span>
+          )}
+          {message.at && <span className="text-[0.72rem] text-ink-muted">{message.at}</span>}
+        </div>
         <p
           className={cx('text-[1.0625rem] leading-relaxed text-ink', message.streaming && 'stream-caret')}
         >
