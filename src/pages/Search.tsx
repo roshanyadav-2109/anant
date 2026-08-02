@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ProvenanceBadge, SourceChip } from '@/components/Provenance'
 import { EmptyState } from '@/components/States'
 import { Search as SearchGlyph } from '@/icons'
@@ -8,6 +9,7 @@ import { relativeShort } from '@/lib/time'
 type Scope = 'all' | 'memories' | 'conversations'
 
 export function SearchPage() {
+  const navigate = useNavigate()
   const [q, setQ] = useState('')
   const [scope, setScope] = useState<Scope>('all')
   const query = q.trim().toLowerCase()
@@ -44,6 +46,7 @@ export function SearchPage() {
         <div className="relative">
           <SearchGlyph
             size={20}
+            filled={false}
             className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-ink-faint"
           />
           <input
@@ -94,16 +97,17 @@ export function SearchPage() {
                 </div>
                 <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
                   {visibleMem.map((m) => (
-                    <div
+                    <button
                       key={m.id}
-                      className="rounded-[var(--radius-lg)] bg-paper-raised p-4 shadow-[0_1px_2px_rgba(12,14,20,0.05)] ring-1 ring-rule/70"
+                      onClick={() => navigate('/memory', { state: { focusId: m.id } })}
+                      className="focus-ring group rounded-[var(--radius-lg)] bg-paper-raised p-4 text-left shadow-[0_1px_2px_rgba(12,14,20,0.05)] ring-1 ring-rule/70 transition-shadow hover:shadow-[var(--shadow-card)] hover:ring-ink-faint/50"
                     >
                       <div className="mb-2 flex flex-wrap items-center gap-2">
                         <ProvenanceBadge provenance={m.provenance} note={m.provenanceNote} />
                         <SourceChip source={m.source} />
                       </div>
                       <p className="text-[0.9375rem] leading-snug text-ink">{m.fact}</p>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </section>
@@ -116,14 +120,15 @@ export function SearchPage() {
                 </div>
                 <div className="space-y-2">
                   {visibleConv.map((c) => (
-                    <div
+                    <button
                       key={c.id}
-                      className="flex items-center gap-3 rounded-[var(--radius-lg)] bg-paper-raised p-4 shadow-[0_1px_2px_rgba(12,14,20,0.05)] ring-1 ring-rule/70"
+                      onClick={() => navigate('/chat', { state: { focusId: c.id } })}
+                      className="focus-ring flex w-full items-center gap-3 rounded-[var(--radius-lg)] bg-paper-raised p-4 text-left shadow-[0_1px_2px_rgba(12,14,20,0.05)] ring-1 ring-rule/70 transition-shadow hover:shadow-[var(--shadow-card)] hover:ring-ink-faint/50"
                     >
                       <SourceChip source={{ kind: 'chat', label: 'Chat' }} />
                       <span className="text-[0.9375rem] text-ink">{c.title}</span>
                       <span className="ml-auto text-[0.75rem] text-ink-faint">{relativeShort(c.at)}</span>
-                    </div>
+                    </button>
                   ))}
                 </div>
               </section>

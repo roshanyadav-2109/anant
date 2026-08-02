@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { ProvenanceDot } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
@@ -14,8 +15,12 @@ const CANNED: { text: string; citations: Citation[] } = {
 }
 
 export function ChatPage() {
+  const location = useLocation()
+  const focusId = (location.state as { focusId?: string } | null)?.focusId
   const [convos, setConvos] = useState<Conversation[]>(seed)
-  const [activeId, setActiveId] = useState(seed[0].id)
+  const [activeId, setActiveId] = useState(
+    focusId && seed.some((c) => c.id === focusId) ? focusId : seed[0].id,
+  )
   const [draft, setDraft] = useState('')
   const [streaming, setStreaming] = useState(false)
   const [sourcesOpen, setSourcesOpen] = useState(false)

@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useLocation } from 'react-router-dom'
 import { MemoryGraph } from '@/components/MemoryGraph'
 import { ConfidenceMeter, ProvenanceDot } from '@/components/Provenance'
 import { Button, cx } from '@/components/ui'
@@ -188,13 +189,17 @@ function MemoryDetail({
 }
 
 export function MemoryPage() {
+  const location = useLocation()
+  const focusId = (location.state as { focusId?: string } | null)?.focusId
   const [items, setItems] = useState<Memory[]>(seedMemories)
   const [view, setView] = useState<'list' | 'graph'>('list')
   const [query, setQuery] = useState('')
   const [prov, setProv] = useState<Provenance | 'all'>('all')
   const [src, setSrc] = useState<SourceKind | 'all'>('all')
   const [subject, setSubject] = useState<string | 'all'>('all')
-  const [selectedId, setSelectedId] = useState<string | null>(seedMemories[0]?.id ?? null)
+  const [selectedId, setSelectedId] = useState<string | null>(
+    (focusId && seedMemories.some((m) => m.id === focusId) ? focusId : seedMemories[0]?.id) ?? null,
+  )
   const [newId, setNewId] = useState<string | null>(null)
   const [undo, setUndo] = useState<{ items: Memory[]; label: string } | null>(null)
 
