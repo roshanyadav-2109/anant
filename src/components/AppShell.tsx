@@ -96,8 +96,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       >
         {/* Brand + collapse toggle */}
         <div className={cx('flex items-center gap-3 px-4 pb-3 pt-5', collapsed && 'flex-col gap-3 px-0')}>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[4px] bg-royal text-white">
-            <Mark size={22} />
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center text-white">
+            <Mark size={28} />
           </span>
           {!collapsed && (
             <div className="min-w-0 flex-1 leading-tight">

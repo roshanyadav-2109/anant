@@ -365,7 +365,7 @@ function Message({
         </span>
       ) : (
         <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-white text-ink ring-1 ring-rule">
-          <Mark size={22} />
+          <Mark size={30} />
         </span>
       )}
       <div className="min-w-0 flex-1">

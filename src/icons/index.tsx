@@ -148,10 +148,10 @@ function Svg({ size = 20, strokeWidth = 1.8, children, ...rest }: IconProps & { 
 // Neural AI mark — an atom: two crossing orbits around a nucleus.
 export function Mark({ size = 24, ...p }: IconProps) {
   return (
-    <Svg size={size} strokeWidth={1.8} {...p}>
-      <ellipse cx="12" cy="12" rx="9.3" ry="4" transform="rotate(45 12 12)" />
-      <ellipse cx="12" cy="12" rx="9.3" ry="4" transform="rotate(-45 12 12)" />
-      <circle cx="12" cy="12" r="2.3" fill="currentColor" stroke="none" />
+    <Svg size={size} strokeWidth={1.9} {...p}>
+      <ellipse cx="12" cy="12" rx="11" ry="4.7" transform="rotate(45 12 12)" />
+      <ellipse cx="12" cy="12" rx="11" ry="4.7" transform="rotate(-45 12 12)" />
+      <circle cx="12" cy="12" r="2.7" fill="currentColor" stroke="none" />
     </Svg>
   )
 }
