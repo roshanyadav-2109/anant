@@ -1,20 +1,34 @@
-import { useCallback, useEffect, useState } from 'react'
-import { insights, provenanceLabel } from '@/lib/mockData'
-import { ProvenanceDot, SourceChip } from '@/components/Provenance'
+import { useState } from 'react'
+import { insights, provenanceLabel, sourceGlyph } from '@/lib/mockData'
+import { logoFor } from '@/lib/logos'
+import { ProvenanceDot } from '@/components/Provenance'
 import { Dismiss } from '@/icons'
 import type { Insight } from '@/lib/types'
 
 /* ============================================================
-   Insights — Direction 02 · "The Triage Deck"
-   One insight, full focus. The connected pair is laid out, a big
-   yes/no, then the next card. A counter burns down. Keyboard-fast:
-   ↵ keep · X dismiss · → skip.
+   Insights — Direction 03 · "The Connection Canvas"
+   Pick a noticing on the left; see the wiring on the right — the
+   origin and the conclusion drawn as two nodes with the link
+   between them, then the evidence and confidence. Reasoning made
+   inspectable, so a skeptical user can see exactly *why*.
    ============================================================ */
 
-const kindEyebrow: Record<Insight['kind'], string> = {
-  connection: 'Two things line up — worth a look',
-  pattern: 'A pattern worth a decision',
-  contradiction: "These don't match — worth a decision",
+const railTitle: Record<Insight['kind'], string> = {
+  connection: 'A connection',
+  pattern: 'A recurring theme',
+  contradiction: 'A mismatch',
+}
+
+const edgeVerb: Record<Insight['kind'], string> = {
+  connection: 'points to',
+  pattern: 'recurs as',
+  contradiction: 'conflicts with',
+}
+
+const conclusion: Record<Insight['kind'], string> = {
+  connection: 'a link worth keeping',
+  pattern: 'a habit to protect',
+  contradiction: 'a flag to resolve',
 }
 
 const keepLabel: Record<Insight['kind'], string> = {
@@ -23,152 +37,193 @@ const keepLabel: Record<Insight['kind'], string> = {
   contradiction: 'Resolve it',
 }
 
-export function InsightsPage() {
-  const total = insights.length
-  const [index, setIndex] = useState(0)
-  const [outcomes, setOutcomes] = useState<Record<string, 'kept' | 'dismissed'>>({})
-
-  const done = index >= total
-  const current = done ? null : insights[index]
-  const decided = Object.keys(outcomes).length
-
-  const advance = useCallback(() => setIndex((i) => Math.min(i + 1, total)), [total])
-  const resolve = useCallback(
-    (id: string, outcome: 'kept' | 'dismissed') => {
-      setOutcomes((o) => ({ ...o, [id]: outcome }))
-      advance()
-    },
-    [advance],
+/* A single node in the reasoning diagram. */
+function Node({
+  eyebrow,
+  title,
+  sub,
+  accent,
+  logo,
+}: {
+  eyebrow: string
+  title: string
+  sub?: string
+  accent?: boolean
+  logo?: React.ReactNode
+}) {
+  return (
+    <div
+      className={
+        'flex-1 rounded-[var(--radius-lg)] border bg-paper-raised p-3.5 ' +
+        (accent ? 'border-[color-mix(in_srgb,var(--color-royal)_40%,transparent)]' : 'border-rule')
+      }
+    >
+      <div className="mb-1.5 flex items-center gap-1.5 text-[0.6875rem] uppercase tracking-[0.1em] text-ink-faint">
+        {logo}
+        {eyebrow}
+      </div>
+      <div className="text-[0.875rem] leading-snug text-ink">{title}</div>
+      {sub && <div className="mt-1 text-[0.75rem] text-ink-faint">{sub}</div>}
+    </div>
   )
+}
 
-  useEffect(() => {
-    if (!current) return
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') resolve(current.id, 'kept')
-      else if (e.key.toLowerCase() === 'x') resolve(current.id, 'dismissed')
-      else if (e.key === 'ArrowRight') advance()
-    }
-    window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [current, resolve, advance])
+export function InsightsPage() {
+  const [selectedId, setSelectedId] = useState(insights[0]?.id)
+  const [outcomes, setOutcomes] = useState<Record<string, 'kept' | 'dismissed'>>({})
+  const selected = insights.find((i) => i.id === selectedId) ?? null
+
+  function resolve(id: string, outcome: 'kept' | 'dismissed') {
+    setOutcomes((o) => ({ ...o, [id]: outcome }))
+    const next = insights.find((i) => i.id !== id && !outcomes[i.id])
+    if (next) setSelectedId(next.id)
+  }
+
+  const pending = insights.filter((i) => !outcomes[i.id]).length
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      {/* Progress strip */}
-      <div className="flex items-center gap-3 border-b border-rule px-8 py-3.5">
-        <span className="text-[0.8125rem] text-ink-muted">Reviewing what Anant noticed</span>
-        <span className="text-[0.8125rem] tabular-nums text-ink">
-          {Math.min(index + (done ? 0 : 1), total)} <span className="text-ink-faint">of</span> {total}
-        </span>
-        <div className="mx-2 h-1 flex-1 overflow-hidden rounded-full bg-paper-sunk">
-          <div
-            className="h-full rounded-full bg-royal transition-[width] duration-300"
-            style={{ width: `${(decided / total) * 100}%` }}
-          />
+    <div className="grid min-h-0 flex-1 grid-cols-[240px_1fr]">
+      {/* Left rail — the list of noticings */}
+      <aside className="min-h-0 overflow-y-auto border-r border-rule bg-paper-sunk/60 px-3 py-4">
+        <div className="mb-3 px-2 text-[0.6875rem] uppercase tracking-[0.12em] text-ink-faint">
+          {pending} to review
         </div>
-        <span className="text-[0.75rem] text-ink-faint">
-          {total - decided} {total - decided === 1 ? 'left' : 'left'}
-        </span>
-      </div>
-
-      <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-8 py-10">
-        {current ? (
-          <div key={current.id} className="rise relative w-full max-w-xl">
-            {/* faint stacked cards behind, hinting at the queue */}
-            {index < total - 1 && (
-              <>
-                <div className="absolute inset-x-6 -top-3 h-10 rounded-[var(--radius-lg)] border border-rule bg-paper-raised/60" />
-                {index < total - 2 && (
-                  <div className="absolute inset-x-10 -top-6 h-10 rounded-[var(--radius-lg)] border border-rule bg-paper-raised/40" />
-                )}
-              </>
-            )}
-
-            <article className="relative rounded-[var(--radius-lg)] border border-rule bg-paper-raised p-8 shadow-[var(--shadow-card)]">
-              <div className="mb-4 flex items-center gap-2 text-[0.75rem] text-ink-muted">
-                <span className="h-1.5 w-1.5 rounded-[2px] bg-royal" />
-                {kindEyebrow[current.kind]}
-              </div>
-
-              <h2 className="text-[1.5rem] leading-[1.28] tracking-[-0.015em] text-ink">{current.title}</h2>
-              <p className="mt-4 text-[1rem] leading-relaxed text-ink-soft">
-                <span className="italic text-ink-muted">I noticed — </span>
-                {current.body}
-              </p>
-
-              {/* evidence */}
-              <div className="mt-6 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-rule/70 pt-5 text-[0.8125rem]">
-                <span
-                  className="inline-flex items-center gap-1.5 font-[500]"
-                  style={{ color: `var(--color-${current.provenance})` }}
-                >
-                  <ProvenanceDot provenance={current.provenance} />
-                  {provenanceLabel[current.provenance]}
-                  {current.provenanceNote && (
-                    <span className="font-[400] text-ink-faint">· {current.provenanceNote}</span>
+        <div className="flex flex-col gap-1">
+          {insights.map((ins) => {
+            const active = ins.id === selectedId
+            const settled = outcomes[ins.id]
+            return (
+              <button
+                key={ins.id}
+                onClick={() => setSelectedId(ins.id)}
+                className={
+                  'rounded-[var(--radius)] px-2.5 py-2 text-left transition-colors ' +
+                  (active
+                    ? 'border border-royal bg-paper-raised shadow-[var(--shadow-card)]'
+                    : 'border border-transparent hover:bg-paper-raised/60')
+                }
+              >
+                <div className="flex items-center gap-2">
+                  <ProvenanceDot provenance={ins.provenance} />
+                  <span className={'text-[0.8125rem] ' + (active ? 'text-ink' : 'text-ink-soft')}>
+                    {railTitle[ins.kind]}
+                  </span>
+                  {settled && (
+                    <span className="ml-auto text-[0.6875rem] text-ink-faint">
+                      {settled === 'kept' ? 'kept' : 'dismissed'}
+                    </span>
                   )}
-                </span>
-                {current.source && <SourceChip source={current.source} />}
-                <span className="ml-auto text-ink-faint">
-                  {Math.round(current.confidence * 100)}% sure
+                </div>
+                <div className="mt-1 truncate pl-5 text-[0.75rem] text-ink-faint">{ins.source?.label}</div>
+              </button>
+            )
+          })}
+        </div>
+      </aside>
+
+      {/* Right — the reasoning */}
+      <section className="min-h-0 overflow-y-auto">
+        {selected ? (
+          <div key={selected.id} className="fade mx-auto max-w-2xl px-9 py-9">
+            <div
+              className="mb-3 inline-flex items-center gap-1.5 text-[0.8125rem] font-[500]"
+              style={{ color: `var(--color-${selected.provenance})` }}
+            >
+              <ProvenanceDot provenance={selected.provenance} />
+              {selected.provenance === 'stated'
+                ? 'You told Anant this'
+                : 'Anant connected these — you didn’t say it'}
+            </div>
+
+            <h2 className="max-w-xl text-[1.375rem] leading-[1.3] tracking-[-0.015em] text-ink">{selected.title}</h2>
+            <p className="mt-3 max-w-xl text-[0.9375rem] leading-relaxed text-ink-soft">
+              <span className="italic text-ink-muted">I noticed — </span>
+              {selected.body}
+            </p>
+
+            {/* the wiring */}
+            <div className="mt-7 flex items-stretch gap-0">
+              <Node
+                eyebrow="Where it came from"
+                title={selected.source?.label ?? 'Your memory'}
+                sub={selected.source?.when}
+                logo={
+                  selected.source &&
+                  (logoFor(selected.source.kind) ? (
+                    <img src={logoFor(selected.source.kind)!} alt="" className="h-3.5 w-3.5 object-contain" />
+                  ) : (
+                    (() => {
+                      const G = sourceGlyph[selected.source.kind]
+                      return <G size={13} className="text-ink-muted" />
+                    })()
+                  ))
+                }
+              />
+              <div className="relative flex w-24 shrink-0 items-center justify-center">
+                <div className="absolute inset-x-0 top-1/2 h-px -translate-y-1/2 bg-[color-mix(in_srgb,var(--color-royal)_45%,transparent)]" />
+                <span className="relative rounded-full border border-[color-mix(in_srgb,var(--color-royal)_40%,transparent)] bg-paper px-2.5 py-0.5 text-[0.6875rem] text-[var(--color-royal)]">
+                  {edgeVerb[selected.kind]}
                 </span>
               </div>
+              <Node eyebrow="What Anant sees" title={conclusion[selected.kind]} accent />
+            </div>
 
-              {/* decision */}
+            {/* evidence footer */}
+            <div className="mt-8 flex flex-wrap gap-x-10 gap-y-4 border-t border-rule pt-5">
+              <div>
+                <div className="text-[0.6875rem] uppercase tracking-[0.1em] text-ink-faint">Provenance</div>
+                <div
+                  className="mt-1.5 inline-flex items-center gap-1.5 text-[0.875rem] font-[500]"
+                  style={{ color: `var(--color-${selected.provenance})` }}
+                >
+                  <ProvenanceDot provenance={selected.provenance} />
+                  {provenanceLabel[selected.provenance]}
+                  {selected.provenanceNote && (
+                    <span className="font-[400] text-ink-faint">· {selected.provenanceNote}</span>
+                  )}
+                </div>
+              </div>
+              <div>
+                <div className="text-[0.6875rem] uppercase tracking-[0.1em] text-ink-faint">How sure</div>
+                <div className="mt-1.5 text-[0.875rem] text-ink">{Math.round(selected.confidence * 100)}% · {selected.when}</div>
+              </div>
+            </div>
+
+            {/* actions */}
+            {outcomes[selected.id] ? (
+              <div className="mt-7 text-[0.875rem] text-ink-muted">
+                {outcomes[selected.id] === 'kept' ? 'Kept — folded into memory.' : 'Dismissed.'}{' '}
+                <button
+                  className="font-[500] text-[var(--color-royal)] hover:underline"
+                  onClick={() => setOutcomes((o) => { const n = { ...o }; delete n[selected.id]; return n })}
+                >
+                  Undo
+                </button>
+              </div>
+            ) : (
               <div className="mt-7 flex items-center gap-2.5">
                 <button
-                  className="inline-flex items-center gap-2 rounded-[var(--radius)] bg-royal px-4 py-2 text-[0.9375rem] font-[500] text-white transition-opacity hover:opacity-90"
-                  onClick={() => resolve(current.id, 'kept')}
+                  className="rounded-[var(--radius)] bg-royal px-4 py-2 text-[0.9375rem] font-[500] text-white transition-opacity hover:opacity-90"
+                  onClick={() => resolve(selected.id, 'kept')}
                 >
-                  {keepLabel[current.kind]}
-                  <span className="opacity-70">↵</span>
+                  {keepLabel[selected.kind]}
                 </button>
                 <button
                   className="inline-flex items-center gap-1.5 rounded-[var(--radius)] border border-rule px-4 py-2 text-[0.9375rem] text-ink-soft transition-colors hover:border-ink-faint"
-                  onClick={() => resolve(current.id, 'dismissed')}
+                  onClick={() => resolve(selected.id, 'dismissed')}
                 >
                   <Dismiss size={16} />
                   Dismiss
                 </button>
-                <button
-                  className="ml-auto text-[0.875rem] text-ink-muted transition-colors hover:text-ink"
-                  onClick={advance}
-                >
-                  Skip for now →
-                </button>
               </div>
-
-              <div className="mt-5 flex gap-4 text-[0.6875rem] text-ink-faint">
-                <span><b className="font-[500] text-ink-muted">↵</b> keep</span>
-                <span><b className="font-[500] text-ink-muted">X</b> dismiss</span>
-                <span><b className="font-[500] text-ink-muted">→</b> next</span>
-              </div>
-            </article>
+            )}
           </div>
         ) : (
-          /* done state */
-          <div className="rise text-center">
-            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[var(--color-royal-soft)] text-[var(--color-royal)]">
-              <ProvenanceDot provenance="inferred" />
-            </div>
-            <h2 className="text-[1.25rem] tracking-[-0.015em] text-ink">You're all caught up</h2>
-            <p className="mx-auto mt-2 max-w-sm text-[0.9375rem] text-ink-muted">
-              You reviewed everything Anant noticed —{' '}
-              {Object.values(outcomes).filter((o) => o === 'kept').length} kept,{' '}
-              {Object.values(outcomes).filter((o) => o === 'dismissed').length} dismissed.
-            </p>
-            <button
-              className="mt-6 rounded-[var(--radius)] border border-rule px-4 py-2 text-[0.875rem] text-ink-soft transition-colors hover:border-ink-faint"
-              onClick={() => {
-                setOutcomes({})
-                setIndex(0)
-              }}
-            >
-              Review again
-            </button>
+          <div className="flex h-full items-center justify-center text-[0.9375rem] text-ink-faint">
+            Select a noticing to see the reasoning.
           </div>
         )}
-      </div>
+      </section>
     </div>
   )
 }
