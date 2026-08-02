@@ -152,11 +152,15 @@ export async function setConnectorStatus(
   workspaceId: string,
   key: string,
   status: 'connected' | 'syncing' | 'error' | 'available',
+  extra?: { items?: number; lastSyncLabel?: string },
 ): Promise<void> {
   if (!supabase) return
+  const patch: Record<string, unknown> = { status }
+  if (extra?.items !== undefined) patch.items = extra.items
+  if (extra?.lastSyncLabel !== undefined) patch.last_sync_label = extra.lastSyncLabel
   const { error } = await supabase
     .from('connectors')
-    .update({ status })
+    .update(patch)
     .eq('workspace_id', workspaceId)
     .eq('key', key)
   if (error) throw error

@@ -1,74 +1,52 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-  type ReactNode,
-} from 'react'
-import type { Session } from '@supabase/supabase-js'
-import { supabase } from '@/lib/supabase'
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import { api, ApiError, decodeToken, getToken, setToken } from '@/lib/anant'
 
+/**
+ * Auth against the Anant Engine (see API_REFERENCE.md). The JWT carries an
+ * immutable `at` claim: 'individual' | 'enterprise'. We surface that as
+ * accountType 'personal' | 'team' so the rest of the app branches as before.
+ */
 export interface AnantUser {
-  email: string
+  userId: string
+  username: string
   name: string
-  role: 'Admin' | 'Member' | 'Viewer'
-  workspace: string
-  /** Entitlement — whether this email has workspace (team) access or is a
-   *  personal account. In production this comes from the purchase / access
-   *  record; here it's derived from the email domain as a stand-in. */
   accountType: 'personal' | 'team'
-  demo?: boolean
+  orgId?: string
+  role?: string
 }
 
-/** Free/consumer email providers → personal; anything else → workspace/team. */
-const PERSONAL_DOMAINS = new Set([
-  'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com', 'live.com', 'msn.com',
-  'yahoo.com', 'ymail.com', 'icloud.com', 'me.com', 'mac.com', 'proton.me', 'protonmail.com',
-  'aol.com', 'gmx.com', 'zoho.com', 'mail.com', 'yandex.com',
-])
-
-/** Specific addresses granted team/enterprise access regardless of domain.
- *  (Stand-in for a real per-account entitlement / purchase record.) */
-const TEAM_EMAILS = new Set([
-  'unknowniitians@gmail.com',
-])
-
-export function accountTypeForEmail(email: string): 'personal' | 'team' {
-  const e = email.toLowerCase()
-  if (TEAM_EMAILS.has(e)) return 'team'
-  const domain = e.split('@')[1] ?? ''
-  if (!domain) return 'personal'
-  return PERSONAL_DOMAINS.has(domain) ? 'personal' : 'team'
+interface EnterpriseSignup {
+  username: string
+  password: string
+  name?: string
+  email: string
+  org_name: string
+  org_slug: string
 }
 
 interface AuthValue {
   user: AnantUser | null
   loading: boolean
-  signIn: (email: string, password: string) => Promise<{ error?: string }>
-  signUp: (email: string, password: string, name: string) => Promise<{ error?: string; needsConfirm?: boolean }>
-  signInWithGoogle: () => Promise<{ error?: string }>
-  signInDemo: () => void
+  signIn: (username: string, password: string, door: 'individual' | 'enterprise') => Promise<{ error?: string }>
+  signUpIndividual: (username: string, password: string, name?: string) => Promise<{ error?: string }>
+  signUpEnterprise: (b: EnterpriseSignup) => Promise<{ error?: string }>
   signOut: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthValue | null>(null)
 
-function nameFromEmail(email: string) {
-  const raw = email.split('@')[0].replace(/[._-]+/g, ' ')
-  return raw.replace(/\b\w/g, (c) => c.toUpperCase())
-}
-
-function userFromSession(session: Session): AnantUser {
-  const email = session.user.email ?? 'you@local'
-  const meta = session.user.user_metadata ?? {}
-  const accountType = accountTypeForEmail(email)
+function userFromClaims(extra?: { user_id?: string; org_id?: string; role?: string }): AnantUser | null {
+  const c = decodeToken()
+  if (!c) return null
+  const accountType = c.at === 'enterprise' ? 'team' : 'personal'
+  const username = (c.username as string) || (c.sub as string) || 'you'
   return {
-    email,
-    name: (meta.name as string) || nameFromEmail(email),
-    role: 'Admin',
-    workspace: accountType === 'team' ? 'Neural AI' : 'Personal',
+    userId: extra?.user_id ?? (c.sub as string) ?? '',
+    username,
+    name: (c.name as string) || username,
     accountType,
+    orgId: extra?.org_id ?? (c.org as string | undefined),
+    role: extra?.role,
   }
 }
 
@@ -76,94 +54,65 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AnantUser | null>(null)
   const [loading, setLoading] = useState(true)
 
+  // Restore a session from the stored token on boot.
   useEffect(() => {
-    // Restore a prior demo session first (survives refresh without Supabase).
-    const demo = localStorage.getItem('anant.demo')
-    if (demo) {
-      const u = JSON.parse(demo) as AnantUser
-      if (!u.accountType) u.accountType = accountTypeForEmail(u.email) // backfill older sessions
-      setUser(u)
-      setLoading(false)
-      return
-    }
-    if (!supabase) {
-      setLoading(false)
-      return
-    }
-    supabase.auth.getSession().then(({ data }) => {
-      if (data.session) setUser(userFromSession(data.session))
-      setLoading(false)
-    })
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
-      setUser(session ? userFromSession(session) : null)
-    })
-    return () => sub.subscription.unsubscribe()
+    if (getToken()) setUser(userFromClaims())
+    setLoading(false)
   }, [])
 
-  const value = useMemo<AuthValue>(
-    () => ({
+  const value = useMemo<AuthValue>(() => {
+    function adopt(res: { access_token: string; user_id?: string; org_id?: string; role?: string }) {
+      setToken(res.access_token)
+      setUser(userFromClaims(res))
+    }
+    function toError(e: unknown): { error?: string } {
+      if (e instanceof ApiError) return { error: e.message }
+      return { error: 'Something went wrong. Please try again.' }
+    }
+    return {
       user,
       loading,
-      async signIn(email, password) {
-        if (!supabase) {
-          signInDemoInternal(email)
+      async signIn(username, password, door) {
+        try {
+          const res = door === 'enterprise' ? await api.enterpriseLogin(username, password) : await api.login(username, password)
+          adopt(res)
           return {}
+        } catch (e) {
+          return toError(e)
         }
-        const { error } = await supabase.auth.signInWithPassword({ email, password })
-        return error ? { error: error.message } : {}
       },
-      async signUp(email, password, name) {
-        if (!supabase) {
-          signInDemoInternal(email, name)
+      async signUpIndividual(username, password, name) {
+        try {
+          adopt(await api.signup(username, password, name))
           return {}
+        } catch (e) {
+          return toError(e)
         }
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { data: { name } },
-        })
-        if (error) return { error: error.message }
-        // If email confirmation is on, there is no session yet.
-        return { needsConfirm: !data.session }
       },
-      async signInWithGoogle() {
-        if (!supabase) return { error: 'Sign-in is not configured.' }
-        const { error } = await supabase.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: window.location.origin },
-        })
-        return error ? { error: error.message } : {}
-      },
-      signInDemo() {
-        signInDemoInternal('you@local', 'Tejash')
+      async signUpEnterprise(b) {
+        try {
+          adopt(await api.enterpriseSignup(b))
+          return {}
+        } catch (e) {
+          return toError(e)
+        }
       },
       async signOut() {
-        localStorage.removeItem('anant.demo')
-        if (supabase) await supabase.auth.signOut()
+        try {
+          await api.logoutAll()
+        } catch {
+          /* ignore — clear locally regardless */
+        }
+        setToken(null)
         setUser(null)
       },
-    }),
-    [user, loading],
-  )
-
-  function signInDemoInternal(email: string, name?: string) {
-    const accountType = accountTypeForEmail(email)
-    const u: AnantUser = {
-      email,
-      name: name || nameFromEmail(email),
-      role: 'Admin',
-      workspace: accountType === 'team' ? 'Neural AI' : 'Personal',
-      accountType,
-      demo: true,
     }
-    localStorage.setItem('anant.demo', JSON.stringify(u))
-    setUser(u)
-  }
+  }, [user, loading])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
-export function useAuth() {
+export function useAuth(): AuthValue {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')
   return ctx

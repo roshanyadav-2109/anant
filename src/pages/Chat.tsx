@@ -4,9 +4,9 @@ import { useAuth } from '@/lib/auth'
 import { ProvenanceDot } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
 import { ArrowRight, Attach, ChevronDown, Dismiss, Mark, Plus, Search, Send, Stop } from '@/icons'
-import { oliverCitations, provenanceLabel, sourceGlyph } from '@/lib/mockData'
+import { provenanceLabel, sourceGlyph } from '@/lib/mockData'
 import { useData } from '@/lib/dataStore'
-import { addMessage, createConversation } from '@/lib/data'
+import { api, chatStream } from '@/lib/anant'
 import { randomGreeting } from '@/lib/greetings'
 
 /**
@@ -28,15 +28,12 @@ import { logoFor } from '@/lib/logos'
 import { bucketFor, relativeShort } from '@/lib/time'
 import type { ChatMessage, Citation, Conversation, Memory, Provenance, SourceKind } from '@/lib/types'
 
-const CANNED: { text: string; citations: Citation[] } = {
-  text: "Oliver now leads design. He moved off the backend team last month, so he's running the design work for your team rather than backend development.",
-  citations: oliverCitations,
-}
+const isEngineId = (id: string) => !!id && !id.startsWith('local_')
 
 export function ChatPage() {
   const location = useLocation()
   const focusId = (location.state as { focusId?: string } | null)?.focusId
-  const { conversations: seedConvos, memories, loading, workspaceId } = useData()
+  const { conversations: seedConvos, memories, loading, refresh } = useData()
   const [greeting] = useState(randomGreeting)
   const suggestions = useMemo(() => suggestionsFromHistory(memories), [memories])
   const [convos, setConvos] = useState<Conversation[]>([])
@@ -86,13 +83,7 @@ export function ChatPage() {
 
   function askFromSource(c: Citation) {
     setSourcesOpen(false)
-    const related = oliverCitations.filter((x) => x.quote !== c.quote).slice(0, 3)
-    stream(
-      `Tell me more about “${c.quote}”`,
-      `${describeSource(c)} Here are the closest related memories.`,
-      [c, ...related],
-      activeId,
-    )
+    void sendMessage(`Tell me more about “${c.quote}”`)
   }
 
   function openSources(list: Citation[]) {
@@ -116,60 +107,93 @@ export function ChatPage() {
   function patchConv(id: string, fn: (c: Conversation) => Conversation) {
     setConvos((cs) => cs.map((c) => (c.id === id ? fn(c) : c)))
   }
-  const isDbId = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(id)
 
-  /** Append a user turn and stream an Anant reply with its citations, persisting both. */
-  function stream(question: string, answerText: string, citations: Citation[], targetId: string) {
-    if (streaming) return
-    const userMsg: ChatMessage = { id: `u_${Date.now()}`, role: 'user', text: question, at: 'Just now' }
-    patchConv(targetId, (c) => ({ ...c, messages: [...c.messages, userMsg] }))
-    if (workspaceId && isDbId(targetId)) void addMessage(targetId, 'user', question, [], 'Just now').catch(() => {})
+  // Load an existing conversation's messages from the engine on first open.
+  useEffect(() => {
+    const c = convos.find((x) => x.id === activeId)
+    if (!c || !isEngineId(activeId) || c.messages.length > 0) return
+    let cancelled = false
+    api
+      .getMessages(activeId)
+      .then((res) => {
+        if (cancelled) return
+        patchConv(activeId, (cv) => ({
+          ...cv,
+          messages: res.messages.map((m) => ({
+            id: m.id,
+            role: m.role === 'assistant' ? 'anant' : 'user',
+            text: m.content,
+            at: m.created_at ?? '',
+          })),
+        }))
+      })
+      .catch(() => {})
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId])
+
+  /** Send a message to the engine and stream the reply into the active thread. */
+  async function sendMessage(text: string) {
+    if (!text || streaming) return
+    const convId = activeId
+    const userMsg: ChatMessage = { id: `u_${Date.now()}`, role: 'user', text, at: 'Just now' }
+    patchConv(convId, (c) => ({ ...c, messages: [...c.messages, userMsg] }))
 
     const answerId = `a_${Date.now()}`
     setStreaming(true)
-    patchConv(targetId, (c) => ({
+    patchConv(convId, (c) => ({
       ...c,
       messages: [...c.messages, { id: answerId, role: 'anant', text: '', streaming: true, at: 'Just now' }],
     }))
 
-    const words = answerText.split(' ')
-    let i = 0
-    const timer = setInterval(() => {
-      i++
-      const partial = words.slice(0, i).join(' ')
-      const done = i >= words.length
-      patchConv(targetId, (c) => ({
-        ...c,
-        messages: c.messages.map((m) =>
-          m.id === answerId
-            ? { ...m, text: partial, streaming: !done, citations: done ? citations : undefined }
-            : m,
-        ),
-      }))
-      if (done) {
-        clearInterval(timer)
-        setStreaming(false)
-        if (workspaceId && isDbId(targetId)) void addMessage(targetId, 'anant', answerText, citations, 'Just now').catch(() => {})
-      }
-    }, 55)
+    let acc = ''
+    await chatStream(
+      text,
+      isEngineId(convId) ? convId : undefined,
+      {
+        onToken: (chunk) => {
+          acc += chunk
+          patchConv(convId, (c) => ({
+            ...c,
+            messages: c.messages.map((m) => (m.id === answerId ? { ...m, text: acc, streaming: true } : m)),
+          }))
+        },
+        onDone: (fin) => {
+          patchConv(convId, (c) => ({
+            ...c,
+            messages: c.messages.map((m) => (m.id === answerId ? { ...m, text: fin.response || acc, streaming: false } : m)),
+          }))
+          setStreaming(false)
+          // Adopt the engine's conversation id for a brand-new local thread.
+          if (!isEngineId(convId) && fin.conversation_id) {
+            const title = text.length > 40 ? text.slice(0, 40) + '…' : text
+            patchConv(convId, (c) => ({ ...c, id: fin.conversation_id, title }))
+            setActiveId(fin.conversation_id)
+            void refresh()
+          }
+        },
+        onError: () => {
+          patchConv(convId, (c) => ({
+            ...c,
+            messages: c.messages.map((m) =>
+              m.id === answerId
+                ? { ...m, text: acc || 'Sorry — I couldn’t reach the engine. Check that it’s running.', streaming: false }
+                : m,
+            ),
+          }))
+          setStreaming(false)
+        },
+      },
+    )
   }
 
-  async function send() {
+  function send() {
     const text = draft.trim()
     if (!text || streaming) return
     setDraft('')
-    let convId = activeId
-    // Persist the conversation on its first message (title from the question).
-    if (workspaceId && !isDbId(convId)) {
-      const title = text.length > 40 ? text.slice(0, 40) + '…' : text
-      const created = await createConversation(workspaceId, title).catch(() => null)
-      if (created) {
-        patchConv(convId, (c) => ({ ...c, id: created, title }))
-        setActiveId(created)
-        convId = created
-      }
-    }
-    stream(text, CANNED.text, CANNED.citations, convId)
+    void sendMessage(text)
   }
 
   function newConversation() {

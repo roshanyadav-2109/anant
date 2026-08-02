@@ -76,11 +76,11 @@ export function SettingsPage() {
               </span>
               <div>
                 <div className="text-[0.9375rem] font-[500] text-ink">{user?.name ?? '—'}</div>
-                <div className="text-[0.8125rem] text-ink-soft">{user?.email ?? '—'}</div>
+                <div className="text-[0.8125rem] text-ink-soft">@{user?.username ?? '—'}</div>
               </div>
             </div>
-            <Row label="Workspace" value={user?.workspace ?? '—'} />
-            <Row label="Role" value={user?.role ?? '—'} />
+            <Row label="Account" value={user?.accountType === 'team' ? 'Organization' : 'Personal'} />
+            <Row label="Role" value={user?.role ?? (user?.accountType === 'team' ? 'Member' : 'Owner')} />
           </Section>
 
           {/* How Anant works */}

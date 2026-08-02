@@ -9,7 +9,6 @@ import {
 } from '@/icons'
 import { sourceGlyph } from '@/lib/mockData'
 import { useData } from '@/lib/dataStore'
-import { correctMemory, createMemory, forgetMemory as dbForgetMemory } from '@/lib/data'
 import { logoFor } from '@/lib/logos'
 import type { Memory, Provenance, SourceKind } from '@/lib/types'
 
@@ -193,7 +192,7 @@ function MemoryDetail({
 export function MemoryPage() {
   const location = useLocation()
   const focusId = (location.state as { focusId?: string } | null)?.focusId
-  const { memories, loading, workspaceId } = useData()
+  const { memories, loading } = useData()
   const [items, setItems] = useState<Memory[]>([])
   const [view, setView] = useState<'list' | 'graph'>('list')
   const [query, setQuery] = useState('')
@@ -235,10 +234,11 @@ export function MemoryPage() {
   const selected = items.find((m) => m.id === selectedId) ?? null
   const filtersActive = prov !== 'all' || src !== 'all' || subject !== 'all' || query.trim() !== ''
 
+  // The engine builds memory from chat/consolidation; edits below are local
+  // working-copy changes (the engine has no per-memory edit/delete endpoint).
   function editMemory(id: string, fact: string) {
     setItems((xs) => xs.map((m) => (m.id === id ? { ...m, fact } : m)))
     if (newId === id) setNewId(null)
-    void correctMemory(id, fact).catch(() => {})
   }
   function confirmMemory(id: string) {
     setItems((xs) => xs.map((m) => (m.id === id ? { ...m, confirmed: true, confidence: 1 } : m)))
@@ -249,22 +249,11 @@ export function MemoryPage() {
     setItems(rest)
     if (selectedId === id) setSelectedId(rest[0]?.id ?? null)
     if (newId === id) setNewId(null)
-    void dbForgetMemory(id).catch(() => {})
   }
-  async function addMemory() {
-    // Persist a blank memory, then edit it in place with the real DB id.
-    let fresh: Memory
-    if (workspaceId) {
-      const created = await createMemory(workspaceId).catch(() => null)
-      fresh = created ?? {
-        id: `m_${Date.now()}`, fact: '', subject: 'You', category: 'Note', provenance: 'stated',
-        source: { kind: 'chat', label: 'Chat', speaker: 'You' }, when: 'just now', confidence: 0.9,
-      }
-    } else {
-      fresh = {
-        id: `m_${Date.now()}`, fact: '', subject: 'You', category: 'Note', provenance: 'stated',
-        source: { kind: 'chat', label: 'Chat', speaker: 'You' }, when: 'just now', confidence: 0.9,
-      }
+  function addMemory() {
+    const fresh: Memory = {
+      id: `m_${Date.now()}`, fact: '', subject: 'You', category: 'Note', provenance: 'stated',
+      source: { kind: 'chat', label: 'Chat', speaker: 'You' }, when: 'just now', confidence: 0.9,
     }
     const id = fresh.id
     setItems((xs) => [fresh, ...xs])

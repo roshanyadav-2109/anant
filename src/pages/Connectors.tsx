@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { ConnectorCard } from '@/components/ConnectorCard'
 import { useData } from '@/lib/dataStore'
-import { insertMemory } from '@/lib/data'
+import { api } from '@/lib/anant'
 import { Attach, Connectors as LinkGlyph, Dismiss, Edit, Plus, type IconProps } from '@/icons'
 import type { ComponentType } from 'react'
 
@@ -43,7 +43,7 @@ function cxTile(accent?: boolean) {
 }
 
 export function ConnectorsPage() {
-  const { connectors, workspaceId, refresh } = useData()
+  const { connectors, refresh } = useData()
   const connected = connectors.filter((c) => c.status === 'connected' || c.status === 'syncing')
   const available = connectors.filter((c) => c.status === 'available' || c.status === 'error')
 
@@ -61,33 +61,24 @@ export function ConnectorsPage() {
 
   async function save(kind: 'text' | 'link') {
     const v = value.trim()
-    if (!v || !workspaceId) return
+    if (!v) return
     setBusy(true)
-    await insertMemory(workspaceId, {
-      fact: v,
-      subject: 'You',
-      category: kind === 'link' ? 'Link' : 'Note',
-      sourceLabel: kind === 'link' ? 'Link you added' : 'Text you added',
-    }).catch(() => {})
+    // The engine builds memory from chat — hand it the text/link to remember.
+    const prompt = kind === 'link' ? `Please remember this link: ${v}` : `Please remember this: ${v}`
+    await api.chat(prompt).catch(() => {})
     await refresh()
     setBusy(false)
     setModal(null)
     setValue('')
-    flash('Added to your memory')
+    flash('Sent to Anant — it will remember this')
   }
 
-  async function onFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ''
-    if (!file || !workspaceId) return
-    await insertMemory(workspaceId, {
-      fact: `Uploaded “${file.name}”`,
-      subject: 'You',
-      category: 'File',
-      sourceLabel: file.name,
-    }).catch(() => {})
-    await refresh()
-    flash(`Added “${file.name}” to your memory`)
+    if (!file) return
+    // No file-ingestion endpoint on the engine yet — be honest rather than fake it.
+    flash(`“${file.name}” selected — file import isn’t available yet`)
   }
 
   return (

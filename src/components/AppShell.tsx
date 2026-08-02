@@ -86,9 +86,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     setCollapsed(location.pathname.startsWith('/chat'))
   }, [location.pathname])
 
-  const initials = (user?.workspace ?? 'A')
+  const initials = (user?.name ?? 'A')
     .split(' ')
-    .map((w) => w[0])
+    .map((w: string) => w[0])
     .slice(0, 1)
     .join('')
 
@@ -157,9 +157,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             </span>
             {!collapsed && (
               <span className="min-w-0 flex-1 leading-tight">
-                <span className="block truncate text-[0.875rem] font-[500] text-white">{user?.workspace}</span>
+                <span className="block truncate text-[0.875rem] font-[500] text-white">{user?.name}</span>
                 <span className="block truncate text-[0.75rem] text-[var(--color-sidebar-faint)]">
-                  {user?.name} · {user?.role}
+                  {user?.accountType === 'team' ? 'Organization' : 'Personal'}
+                  {user?.role ? ` · ${user.role}` : ''}
                 </span>
               </span>
             )}
@@ -170,7 +171,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div className="rise absolute bottom-[calc(100%+6px)] left-2.5 right-2.5 z-20 overflow-hidden rounded-[var(--radius)] border border-rule bg-paper-raised shadow-[var(--shadow-pop)]">
               <div className="border-b border-rule px-3.5 py-2.5">
                 <div className="text-[0.8125rem] font-[500] text-ink">{user?.name}</div>
-                <div className="text-[0.75rem] text-ink-muted">{user?.email}</div>
+                <div className="text-[0.75rem] text-ink-muted">@{user?.username}</div>
               </div>
               <button
                 onClick={() => {

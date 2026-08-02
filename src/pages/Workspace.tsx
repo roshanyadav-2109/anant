@@ -391,7 +391,7 @@ export function WorkspacePage() {
         {isTeam ? (
           <TeamView onOpenActivity={setOpenActivity} />
         ) : (
-          <PersonalView name={user?.name ?? 'You'} email={user?.email ?? 'you@local'} />
+          <PersonalView name={user?.name ?? 'You'} email={user?.username ? `@${user.username}` : ''} />
         )}
       </div>
 

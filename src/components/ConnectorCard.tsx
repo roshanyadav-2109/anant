@@ -3,8 +3,6 @@ import type { Connector, ConnectorStatus } from '@/lib/types'
 import { cx, Button } from '@/components/ui'
 import { Alert, Confirm, Sync } from '@/icons'
 import { logoFor } from '@/lib/logos'
-import { useData } from '@/lib/dataStore'
-import { setConnectorStatus } from '@/lib/data'
 
 const statusMeta: Record<ConnectorStatus, { label: string; className: string }> = {
   connected: { label: 'Connected', className: 'text-[var(--color-ok)]' },
@@ -29,16 +27,15 @@ export function StatusPill({ status }: { status: ConnectorStatus }) {
 export function ConnectorCard({ connector }: { connector: Connector }) {
   const { icon: Icon } = connector
   const logo = logoFor(connector.id)
-  const { workspaceId } = useData()
   const [status, setStatus] = useState(connector.status)
 
+  // Optimistic local status. Real connection flows are per-provider (the
+  // engine ships a Slack connector; others light up as integrations land).
   function connect() {
     setStatus('connected')
-    if (workspaceId) void setConnectorStatus(workspaceId, connector.id, 'connected').catch(() => {})
   }
   function disconnect() {
     setStatus('available')
-    if (workspaceId) void setConnectorStatus(workspaceId, connector.id, 'available').catch(() => {})
   }
 
   const progress =
