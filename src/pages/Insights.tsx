@@ -73,7 +73,7 @@ function Entry({ ins, last }: { ins: Insight; last: boolean }) {
           <span className="font-[500]" style={{ color }}>
             Anant {verb[ins.kind]}
           </span>
-          {/today/i.test(ins.when) && <span className="text-ink-soft">today</span>}
+          {/today/i.test(ins.when) && ins.at && <span className="text-ink-soft">{ins.at}</span>}
         </div>
 
         <p className="mt-1.5 max-w-xl text-[1rem] leading-snug text-ink">{ins.title}</p>

@@ -142,6 +142,7 @@ export const insights: Insight[] = [
     provenanceNote: 'links 2 memories',
     source: { kind: 'slack', label: 'Slack · #engineering' },
     when: 'noticed today',
+    at: '9:42am',
     confidence: 0.58,
   },
   {

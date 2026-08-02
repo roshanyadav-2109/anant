@@ -54,6 +54,7 @@ export interface Insight {
   provenanceNote?: string
   source?: SourceRef
   when: string
+  at?: string // clock time, shown for today's noticings, e.g. "9:42am"
   confidence: number
 }
 
