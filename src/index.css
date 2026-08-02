@@ -8,29 +8,29 @@
    ============================================================ */
 
 @theme {
-  /* Surfaces — pure white, cool neutral greys */
-  --color-paper: #ffffff;
+  /* ===== Direction 2 · Elevated — tinted canvas, soft depth ===== */
+  /* Surfaces — tinted page, white elevated panels */
+  --color-paper: #f6f7fa;
   --color-paper-raised: #ffffff;
-  --color-paper-sunk: #f5f5f6;
+  --color-paper-sunk: #eceef4;
   --color-veil: #ffffff;
 
-  /* Ink — black everywhere; only placeholders keep a faint tone */
+  /* Ink — black headings, tasteful grey for secondary */
   --color-ink: #0b0b0d;
-  --color-ink-soft: #0b0b0d;
-  --color-ink-muted: #0b0b0d;
-  --color-ink-faint: #3f3f46;
+  --color-ink-soft: #26272c;
+  --color-ink-muted: #5b5f6b;
+  --color-ink-faint: #9aa0ad;
 
   /* Hairlines */
-  --color-rule: #e6e6e9;
-  --color-rule-soft: #efeff1;
+  --color-rule: #e7e9f0;
+  --color-rule-soft: #eef0f5;
 
-  /* The single accent — deep royal blue.
-     (Named 'evergreen' for historical class-name reuse; value is royal.) */
-  --color-evergreen: #1e40af;
-  --color-evergreen-deep: #1a389d;
-  --color-evergreen-soft: #eef2fd;
-  --color-royal: #1e40af;
-  --color-royal-line: #74a4ff; /* brighter left indicator on the active tab */
+  /* Accent — indigo, gradient CTA */
+  --color-evergreen: #4f46e5;
+  --color-evergreen-deep: #4338ca;
+  --color-evergreen-soft: #eef0fb;
+  --color-royal: #4f46e5;
+  --color-royal-line: #a5b4fc;
 
   /* Status — used only as plain coloured text, never a filled capsule */
   --color-ok: #15803d;    /* connected / available — a calm, deep green */
@@ -52,14 +52,17 @@
   --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
 
-  /* Radii — tight, production */
-  --radius-sm: 4px;
-  --radius: 4px;
-  --radius-lg: 6px;
+  /* Radii — rounded */
+  --radius-sm: 6px;
+  --radius: 8px;
+  --radius-lg: 12px;
 
-  /* Shadows — crisp, neutral, minimal */
-  --shadow-card: 0 1px 2px rgba(11, 11, 13, 0.04), 0 1px 3px rgba(11, 11, 13, 0.06);
-  --shadow-pop: 0 4px 12px rgba(11, 11, 13, 0.08), 0 16px 40px -16px rgba(11, 11, 13, 0.24);
+  /* Shadows — soft depth */
+  --shadow-card: 0 1px 2px rgba(12, 14, 20, 0.05), 0 10px 28px -18px rgba(12, 14, 20, 0.22);
+  --shadow-pop: 0 4px 12px rgba(12, 14, 20, 0.08), 0 24px 48px -20px rgba(12, 14, 20, 0.28);
+
+  /* Primary CTA gradient */
+  --brand-grad: linear-gradient(135deg, #6366f1, #4f46e5);
 }
 
 /* ============================================================
@@ -145,6 +148,9 @@
   .tnum { font-variant-numeric: tabular-nums; }
 
   .hairline { border-color: var(--color-rule); }
+
+  /* Primary CTA gradient hook — flat unless a direction sets --brand-grad */
+  .brand-btn { background-image: var(--brand-grad); }
 
   .focus-ring {
     outline: 2px solid transparent;

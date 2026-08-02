@@ -20,7 +20,7 @@ const buttonBase =
 
 const buttonVariants: Record<ButtonVariant, string> = {
   primary:
-    'bg-evergreen text-veil hover:bg-evergreen-deep border border-transparent shadow-[0_1px_0_rgba(0,0,0,0.06)]',
+    'brand-btn bg-evergreen text-veil hover:bg-evergreen-deep border border-transparent shadow-[0_1px_0_rgba(0,0,0,0.06)]',
   outline: 'bg-paper-raised text-ink border border-rule hover:border-ink-faint hover:bg-veil',
   ghost: 'bg-transparent text-ink-soft hover:bg-paper-sunk border border-transparent',
   quiet: 'bg-transparent text-ink-muted hover:text-ink border border-transparent',
