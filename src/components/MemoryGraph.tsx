@@ -88,12 +88,14 @@ function edgePath(a: GNode, b: GNode) {
   return { d: `M${x1} ${y1} Q ${cx} ${cy} ${x2} ${y2}`, mx: cx, my: cy }
 }
 
-export function MemoryGraph() {
+export function MemoryGraph({ query = '' }: { query?: string }) {
   const [active, setActive] = useState<string>('oliver')
   const [hover, setHover] = useState<string | null>(null)
   const [open, setOpen] = useState(false)
 
   const focus = hover ?? active
+  const q = query.trim().toLowerCase()
+  const searching = q.length > 0
 
   // adjacency for dimming / highlighting
   const neighbours = useMemo(() => {
@@ -181,19 +183,31 @@ export function MemoryGraph() {
           {nodes.map((n) => {
             const isFocus = n.id === focus
             const near = neighbours.has(n.id)
-            const dim = focus ? !near : false
+            const matched = searching && n.label.toLowerCase().includes(q)
+            const dim = searching ? !matched : focus ? !near : false
             const w = Math.max(52, n.label.length * 7.4 + 22)
 
             return (
               <g
                 key={n.id}
                 className="cursor-pointer"
-                opacity={dim ? 0.32 : 1}
+                opacity={dim ? 0.22 : 1}
                 style={{ transition: 'opacity 0.2s' }}
                 onMouseEnter={() => setHover(n.id)}
                 onMouseLeave={() => setHover(null)}
                 onClick={() => { setActive(n.id); setOpen(true) }}
               >
+                {matched && (
+                  <circle
+                    cx={n.x}
+                    cy={n.y}
+                    r={radius[n.type] + 7}
+                    fill="none"
+                    stroke="var(--color-royal)"
+                    strokeWidth={1.8}
+                    className="consolidating"
+                  />
+                )}
                 {n.type === 'you' && (
                   <>
                     <circle cx={n.x} cy={n.y} r={radius.you} fill="var(--color-royal)" />

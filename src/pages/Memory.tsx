@@ -320,7 +320,7 @@ export function MemoryPage() {
         {middleHeader}
 
         {view === 'graph' ? (
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5"><MemoryGraph /></div>
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5"><MemoryGraph query={query} /></div>
         ) : (
           <div className={cx('grid min-h-0 flex-1', selected ? 'grid-cols-[minmax(0,1fr)_400px]' : 'grid-cols-1')}>
             {/* Middle column: the list */}
@@ -339,7 +339,7 @@ export function MemoryPage() {
                         active ? 'bg-evergreen-soft' : 'hover:bg-paper-sunk')}
                     >
                       {active && <span className="absolute left-0 top-0 h-full w-[2.5px] bg-[var(--color-royal)]" />}
-                      <span className="mt-1"><ProvenanceDot provenance={m.provenance} /></span>
+                      <span className="mt-0.5"><ProvGlyph p={m.provenance} /></span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-[0.875rem] text-ink">{m.fact || 'New memory'}</span>
                         <span className="mt-0.5 flex items-center gap-1.5 text-[0.72rem] text-ink-faint">
