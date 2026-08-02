@@ -211,6 +211,32 @@ export const connectors: Connector[] = [
   { id: 'hubspot', name: 'HubSpot', category: 'CRM', status: 'available', icon: CoGeneric, official: true },
   { id: 'salesforce', name: 'Salesforce', category: 'CRM', status: 'available', icon: CoGeneric, official: true },
   { id: 'discord', name: 'Discord', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
+  // Messaging
+  { id: 'telegram', name: 'Telegram', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
+  { id: 'whatsapp', name: 'WhatsApp Business', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
+  { id: 'messenger', name: 'Messenger', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
+  { id: 'wechat', name: 'WeChat', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
+  { id: 'signal', name: 'Signal', category: 'Messaging', status: 'available', icon: CoGeneric, official: true },
+  // Documents & notes
+  { id: 'box', name: 'Box', category: 'Documents', status: 'available', icon: CoGeneric, official: true },
+  { id: 'onedrive', name: 'OneDrive', category: 'Documents', status: 'available', icon: CoGeneric, official: true },
+  { id: 'gdocs', name: 'Google Docs', category: 'Documents', status: 'available', icon: CoGeneric, official: true },
+  { id: 'evernote', name: 'Evernote', category: 'Notes', status: 'available', icon: CoGeneric, official: true },
+  // Tasks & databases
+  { id: 'clickup', name: 'ClickUp', category: 'Tasks', status: 'available', icon: CoGeneric, official: true },
+  { id: 'monday', name: 'monday.com', category: 'Tasks', status: 'available', icon: CoGeneric, official: true },
+  { id: 'todoist', name: 'Todoist', category: 'Tasks', status: 'available', icon: CoGeneric, official: true },
+  { id: 'airtable', name: 'Airtable', category: 'Databases', status: 'available', icon: CoGeneric, official: true },
+  // Support & CRM
+  { id: 'zendesk', name: 'Zendesk', category: 'Support', status: 'available', icon: CoGeneric, official: true },
+  { id: 'intercom', name: 'Intercom', category: 'Support', status: 'available', icon: CoGeneric, official: true },
+  { id: 'zoho', name: 'Zoho CRM', category: 'CRM', status: 'available', icon: CoGeneric, official: true },
+  { id: 'pipedrive', name: 'Pipedrive', category: 'CRM', status: 'available', icon: CoGeneric, official: true },
+  // Code
+  { id: 'gitlab', name: 'GitLab', category: 'Code', status: 'available', icon: CoGeneric, official: true },
+  { id: 'bitbucket', name: 'Bitbucket', category: 'Code', status: 'available', icon: CoGeneric, official: true },
+  // Meetings
+  { id: 'loom', name: 'Loom', category: 'Meetings', status: 'available', icon: CoGeneric, official: true },
 ]
 
 /* Detailed provenance for the sample answer — dates, the conversation each
