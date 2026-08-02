@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 import { api, ApiError, decodeToken, getToken, setToken } from '@/lib/anant'
+import { supabase } from '@/lib/supabase'
 
 /**
  * Auth against the Anant Engine (see API_REFERENCE.md). The JWT carries an
@@ -30,6 +31,7 @@ interface AuthValue {
   signIn: (username: string, password: string, door: 'individual' | 'enterprise') => Promise<{ error?: string }>
   signUpIndividual: (username: string, password: string, name?: string) => Promise<{ error?: string }>
   signUpEnterprise: (b: EnterpriseSignup) => Promise<{ error?: string }>
+  signInWithGoogle: () => Promise<{ error?: string }>
   signOut: () => Promise<void>
 }
 
@@ -97,11 +99,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return toError(e)
         }
       },
+      async signInWithGoogle() {
+        // Google OAuth via Supabase. Note: the Anant Engine authenticates by
+        // username/password only — until it exposes a Google exchange endpoint,
+        // this yields a Google identity but not an engine token.
+        if (!supabase) return { error: 'Google sign-in is not configured.' }
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: window.location.origin },
+        })
+        return error ? { error: error.message } : {}
+      },
       async signOut() {
         try {
           await api.logoutAll()
         } catch {
           /* ignore — clear locally regardless */
+        }
+        try {
+          if (supabase) await supabase.auth.signOut()
+        } catch {
+          /* ignore */
         }
         setToken(null)
         setUser(null)
