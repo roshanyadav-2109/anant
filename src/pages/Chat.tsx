@@ -3,8 +3,9 @@ import { TopBar } from '@/components/AppShell'
 import { ProvenanceBadge, SourceChip } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
 import { Attach, Chat as ChatGlyph, Dismiss, Mark, Node, Person, Plus, Send, Stop, Time } from '@/icons'
-import { conversations as seed, oliverCitations } from '@/lib/mockData'
-import type { ChatMessage, Citation, Conversation } from '@/lib/types'
+import { conversations as seed, oliverCitations, sourceGlyph } from '@/lib/mockData'
+import { logoFor } from '@/lib/logos'
+import type { ChatMessage, Citation, Conversation, SourceKind } from '@/lib/types'
 
 const CANNED: { text: string; citations: Citation[] } = {
   text: "Oliver now leads design. He moved off the backend team last month, so he's running the design work for your team rather than backend development.",
@@ -244,6 +245,13 @@ export function ChatPage() {
   )
 }
 
+function SourceLogo({ kind }: { kind: SourceKind }) {
+  const logo = logoFor(kind)
+  if (logo) return <img src={logo} alt="" className="h-4 w-4 object-contain" />
+  const Glyph = sourceGlyph[kind]
+  return <Glyph size={15} className="text-ink-muted" />
+}
+
 function Message({
   message,
   onSeeSources,
@@ -278,16 +286,24 @@ function Message({
         {message.citations && !message.streaming && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {message.citations.slice(0, 3).map((c, i) => (
-              <SourceChip key={i} source={c.source} onClick={() => onSeeSources(message.citations!)} />
-            ))}
-            {message.citations.length > 3 && (
               <button
+                key={i}
                 onClick={() => onSeeSources(message.citations!)}
-                className="focus-ring inline-flex items-center gap-1.5 rounded-full border border-rule bg-paper-sunk px-2.5 py-1 text-[0.75rem] font-[500] text-ink-soft transition-colors hover:border-ink-faint hover:text-ink"
+                title={c.source.label}
+                aria-label={`Source: ${c.source.label}`}
+                className="focus-ring flex h-7 w-7 items-center justify-center rounded-full border border-rule bg-veil transition-colors hover:border-ink-faint"
               >
-                +{message.citations.length - 3} more sources
+                <SourceLogo kind={c.source.kind} />
               </button>
-            )}
+            ))}
+            <button
+              onClick={() => onSeeSources(message.citations!)}
+              className="focus-ring inline-flex items-center gap-1.5 rounded-full border border-rule bg-paper-sunk px-2.5 py-1 text-[0.75rem] font-[500] text-ink-soft transition-colors hover:border-ink-faint hover:text-ink"
+            >
+              {message.citations.length > 3
+                ? `+${message.citations.length - 3} more sources`
+                : 'View sources in detail'}
+            </button>
           </div>
         )}
       </div>
