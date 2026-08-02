@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useAuth } from '@/lib/auth'
 import { ProvenanceDot } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
-import { ArrowRight, Attach, ChevronDown, Dismiss, Mark, Plus, Send, Stop } from '@/icons'
+import { ArrowRight, Attach, ChevronDown, Dismiss, Mark, Plus, Search, Send, Stop } from '@/icons'
 import { conversations as seed, oliverCitations, provenanceLabel, sourceGlyph } from '@/lib/mockData'
 import { logoFor } from '@/lib/logos'
 import type { ChatMessage, Citation, Conversation, Provenance, SourceKind } from '@/lib/types'
@@ -20,10 +20,23 @@ export function ChatPage() {
   const [sourcesOpen, setSourcesOpen] = useState(false)
   const [sourceList, setSourceList] = useState<Citation[]>([])
   const [openSrc, setOpenSrc] = useState<Set<number>>(new Set())
+  const [convQuery, setConvQuery] = useState('')
   const threadRef = useRef<HTMLDivElement>(null)
   const { user } = useAuth()
   const me = user?.name ?? 'You'
   const active = convos.find((c) => c.id === activeId)!
+
+  // Conversation history, filtered by search and grouped by recency.
+  const bucketLabel = (w: string) =>
+    w === 'now' ? 'Today' : w === 'last week' ? 'Last week' : 'Earlier'
+  const convGroups: { label: string; items: Conversation[] }[] = []
+  convos
+    .filter((c) => c.title.toLowerCase().includes(convQuery.trim().toLowerCase()))
+    .forEach((c) => {
+      const label = bucketLabel(c.when)
+      const g = convGroups.find((x) => x.label === label) ?? (convGroups.push({ label, items: [] }), convGroups[convGroups.length - 1])
+      g.items.push(c)
+    })
 
   function askFromSource(c: Citation) {
     setSourcesOpen(false)
@@ -107,29 +120,60 @@ export function ChatPage() {
   return (
     <>
       <div className="grid min-h-0 flex-1 grid-cols-[240px_1fr]">
-        {/* Conversation list */}
+        {/* Conversation history */}
         <aside className="flex min-h-0 flex-col border-r border-rule bg-paper-sunk/30">
-          <div className="p-3">
-            <Button variant="outline" size="sm" className="w-full" leading={<Plus size={16} />} onClick={newConversation}>
+          <div className="space-y-2.5 p-3">
+            <Button variant="primary" size="sm" className="w-full justify-center" leading={<Plus size={16} />} onClick={newConversation}>
               New conversation
             </Button>
+            <div className="relative">
+              <Search size={15} className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-ink-faint" />
+              <input
+                value={convQuery}
+                onChange={(e) => setConvQuery(e.target.value)}
+                placeholder="Search conversations"
+                className="focus-ring w-full rounded-[4px] border border-rule bg-paper-raised py-1.5 pl-8 pr-2.5 text-[0.8125rem] text-ink placeholder:text-ink-faint"
+              />
+            </div>
           </div>
+
           <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
-            {convos.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => setActiveId(c.id)}
-                className={cx(
-                  'focus-ring mb-0.5 block w-full rounded-[var(--radius)] px-3 py-2 text-left transition-colors',
-                  c.id === activeId ? 'bg-paper-raised shadow-[inset_0_0_0_1px_var(--color-rule)]' : 'hover:bg-paper-raised/60',
-                )}
-              >
-                <div className={cx('truncate text-[0.875rem]', c.id === activeId ? 'font-[500] text-ink' : 'text-ink-soft')}>
-                  {c.title}
+            {convGroups.map((g) => (
+              <div key={g.label} className="mb-1.5">
+                <div className="px-2.5 pb-1 pt-2.5 text-[0.625rem] font-[600] uppercase tracking-[0.14em] text-ink-faint">
+                  {g.label}
                 </div>
-                <div className="text-[0.6875rem] text-ink-faint">{c.when}</div>
-              </button>
+                {g.items.map((c) => {
+                  const isActive = c.id === activeId
+                  const last = c.messages[c.messages.length - 1]
+                  const preview = last ? `${last.role === 'anant' ? 'Anant: ' : ''}${last.text}` : 'New conversation'
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => setActiveId(c.id)}
+                      className={cx(
+                        'group/conv focus-ring relative mb-0.5 block w-full rounded-[4px] px-3 py-2 text-left transition-colors',
+                        isActive ? 'bg-paper-raised shadow-[0_1px_2px_rgba(11,11,13,0.04)]' : 'hover:bg-paper-raised/70',
+                      )}
+                    >
+                      {isActive && (
+                        <span className="absolute left-0 top-1/2 h-5 w-[2.5px] -translate-y-1/2 rounded-r-full bg-[var(--color-royal)]" />
+                      )}
+                      <div className="flex items-baseline gap-2">
+                        <span className={cx('flex-1 truncate text-[0.875rem]', isActive ? 'font-[600] text-ink' : 'font-[500] text-ink')}>
+                          {c.title}
+                        </span>
+                        <span className="shrink-0 text-[0.6875rem] text-ink-faint">{c.when}</span>
+                      </div>
+                      <div className="mt-0.5 truncate text-[0.75rem] text-ink-faint">{preview}</div>
+                    </button>
+                  )
+                })}
+              </div>
             ))}
+            {convGroups.length === 0 && (
+              <p className="px-3 py-8 text-center text-[0.8125rem] text-ink-faint">No conversations found.</p>
+            )}
           </div>
         </aside>
 

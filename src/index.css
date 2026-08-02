@@ -14,11 +14,11 @@
   --color-paper-sunk: #f5f5f6;
   --color-veil: #ffffff;
 
-  /* Ink — black-forward; secondary text stays dark, never washed-out grey */
+  /* Ink — black everywhere; only placeholders keep a faint tone */
   --color-ink: #0b0b0d;
-  --color-ink-soft: #141417;
-  --color-ink-muted: #2b2b31;
-  --color-ink-faint: #4a4a52;
+  --color-ink-soft: #0b0b0d;
+  --color-ink-muted: #0b0b0d;
+  --color-ink-faint: #3f3f46;
 
   /* Hairlines */
   --color-rule: #e6e6e9;
@@ -139,7 +139,7 @@
     font-weight: 500;
     letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--color-ink-faint);
+    color: var(--color-ink-muted);
   }
 
   .tnum { font-variant-numeric: tabular-nums; }
