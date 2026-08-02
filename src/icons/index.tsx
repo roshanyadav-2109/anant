@@ -145,13 +145,13 @@ function Svg({ size = 20, strokeWidth = 1.8, children, ...rest }: IconProps & { 
   )
 }
 
-// Anant mark — a knotted thread that returns to itself: memory that holds.
+// Neural AI mark — an atom: two crossing orbits around a nucleus.
 export function Mark({ size = 24, ...p }: IconProps) {
   return (
-    <Svg size={size} strokeWidth={1.5} {...p}>
-      <path d="M12 3.5 C6.8 3.5 4 7 4 11.2 C4 16.4 8 20.5 12 20.5 C16 20.5 20 16.4 20 11.2 C20 7 17.2 3.5 12 3.5 Z" opacity={0.35} />
-      <path d="M8.5 15.5 C8.5 11 10 8 12 8 C14 8 15.5 11 15.5 15.5" />
-      <circle cx="12" cy="8" r="1.15" fill="currentColor" stroke="none" />
+    <Svg size={size} strokeWidth={1.8} {...p}>
+      <ellipse cx="12" cy="12" rx="9.3" ry="4" transform="rotate(45 12 12)" />
+      <ellipse cx="12" cy="12" rx="9.3" ry="4" transform="rotate(-45 12 12)" />
+      <circle cx="12" cy="12" r="2.3" fill="currentColor" stroke="none" />
     </Svg>
   )
 }
