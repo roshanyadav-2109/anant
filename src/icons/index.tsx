@@ -55,7 +55,25 @@ export const Aggregated = solarIcon('Aggregated')
 export const Edit = solarIcon('Edit')
 export const Forget = solarIcon('Forget')
 export const Confirm = solarIcon('Confirm')
-export const Dismiss = solarIcon('Dismiss')
+export function Dismiss({ size = 20, strokeWidth = 1.9, className, ...rest }: IconProps) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={strokeWidth}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden="true"
+      {...rest}
+    >
+      <path d="M6.5 6.5 17.5 17.5M17.5 6.5 6.5 17.5" />
+    </svg>
+  )
+}
 export const Plus = solarIcon('Plus')
 export const Send = solarIcon('Send')
 export const ChevronDown = solarIcon('ChevronDown')

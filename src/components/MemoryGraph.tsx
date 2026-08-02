@@ -249,14 +249,14 @@ export function MemoryGraph() {
       {open && (
         <aside className="slide-in-right w-[360px] shrink-0 overflow-y-auto p-4">
           <div className="overflow-hidden rounded-[var(--radius-lg)] border border-rule bg-paper-raised">
-            <header className="flex items-center justify-between border-b border-rule px-4 py-3">
+            <header className="flex items-center justify-between px-4 pb-1 pt-3">
               <div className="text-[0.95rem] font-[500] text-ink">{nodeById(active).label}</div>
               <button aria-label="Close" onClick={() => setOpen(false)} className="focus-ring text-ink-muted transition-colors hover:text-ink">
                 <Dismiss size={18} />
               </button>
             </header>
             {related.length > 0 ? (
-              <div className="divide-y divide-rule/70">
+              <div>
                 {related.map((m) => (
                   <div key={m.id} className="px-4 py-3.5">
                     <div className="mb-1.5 flex items-center gap-2 text-[0.72rem] text-ink-muted">
