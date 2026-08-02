@@ -28,8 +28,16 @@ const PERSONAL_DOMAINS = new Set([
   'aol.com', 'gmx.com', 'zoho.com', 'mail.com', 'yandex.com',
 ])
 
+/** Specific addresses granted team/enterprise access regardless of domain.
+ *  (Stand-in for a real per-account entitlement / purchase record.) */
+const TEAM_EMAILS = new Set([
+  'unknowniitians@gmail.com',
+])
+
 export function accountTypeForEmail(email: string): 'personal' | 'team' {
-  const domain = email.split('@')[1]?.toLowerCase() ?? ''
+  const e = email.toLowerCase()
+  if (TEAM_EMAILS.has(e)) return 'team'
+  const domain = e.split('@')[1] ?? ''
   if (!domain) return 'personal'
   return PERSONAL_DOMAINS.has(domain) ? 'personal' : 'team'
 }
