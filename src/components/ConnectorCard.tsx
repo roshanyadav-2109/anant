@@ -3,6 +3,8 @@ import type { Connector, ConnectorStatus } from '@/lib/types'
 import { cx, Button } from '@/components/ui'
 import { Alert, Confirm, Sync } from '@/icons'
 import { logoFor } from '@/lib/logos'
+import { useData } from '@/lib/dataStore'
+import { setConnectorStatus } from '@/lib/data'
 
 const statusMeta: Record<ConnectorStatus, { label: string; className: string }> = {
   connected: { label: 'Connected', className: 'text-[var(--color-ok)]' },
@@ -27,7 +29,17 @@ export function StatusPill({ status }: { status: ConnectorStatus }) {
 export function ConnectorCard({ connector }: { connector: Connector }) {
   const { icon: Icon } = connector
   const logo = logoFor(connector.id)
+  const { workspaceId } = useData()
   const [status, setStatus] = useState(connector.status)
+
+  function connect() {
+    setStatus('connected')
+    if (workspaceId) void setConnectorStatus(workspaceId, connector.id, 'connected').catch(() => {})
+  }
+  function disconnect() {
+    setStatus('available')
+    if (workspaceId) void setConnectorStatus(workspaceId, connector.id, 'available').catch(() => {})
+  }
 
   const progress =
     connector.items && connector.itemsTarget
@@ -71,11 +83,16 @@ export function ConnectorCard({ connector }: { connector: Connector }) {
 
       <div className="mt-4 flex items-center justify-end border-t border-rule/70 pt-3">
         {status === 'available' ? (
-          <Button size="sm" variant="primary" onClick={() => setStatus('syncing')}>
+          <Button size="sm" variant="primary" onClick={connect}>
             Connect
           </Button>
         ) : (
-          <button className="text-[0.75rem] font-[500] text-ink-muted transition-colors hover:text-ink">Manage</button>
+          <button
+            onClick={disconnect}
+            className="text-[0.75rem] font-[500] text-ink-muted transition-colors hover:text-[var(--color-alert)]"
+          >
+            Disconnect
+          </button>
         )}
       </div>
     </div>

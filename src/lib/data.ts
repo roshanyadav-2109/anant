@@ -121,6 +121,47 @@ export async function createMemory(workspaceId: string): Promise<Memory | null> 
   return rowToMemory(data as MemoryRow)
 }
 
+export async function insertMemory(
+  workspaceId: string,
+  m: { fact: string; subject?: string; category?: string; sourceKind?: SourceKind; sourceLabel?: string },
+): Promise<Memory | null> {
+  if (!supabase) return null
+  const { data, error } = await supabase
+    .from('memories')
+    .insert({
+      workspace_id: workspaceId,
+      scope: 'shared',
+      fact: m.fact,
+      subject: m.subject ?? 'You',
+      category: m.category ?? 'Note',
+      provenance: 'stated',
+      source_kind: m.sourceKind ?? 'chat',
+      source_label: m.sourceLabel ?? 'Added by you',
+      confidence: 0.9,
+      when_label: 'just now',
+    })
+    .select(
+      'id, fact, detail, subject, category, provenance, provenance_note, source_kind, source_label, source_speaker, source_when, confidence, superseded_from, superseded_to, when_label',
+    )
+    .single()
+  if (error) throw error
+  return rowToMemory(data as MemoryRow)
+}
+
+export async function setConnectorStatus(
+  workspaceId: string,
+  key: string,
+  status: 'connected' | 'syncing' | 'error' | 'available',
+): Promise<void> {
+  if (!supabase) return
+  const { error } = await supabase
+    .from('connectors')
+    .update({ status })
+    .eq('workspace_id', workspaceId)
+    .eq('key', key)
+  if (error) throw error
+}
+
 export async function correctMemory(id: string, fact: string): Promise<void> {
   if (!supabase) return
   const { error } = await supabase

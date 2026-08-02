@@ -6,6 +6,7 @@ import { Button, cx, IconButton } from '@/components/ui'
 import { ArrowRight, Attach, ChevronDown, Dismiss, Mark, Plus, Search, Send, Stop } from '@/icons'
 import { oliverCitations, provenanceLabel, sourceGlyph } from '@/lib/mockData'
 import { useData } from '@/lib/dataStore'
+import { addMessage, createConversation } from '@/lib/data'
 import { randomGreeting } from '@/lib/greetings'
 
 /**
@@ -35,7 +36,7 @@ const CANNED: { text: string; citations: Citation[] } = {
 export function ChatPage() {
   const location = useLocation()
   const focusId = (location.state as { focusId?: string } | null)?.focusId
-  const { conversations: seedConvos, memories } = useData()
+  const { conversations: seedConvos, memories, loading, workspaceId } = useData()
   const [greeting] = useState(randomGreeting)
   const suggestions = useMemo(() => suggestionsFromHistory(memories), [memories])
   const [convos, setConvos] = useState<Conversation[]>([])
@@ -55,12 +56,17 @@ export function ChatPage() {
     setConvos(seedConvos)
   }, [seedConvos])
   useEffect(() => {
-    if (!convos.length) return
+    if (loading) return
+    // Empty history → start a fresh (unsaved) conversation so the composer shows.
+    if (convos.length === 0) {
+      setConvos([{ id: `local_${Date.now()}`, title: 'New conversation', at: Date.now(), messages: [] }])
+      return
+    }
     setActiveId((cur) => {
       if (cur && convos.some((c) => c.id === cur)) return cur
       return (focusId && convos.some((c) => c.id === focusId) ? focusId : convos[0].id) ?? ''
     })
-  }, [convos, focusId])
+  }, [convos, focusId, loading])
 
   const active = convos.find((c) => c.id === activeId)
 
@@ -85,6 +91,7 @@ export function ChatPage() {
       `Tell me more about “${c.quote}”`,
       `${describeSource(c)} Here are the closest related memories.`,
       [c, ...related],
+      activeId,
     )
   }
 
@@ -106,19 +113,21 @@ export function ChatPage() {
     threadRef.current?.scrollTo({ top: threadRef.current.scrollHeight, behavior: 'smooth' })
   }, [active?.messages.length, streaming])
 
-  function patchActive(fn: (c: Conversation) => Conversation) {
-    setConvos((cs) => cs.map((c) => (c.id === activeId ? fn(c) : c)))
+  function patchConv(id: string, fn: (c: Conversation) => Conversation) {
+    setConvos((cs) => cs.map((c) => (c.id === id ? fn(c) : c)))
   }
+  const isDbId = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-/.test(id)
 
-  /** Append a user turn and stream an Anant reply with its citations. */
-  function stream(question: string, answerText: string, citations: Citation[]) {
+  /** Append a user turn and stream an Anant reply with its citations, persisting both. */
+  function stream(question: string, answerText: string, citations: Citation[], targetId: string) {
     if (streaming) return
     const userMsg: ChatMessage = { id: `u_${Date.now()}`, role: 'user', text: question, at: 'Just now' }
-    patchActive((c) => ({ ...c, messages: [...c.messages, userMsg] }))
+    patchConv(targetId, (c) => ({ ...c, messages: [...c.messages, userMsg] }))
+    if (workspaceId && isDbId(targetId)) void addMessage(targetId, 'user', question, [], 'Just now').catch(() => {})
 
     const answerId = `a_${Date.now()}`
     setStreaming(true)
-    patchActive((c) => ({
+    patchConv(targetId, (c) => ({
       ...c,
       messages: [...c.messages, { id: answerId, role: 'anant', text: '', streaming: true, at: 'Just now' }],
     }))
@@ -129,7 +138,7 @@ export function ChatPage() {
       i++
       const partial = words.slice(0, i).join(' ')
       const done = i >= words.length
-      patchActive((c) => ({
+      patchConv(targetId, (c) => ({
         ...c,
         messages: c.messages.map((m) =>
           m.id === answerId
@@ -140,19 +149,31 @@ export function ChatPage() {
       if (done) {
         clearInterval(timer)
         setStreaming(false)
+        if (workspaceId && isDbId(targetId)) void addMessage(targetId, 'anant', answerText, citations, 'Just now').catch(() => {})
       }
     }, 55)
   }
 
-  function send() {
+  async function send() {
     const text = draft.trim()
     if (!text || streaming) return
     setDraft('')
-    stream(text, CANNED.text, CANNED.citations)
+    let convId = activeId
+    // Persist the conversation on its first message (title from the question).
+    if (workspaceId && !isDbId(convId)) {
+      const title = text.length > 40 ? text.slice(0, 40) + '…' : text
+      const created = await createConversation(workspaceId, title).catch(() => null)
+      if (created) {
+        patchConv(convId, (c) => ({ ...c, id: created, title }))
+        setActiveId(created)
+        convId = created
+      }
+    }
+    stream(text, CANNED.text, CANNED.citations, convId)
   }
 
   function newConversation() {
-    const c: Conversation = { id: `c_${Date.now()}`, title: 'New conversation', at: Date.now(), messages: [] }
+    const c: Conversation = { id: `local_${Date.now()}`, title: 'New conversation', at: Date.now(), messages: [] }
     setConvos((cs) => [c, ...cs])
     setActiveId(c.id)
   }
