@@ -56,12 +56,13 @@ export function DataProvider({ children }: { children: ReactNode }) {
         setState(empty)
         return
       }
+      // Resilient: a failure in one fetch must not blank the others.
       const [memories, insights, connectors, conversations, members] = await Promise.all([
-        fetchMemories(workspaceId),
-        fetchInsights(workspaceId),
-        fetchConnectors(workspaceId),
-        fetchConversations(workspaceId),
-        fetchMembers(workspaceId, user.email),
+        fetchMemories(workspaceId).catch((e) => (console.error('memories', e), [])),
+        fetchInsights(workspaceId).catch((e) => (console.error('insights', e), [])),
+        fetchConnectors(workspaceId).catch((e) => (console.error('connectors', e), [])),
+        fetchConversations(workspaceId).catch((e) => (console.error('conversations', e), [])),
+        fetchMembers(workspaceId, user.email).catch((e) => (console.error('members', e), [])),
       ])
       setState({ workspaceId, memories, insights, connectors, conversations, members })
     } catch (e) {

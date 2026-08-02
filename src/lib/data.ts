@@ -296,22 +296,40 @@ export interface Member {
 interface MemberRow {
   role: 'admin' | 'member' | 'viewer'
   user_id: string
-  profiles: { full_name: string | null; email: string | null } | null
+}
+interface ProfileRow {
+  id: string
+  full_name: string | null
+  email: string | null
 }
 
 export async function fetchMembers(workspaceId: string, meEmail?: string): Promise<Member[]> {
   if (!supabase) return []
-  const { data, error } = await supabase
+  // No PostgREST embed — workspace_members has no direct FK to profiles.
+  const { data: mem, error } = await supabase
     .from('workspace_members')
-    .select('role, user_id, profiles(full_name, email)')
+    .select('role, user_id')
     .eq('workspace_id', workspaceId)
   if (error) throw error
+  const rows = (mem ?? []) as MemberRow[]
+  const ids = rows.map((m) => m.user_id)
+  let profiles: ProfileRow[] = []
+  if (ids.length) {
+    const { data: p } = await supabase.from('profiles').select('id, full_name, email').in('id', ids)
+    profiles = (p ?? []) as ProfileRow[]
+  }
+  const byId = new Map(profiles.map((p) => [p.id, p]))
   const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1)
-  return (data as unknown as MemberRow[]).map((m) => ({
-    name: m.profiles?.full_name ?? (m.profiles?.email ?? 'Member').split('@')[0],
-    email: m.profiles?.email ?? '',
-    role: cap(m.role) as Member['role'],
-    access: m.role === 'viewer' ? 'Shared only' : 'Private + shared',
-    you: !!meEmail && m.profiles?.email === meEmail,
-  }))
+  return rows.map((m) => {
+    const p = byId.get(m.user_id)
+    const email = p?.email ?? ''
+    const name = p?.full_name ?? (email ? email.split('@')[0] : 'Member')
+    return {
+      name,
+      email,
+      role: cap(m.role) as Member['role'],
+      access: m.role === 'viewer' ? 'Shared only' : 'Private + shared',
+      you: !!meEmail && email === meEmail,
+    }
+  })
 }
