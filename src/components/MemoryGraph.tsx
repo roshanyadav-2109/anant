@@ -247,33 +247,33 @@ export function MemoryGraph() {
 
       {/* Selected node — one section block: name + cross + description */}
       {open && (
-        <aside className="slide-in-right w-[360px] shrink-0 overflow-y-auto py-3 pl-2 pr-3">
+        <aside className="slide-in-right w-[320px] shrink-0 overflow-y-auto py-2 pl-1 pr-1.5">
           <div className="overflow-hidden rounded-[var(--radius-lg)] border border-rule bg-paper-raised">
-            <header className="flex items-center justify-between px-4 pb-1 pt-3">
-              <div className="text-[0.95rem] font-[500] text-ink">{nodeById(active).label}</div>
+            <header className="flex items-center justify-between px-3 pb-1 pt-2.5">
+              <div className="text-[0.9rem] font-[500] text-ink">{nodeById(active).label}</div>
               <button aria-label="Close" onClick={() => setOpen(false)} className="focus-ring text-ink-muted transition-colors hover:text-ink">
-                <Dismiss size={18} />
+                <Dismiss size={17} />
               </button>
             </header>
             {related.length > 0 ? (
               <div>
                 {related.map((m) => (
-                  <div key={m.id} className="px-4 py-3.5">
-                    <div className="mb-1.5 flex items-center gap-2 text-[0.72rem] text-ink-muted">
+                  <div key={m.id} className="px-3 py-2.5">
+                    <div className="mb-1 flex items-center gap-2 text-[0.7rem] text-ink-muted">
                       <span className="h-2 w-2 rounded-full" style={{ background: `var(--color-${m.provenance})` }} />
                       <span>{m.when}</span>
                     </div>
-                    <p className="text-[0.95rem] leading-snug text-ink">{m.fact}</p>
-                    <div className="mt-2 flex items-center gap-1.5 text-[0.8125rem] text-ink-muted">
-                      <SourceMark kind={m.source.kind} size={15} />
-                      <span>{m.source.label}</span>
-                      <span className="tnum ml-auto">{Math.round(m.confidence * 100)}%</span>
+                    <p className="text-[0.875rem] leading-snug text-ink">{m.fact}</p>
+                    <div className="mt-1.5 flex items-center gap-1.5 text-[0.78rem] text-ink-muted">
+                      <SourceMark kind={m.source.kind} size={14} />
+                      <span className="truncate">{m.source.label}</span>
+                      <span className="tnum ml-auto shrink-0">{Math.round(m.confidence * 100)}%</span>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="px-4 py-8 text-center text-[0.875rem] text-ink-muted">Nothing recorded against this node yet.</p>
+              <p className="px-3 py-6 text-center text-[0.85rem] text-ink-muted">Nothing recorded against this node yet.</p>
             )}
           </div>
         </aside>
