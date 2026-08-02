@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { MemoryGraph } from '@/components/MemoryGraph'
 import { ConfidenceMeter, ProvenanceDot } from '@/components/Provenance'
-import { Button, cx, Segmented } from '@/components/ui'
+import { Button, cx } from '@/components/ui'
 import {
   Aggregated, ArrowRight, Confirm, Dismiss, Edit, Forget, GraphView, Inferred, ListView,
   Memory as MemoryGlyph, Plus, Search as SearchGlyph, Stated,
@@ -38,6 +38,36 @@ function SourceMark({ kind, size = 15 }: { kind: SourceKind; size?: number }) {
 function ProvGlyph({ p }: { p: Provenance }) {
   const I = provIcon[p]
   return <I size={16} style={{ color: `var(--color-${p})` }} />
+}
+
+/** Underline tabs — "List view" / "Graphical view". */
+function ViewToggle({ value, onChange }: { value: 'list' | 'graph'; onChange: (v: 'list' | 'graph') => void }) {
+  const opts = [
+    { v: 'list' as const, I: ListView, label: 'List view' },
+    { v: 'graph' as const, I: GraphView, label: 'Graphical view' },
+  ]
+  return (
+    <div className="flex items-center gap-5">
+      {opts.map(({ v, I, label }) => {
+        const active = value === v
+        return (
+          <button
+            key={v}
+            onClick={() => onChange(v)}
+            aria-pressed={active}
+            className={cx(
+              'focus-ring relative flex items-center gap-1.5 pb-1.5 text-[0.875rem] transition-colors',
+              active ? 'font-[500] text-ink' : 'font-[400] text-ink-muted hover:text-ink',
+            )}
+          >
+            <I size={16} className={active ? 'text-[var(--color-royal)]' : ''} />
+            {label}
+            {active && <span className="absolute inset-x-0 -bottom-px h-[2px] rounded-full bg-[var(--color-royal)]" />}
+          </button>
+        )
+      })}
+    </div>
+  )
 }
 
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -270,14 +300,7 @@ export function MemoryPage() {
           className="focus-ring w-full rounded-[var(--radius)] border border-rule bg-paper-raised py-2 pl-9 pr-3 text-[0.875rem] text-ink placeholder:text-ink-faint"
         />
       </div>
-      <Segmented
-        value={view}
-        onChange={setView}
-        options={[
-          { value: 'list', label: <><ListView size={16} /> List</> },
-          { value: 'graph', label: <><GraphView size={16} /> Graph</> },
-        ]}
-      />
+      <ViewToggle value={view} onChange={setView} />
     </div>
   )
 
