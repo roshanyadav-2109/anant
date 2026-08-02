@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react'
-import { NavLink, useNavigate } from 'react-router-dom'
+import { useEffect, useState, type ReactNode } from 'react'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
 import { cx, IconButton } from '@/components/ui'
 import {
@@ -77,7 +77,14 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+
+  // Chat is a focus surface — collapse the rail to icons while chatting,
+  // and restore it on every other screen.
+  useEffect(() => {
+    setCollapsed(location.pathname.startsWith('/chat'))
+  }, [location.pathname])
 
   const initials = (user?.workspace ?? 'A')
     .split(' ')
