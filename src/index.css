@@ -8,11 +8,11 @@
    ============================================================ */
 
 @theme {
-  /* ===== Polish Direction 3 · Soft depth — greyer desk, floating panels ===== */
-  /* Surfaces — a distinctly grey canvas so white panels lift off it */
-  --color-paper: #e8eaf0;
-  --color-paper-raised: #ffffff;
-  --color-paper-sunk: #dfe1ea;
+  /* ===== Inverted · white room — a white canvas with soft-grey blocks ===== */
+  /* Surfaces — white page; panels are gentle grey insets */
+  --color-paper: #ffffff;
+  --color-paper-raised: #eef0f6;
+  --color-paper-sunk: #e5e7ef;
   --color-veil: #ffffff;
 
   /* Ink — cool slate */
@@ -57,9 +57,9 @@
   --radius: 6px;
   --radius-lg: 8px;
 
-  /* Shadows — pronounced depth (panels float off the grey canvas) */
-  --shadow-card: 0 1px 2px rgba(12, 14, 20, 0.06), 0 14px 32px -14px rgba(12, 14, 20, 0.32);
-  --shadow-pop: 0 6px 16px rgba(12, 14, 20, 0.1), 0 28px 56px -18px rgba(12, 14, 20, 0.34);
+  /* Shadows — gentle, since grey blocks sit as insets on the white page */
+  --shadow-card: 0 1px 2px rgba(12, 14, 20, 0.04), 0 10px 26px -18px rgba(12, 14, 20, 0.22);
+  --shadow-pop: 0 6px 16px rgba(12, 14, 20, 0.08), 0 24px 48px -20px rgba(12, 14, 20, 0.26);
 
   /* Primary CTA gradient */
   --brand-grad: linear-gradient(135deg, #6366f1, #4f46e5);
