@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { TopBar } from '@/components/AppShell'
-import { ProvenanceBadge, SourceChip } from '@/components/Provenance'
+import { ProvenanceBadge } from '@/components/Provenance'
 import { Button, cx, IconButton } from '@/components/ui'
-import { Attach, Chat as ChatGlyph, Dismiss, Mark, Node, Person, Plus, Send, Stop, Time } from '@/icons'
+import { Attach, ChevronDown, Dismiss, Mark, Plus, Send, Stop } from '@/icons'
 import { conversations as seed, oliverCitations, sourceGlyph } from '@/lib/mockData'
 import { logoFor } from '@/lib/logos'
 import type { ChatMessage, Citation, Conversation, SourceKind } from '@/lib/types'
@@ -19,12 +19,29 @@ export function ChatPage() {
   const [streaming, setStreaming] = useState(false)
   const [sourcesOpen, setSourcesOpen] = useState(false)
   const [sourceList, setSourceList] = useState<Citation[]>([])
+  const [openSrc, setOpenSrc] = useState<Set<number>>(new Set())
   const threadRef = useRef<HTMLDivElement>(null)
+  const composerRef = useRef<HTMLTextAreaElement>(null)
   const active = convos.find((c) => c.id === activeId)!
+
+  function askFromSource(c: Citation) {
+    setSourcesOpen(false)
+    setDraft(`Tell me more about “${c.quote}” `)
+    requestAnimationFrame(() => composerRef.current?.focus())
+  }
 
   function openSources(list: Citation[]) {
     setSourceList(list)
+    setOpenSrc(new Set())
     setSourcesOpen(true)
+  }
+
+  function toggleSrc(i: number) {
+    setOpenSrc((prev) => {
+      const next = new Set(prev)
+      next.has(i) ? next.delete(i) : next.add(i)
+      return next
+    })
   }
 
   useEffect(() => {
@@ -147,6 +164,7 @@ export function ChatPage() {
                   <Attach size={18} />
                 </IconButton>
                 <textarea
+                  ref={composerRef}
                   value={draft}
                   onChange={(e) => setDraft(e.target.value)}
                   onKeyDown={(e) => {
@@ -174,71 +192,72 @@ export function ChatPage() {
                   </button>
                 )}
               </div>
-              <p className="mt-2 text-center text-[0.6875rem] text-ink-faint">
-                Tip: ask about one source, e.g. “from Slack”.
-              </p>
             </div>
           </div>
         </section>
       </div>
 
-      {/* Sources — a centred modal over a blurred screen */}
+      {/* Sources — a drawer that slides in from the right */}
       {sourcesOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-50">
           <button
             aria-label="Close sources"
             onClick={() => setSourcesOpen(false)}
-            className="absolute inset-0 bg-ink/25 backdrop-blur-md"
+            className="absolute inset-0 bg-ink/20"
           />
-          <div className="rise relative z-10 flex max-h-[80vh] w-[70vw] max-w-[960px] flex-col overflow-hidden rounded-[4px] border border-rule bg-paper-raised shadow-[var(--shadow-pop)]">
-            <div className="flex items-start justify-between gap-3 border-b border-rule px-6 py-4">
-              <div className="text-[1.05rem] font-[500] text-ink">Sources for this answer</div>
-              <IconButton label="Close" onClick={() => setSourcesOpen(false)}>
+          <aside className="slide-in-right absolute right-0 top-0 bottom-0 z-10 flex w-[400px] max-w-[92vw] flex-col border-l border-rule bg-paper-raised shadow-[var(--shadow-pop)]">
+            <header className="flex items-center justify-between gap-3 px-5 pt-5 pb-2">
+              <div className="text-[1rem] font-[500] text-ink">Sources for this answer</div>
+              <button
+                aria-label="Close"
+                onClick={() => setSourcesOpen(false)}
+                className="focus-ring text-ink-muted transition-colors hover:text-ink"
+              >
                 <Dismiss size={18} />
-              </IconButton>
-            </div>
-            <div className="grid gap-3 overflow-y-auto p-6 sm:grid-cols-2">
-              {sourceList.map((c, i) => (
-                <div key={i} className="rounded-[4px] border border-rule bg-veil p-4">
-                  <div className="flex items-center justify-between gap-2">
-                    <ProvenanceBadge provenance={c.provenance} />
-                    <SourceChip source={c.source} />
+              </button>
+            </header>
+
+            <div className="flex-1 overflow-y-auto px-2 py-2">
+              {sourceList.map((c, i) => {
+                const open = openSrc.has(i)
+                return (
+                  <div key={i}>
+                    <button
+                      onClick={() => toggleSrc(i)}
+                      className="focus-ring flex w-full items-center gap-3 rounded-[4px] px-3 py-2.5 text-left transition-colors hover:bg-paper-sunk"
+                    >
+                      <span className="flex w-5 shrink-0 justify-center">
+                        <SourceLogo kind={c.source.kind} />
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-[0.9rem] text-ink">{c.quote}</span>
+                      <ChevronDown
+                        size={16}
+                        className={cx('shrink-0 text-ink-muted transition-transform', open && 'rotate-180')}
+                      />
+                    </button>
+
+                    {open && (
+                      <div className="fade space-y-3 px-3 pb-4 pl-10">
+                        <ProvenanceBadge provenance={c.provenance} />
+                        <p className="text-[0.85rem] leading-relaxed text-ink">{describeSource(c)}</p>
+                        <dl className="space-y-1.5 text-[0.8125rem]">
+                          {c.date && <DetailRow label="When" value={c.date} />}
+                          {c.conversation && <DetailRow label="Conversation" value={c.conversation} />}
+                          {c.source.speaker && <DetailRow label="Said by" value={c.source.speaker} />}
+                        </dl>
+                        <button
+                          onClick={() => askFromSource(c)}
+                          className="focus-ring mt-1 inline-flex items-center gap-1.5 rounded-[4px] border border-rule bg-paper-raised px-3 py-1.5 text-[0.8rem] font-[500] text-ink transition-colors hover:border-ink-faint"
+                        >
+                          Ask a follow-up from this source
+                        </button>
+                      </div>
+                    )}
                   </div>
-                  <p className="mt-3 text-[0.95rem] leading-snug text-ink">{c.quote}</p>
-                  <dl className="mt-3 space-y-1.5 border-t border-rule/70 pt-3 text-[0.8125rem]">
-                    {c.date && (
-                      <div className="flex items-center gap-2 text-ink-soft">
-                        <Time size={14} className="shrink-0 text-ink-faint" />
-                        <span>{c.date}</span>
-                      </div>
-                    )}
-                    {c.conversation && (
-                      <div className="flex items-center gap-2 text-ink-soft">
-                        <ChatGlyph size={14} className="shrink-0 text-ink-faint" />
-                        <span>
-                          In <span className="text-ink">{c.conversation}</span>
-                        </span>
-                      </div>
-                    )}
-                    {c.source.speaker && (
-                      <div className="flex items-center gap-2 text-ink-soft">
-                        <Person size={14} className="shrink-0 text-ink-faint" />
-                        <span>
-                          Said by <span className="text-ink">{c.source.speaker}</span>
-                        </span>
-                      </div>
-                    )}
-                    {c.context && (
-                      <div className="flex items-center gap-2 text-ink-muted">
-                        <Node size={14} className="shrink-0 text-ink-faint" />
-                        <span>{c.context}</span>
-                      </div>
-                    )}
-                  </dl>
-                </div>
-              ))}
+                )
+              })}
             </div>
-          </div>
+          </aside>
         </div>
       )}
     </>
@@ -250,6 +269,26 @@ function SourceLogo({ kind }: { kind: SourceKind }) {
   if (logo) return <img src={logo} alt="" className="h-4 w-4 object-contain" />
   const Glyph = sourceGlyph[kind]
   return <Glyph size={15} className="text-ink-muted" />
+}
+
+/** A plain-language explanation of how a source came to be known. */
+function describeSource(c: Citation): string {
+  if (c.provenance === 'stated') {
+    return `This was stated directly${c.source.speaker ? ` by ${c.source.speaker}` : ''}. Anant recorded it word-for-word, so it carries the highest trust.`
+  }
+  if (c.provenance === 'inferred') {
+    return `Anant worked this out on its own — it wasn't said outright${c.context ? `, ${c.context.toLowerCase()}` : ''}. Treat it as Anant's reasoning, not a stated fact.`
+  }
+  return `Anant noticed this as a pattern across many items rather than a single message${c.context ? ` (${c.context.toLowerCase()})` : ''}. It summarises a trend, not one quote.`
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex gap-2">
+      <dt className="w-24 shrink-0 text-ink-muted">{label}</dt>
+      <dd className="flex-1 font-[500] text-ink">{value}</dd>
+    </div>
+  )
 }
 
 function Message({

@@ -14,11 +14,11 @@
   --color-paper-sunk: #f5f5f6;
   --color-veil: #ffffff;
 
-  /* Ink — near-black through to soft grey */
+  /* Ink — black-forward; secondary text stays dark, never washed-out grey */
   --color-ink: #0b0b0d;
-  --color-ink-soft: #3f3f46;
-  --color-ink-muted: #71717a;
-  --color-ink-faint: #a1a1aa;
+  --color-ink-soft: #141417;
+  --color-ink-muted: #2b2b31;
+  --color-ink-faint: #4a4a52;
 
   /* Hairlines */
   --color-rule: #e6e6e9;
@@ -42,11 +42,11 @@
   --color-sidebar-ink: #d4d4d8;
   --color-sidebar-faint: #8a8a92;
 
-  /* Provenance — monochrome, distinguished by tone + icon, never colour */
-  --color-stated: #18181b;
-  --color-inferred: #52525b;
-  --color-aggregated: #a1a1aa;
-  --color-supersede: #6b7280;
+  /* Provenance — the classic coloured triad */
+  --color-stated: #15803d;    /* user-stated — green */
+  --color-inferred: #2563eb;  /* inferred — blue */
+  --color-aggregated: #b45309; /* aggregated — amber */
+  --color-supersede: #9a7233;  /* superseded ribbon — ochre */
 
   /* Type — Inter only */
   --font-sans: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
@@ -165,6 +165,12 @@
     to { opacity: 1; }
   }
   .fade { animation: anant-fade 0.5s ease both; }
+
+  @keyframes anant-slide-right {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0); }
+  }
+  .slide-in-right { animation: anant-slide-right 0.3s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
 
   @keyframes anant-consolidate {
     0%, 100% { opacity: 0.4; }
