@@ -168,26 +168,28 @@ export function InsightsPage() {
 
         {/* context rail */}
         <aside className="hidden lg:block">
-          <div className="sticky top-4 border-l border-rule pl-7">
-            <div className="text-[2rem] leading-none tracking-[-0.03em] text-ink">{insights.length}</div>
-            <div className="mt-1 text-[0.8125rem] text-ink-soft">
-              {insights.length === 1 ? 'thing to look at' : 'things to look at'}
-            </div>
+          <div className="sticky top-4 flex flex-col gap-3">
+            <div className="rounded-[3px] border border-rule bg-paper-raised p-5">
+              <div className="text-[2rem] leading-none tracking-[-0.03em] text-ink">{insights.length}</div>
+              <div className="mt-1 text-[0.8125rem] text-ink-soft">
+                {insights.length === 1 ? 'thing to look at' : 'things to look at'}
+              </div>
 
-            <div className="mt-7 flex flex-col gap-2.5">
-              {provOrder
-                .filter((p) => byProv[p])
-                .map((p) => (
-                  <div key={p} className="flex items-center gap-2.5 text-[0.8125rem]">
-                    <span className="h-2 w-2 rounded-full" style={{ background: `var(--color-${p})` }} />
-                    <span className="text-ink">{humanProv[p]}</span>
-                    <span className="ml-auto tabular-nums text-ink-soft">{byProv[p]}</span>
-                  </div>
-                ))}
+              <div className="mt-6 flex flex-col gap-2.5">
+                {provOrder
+                  .filter((p) => byProv[p])
+                  .map((p) => (
+                    <div key={p} className="flex items-center gap-2.5 text-[0.8125rem]">
+                      <span className="h-2 w-2 rounded-full" style={{ background: `var(--color-${p})` }} />
+                      <span className="text-ink">{humanProv[p]}</span>
+                      <span className="ml-auto tabular-nums text-ink-soft">{byProv[p]}</span>
+                    </div>
+                  ))}
+              </div>
             </div>
 
             {sources.length > 0 && (
-              <div className="mt-7 border-t border-rule pt-5">
+              <div className="rounded-[3px] border border-rule bg-paper-raised p-5">
                 <div className="mb-2.5 text-[0.75rem] font-[500] text-ink">Drawn from</div>
                 <div className="flex flex-col gap-2">
                   {sources.map((label) => (
