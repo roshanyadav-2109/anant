@@ -5,6 +5,7 @@ import { FilterChip } from '@/components/ui'
 import { EmptyState } from '@/components/States'
 import { Search as SearchGlyph } from '@/icons'
 import { conversations, memories } from '@/lib/mockData'
+import { relativeShort } from '@/lib/time'
 
 export function SearchPage() {
   const [q, setQ] = useState('')
@@ -86,7 +87,7 @@ export function SearchPage() {
                       <div key={c.id} className="flex items-center gap-3 rounded-[var(--radius)] border border-rule bg-paper-raised p-4">
                         <SourceChip source={{ kind: 'chat', label: 'Chat' }} />
                         <span className="text-[0.9375rem] text-ink">{c.title}</span>
-                        <span className="ml-auto text-[0.75rem] text-ink-faint">{c.when}</span>
+                        <span className="ml-auto text-[0.75rem] text-ink-faint">{relativeShort(c.at)}</span>
                       </div>
                     ))}
                   </div>

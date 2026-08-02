@@ -5,6 +5,7 @@ import { Button, cx, IconButton } from '@/components/ui'
 import { ArrowRight, Attach, ChevronDown, Dismiss, Mark, Plus, Search, Send, Stop } from '@/icons'
 import { conversations as seed, oliverCitations, provenanceLabel, sourceGlyph } from '@/lib/mockData'
 import { logoFor } from '@/lib/logos'
+import { bucketFor, relativeShort } from '@/lib/time'
 import type { ChatMessage, Citation, Conversation, Provenance, SourceKind } from '@/lib/types'
 
 const CANNED: { text: string; citations: Citation[] } = {
@@ -26,15 +27,17 @@ export function ChatPage() {
   const me = user?.name ?? 'You'
   const active = convos.find((c) => c.id === activeId)!
 
-  // Conversation history, filtered by search and grouped by recency.
-  const bucketLabel = (w: string) =>
-    w === 'now' ? 'Today' : w === 'last week' ? 'Last week' : 'Earlier'
+  // Conversation history, filtered by search and grouped by recency (newest first).
   const convGroups: { label: string; items: Conversation[] }[] = []
   convos
     .filter((c) => c.title.toLowerCase().includes(convQuery.trim().toLowerCase()))
+    .slice()
+    .sort((a, b) => b.at - a.at)
     .forEach((c) => {
-      const label = bucketLabel(c.when)
-      const g = convGroups.find((x) => x.label === label) ?? (convGroups.push({ label, items: [] }), convGroups[convGroups.length - 1])
+      const label = bucketFor(c.at)
+      const g =
+        convGroups.find((x) => x.label === label) ??
+        (convGroups.push({ label, items: [] }), convGroups[convGroups.length - 1])
       g.items.push(c)
     })
 
@@ -112,7 +115,7 @@ export function ChatPage() {
   }
 
   function newConversation() {
-    const c: Conversation = { id: `c_${Date.now()}`, title: 'New conversation', when: 'now', messages: [] }
+    const c: Conversation = { id: `c_${Date.now()}`, title: 'New conversation', at: Date.now(), messages: [] }
     setConvos((cs) => [c, ...cs])
     setActiveId(c.id)
   }
@@ -140,32 +143,27 @@ export function ChatPage() {
           <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-3">
             {convGroups.map((g) => (
               <div key={g.label} className="mb-1.5">
-                <div className="px-2.5 pb-1 pt-2.5 text-[0.625rem] font-[600] uppercase tracking-[0.14em] text-ink-faint">
-                  {g.label}
-                </div>
+                {g.label !== 'Today' && (
+                  <div className="px-2.5 pb-1 pt-2.5 text-[0.72rem] font-[600] text-ink-faint">{g.label}</div>
+                )}
                 {g.items.map((c) => {
                   const isActive = c.id === activeId
-                  const last = c.messages[c.messages.length - 1]
-                  const preview = last ? `${last.role === 'anant' ? 'Anant: ' : ''}${last.text}` : 'New conversation'
                   return (
                     <button
                       key={c.id}
                       onClick={() => setActiveId(c.id)}
                       className={cx(
-                        'group/conv focus-ring relative mb-0.5 block w-full rounded-[4px] px-3 py-2 text-left transition-colors',
+                        'group/conv focus-ring relative mb-0.5 flex w-full items-baseline gap-2 rounded-[4px] px-3 py-2 text-left transition-colors',
                         isActive ? 'bg-paper-raised shadow-[0_1px_2px_rgba(11,11,13,0.04)]' : 'hover:bg-paper-raised/70',
                       )}
                     >
                       {isActive && (
                         <span className="absolute left-0 top-1/2 h-5 w-[2.5px] -translate-y-1/2 rounded-r-full bg-[var(--color-royal)]" />
                       )}
-                      <div className="flex items-baseline gap-2">
-                        <span className={cx('flex-1 truncate text-[0.875rem]', isActive ? 'font-[600] text-ink' : 'font-[500] text-ink')}>
-                          {c.title}
-                        </span>
-                        <span className="shrink-0 text-[0.6875rem] text-ink-faint">{c.when}</span>
-                      </div>
-                      <div className="mt-0.5 truncate text-[0.75rem] text-ink-faint">{preview}</div>
+                      <span className={cx('flex-1 truncate text-[0.875rem] text-ink', isActive ? 'font-[600]' : 'font-[500]')}>
+                        {c.title}
+                      </span>
+                      <span className="shrink-0 text-[0.6875rem] text-ink-faint">{relativeShort(c.at)}</span>
                     </button>
                   )
                 })}

@@ -250,11 +250,15 @@ export const oliverCitations: Citation[] = [
   },
 ]
 
+const NOW = Date.now()
+const HOUR = 3_600_000
+const DAY = 86_400_000
+
 export const conversations: Conversation[] = [
   {
     id: 'c_design',
     title: 'Design team changes',
-    when: 'last week',
+    at: NOW - 2 * HOUR,
     messages: [
       { id: 'c_design_q', role: 'user', text: 'What is Oliver working on now?', at: 'Today at 11:34 AM' },
       {
@@ -266,10 +270,11 @@ export const conversations: Conversation[] = [
       },
     ],
   },
-  { id: 'c_q3', title: 'Q3 planning notes', when: 'last week', messages: [] },
-  { id: 'c_thornbury', title: 'Thornbury account', when: 'last week', messages: [] },
-  { id: 'c_grace', title: 'Onboarding Grace', when: 'last week', messages: [] },
-  { id: 'c_roadmap', title: 'Roadmap review', when: 'last week', messages: [] },
+  { id: 'c_q3', title: 'Q3 planning notes', at: NOW - 27 * HOUR, messages: [] },
+  { id: 'c_thornbury', title: 'Thornbury account', at: NOW - 3 * DAY, messages: [] },
+  { id: 'c_grace', title: 'Onboarding Grace', at: NOW - 9 * DAY, messages: [] },
+  { id: 'c_roadmap', title: 'Roadmap review', at: NOW - 20 * DAY, messages: [] },
+  { id: 'c_kickoff', title: 'Project kickoff', at: NOW - 65 * DAY, messages: [] },
 ]
 
 export const provenanceLabel: Record<Memory['provenance'], string> = {

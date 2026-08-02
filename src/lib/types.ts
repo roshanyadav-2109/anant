@@ -91,6 +91,6 @@ export interface ChatMessage {
 export interface Conversation {
   id: string
   title: string
-  when: string
+  at: number // epoch ms — drives recency grouping and relative labels
   messages: ChatMessage[]
 }
