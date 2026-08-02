@@ -46,7 +46,7 @@ function SourceNode({ ins }: { ins: Insight }) {
   const logo = src && logoFor(src.kind)
   const Glyph = src ? sourceGlyph[src.kind] : null
   return (
-    <div className="flex min-w-0 items-center gap-2 rounded-[var(--radius-lg)] border border-rule bg-paper-raised px-3 py-2">
+    <div className="flex min-w-0 items-center gap-2 rounded-[var(--radius-lg)] bg-paper-raised px-3 py-2 shadow-[0_1px_2px_rgba(12,14,20,0.06)] ring-1 ring-rule/70">
       {logo ? (
         <img src={logo} alt="" className="h-4 w-4 shrink-0 object-contain" />
       ) : Glyph ? (
@@ -98,8 +98,8 @@ function Entry({ ins, last }: { ins: Insight; last: boolean }) {
           />
 
           <div
-            className="rounded-[var(--radius-lg)] border bg-[var(--color-royal-soft)] px-3 py-2 text-[0.8125rem] text-[var(--color-royal)]"
-            style={{ borderColor: 'color-mix(in srgb, var(--color-royal) 30%, transparent)' }}
+            className="rounded-[var(--radius-lg)] bg-[var(--color-royal-soft)] px-3 py-2 text-[0.8125rem] text-[var(--color-royal)] shadow-[0_1px_2px_rgba(79,70,229,0.12)] ring-1"
+            style={{ ['--tw-ring-color' as string]: 'color-mix(in srgb, var(--color-royal) 26%, transparent)' }}
           >
             {conclusion[ins.kind]}
           </div>
@@ -147,7 +147,11 @@ export function InsightsPage() {
     return acc
   }, {})
   const provOrder: Provenance[] = ['stated', 'inferred', 'aggregated']
-  const sources = Array.from(new Set(insights.map((i) => i.source?.label).filter(Boolean))) as string[]
+  const seenKind = new Set<string>()
+  const sources = insights
+    .map((i) => i.source)
+    .filter((s): s is NonNullable<typeof s> => Boolean(s))
+    .filter((s) => (seenKind.has(s.kind) ? false : (seenKind.add(s.kind), true)))
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
@@ -169,13 +173,28 @@ export function InsightsPage() {
         {/* context rail */}
         <aside className="hidden lg:block">
           <div className="sticky top-4 flex flex-col gap-3">
-            <div className="rounded-[3px] border border-rule bg-paper-raised p-5">
-              <div className="text-[2rem] leading-none tracking-[-0.03em] text-ink">{insights.length}</div>
-              <div className="mt-1 text-[0.8125rem] text-ink-soft">
-                {insights.length === 1 ? 'thing to look at' : 'things to look at'}
+            <div className="rounded-[3px] bg-paper-raised p-5 shadow-[var(--shadow-card)] ring-1 ring-rule/60">
+              <div className="flex items-baseline gap-2">
+                <span className="text-[2.125rem] leading-none tracking-[-0.03em] tabular-nums text-ink">
+                  {insights.length}
+                </span>
+                <span className="pb-0.5 text-[0.8125rem] text-ink-soft">to look at</span>
               </div>
 
-              <div className="mt-6 flex flex-col gap-2.5">
+              {/* distribution — the provenance mix, as a bar */}
+              <div className="mt-4 flex h-2 gap-[3px]">
+                {provOrder
+                  .filter((p) => byProv[p])
+                  .map((p) => (
+                    <span
+                      key={p}
+                      className="rounded-full"
+                      style={{ background: `var(--color-${p})`, flex: byProv[p] }}
+                    />
+                  ))}
+              </div>
+
+              <div className="mt-4 flex flex-col gap-2.5">
                 {provOrder
                   .filter((p) => byProv[p])
                   .map((p) => (
@@ -189,14 +208,23 @@ export function InsightsPage() {
             </div>
 
             {sources.length > 0 && (
-              <div className="rounded-[3px] border border-rule bg-paper-raised p-5">
-                <div className="mb-2.5 text-[0.75rem] font-[500] text-ink">Drawn from</div>
-                <div className="flex flex-col gap-2">
-                  {sources.map((label) => (
-                    <div key={label} className="truncate text-[0.8125rem] text-ink-soft">
-                      {label}
-                    </div>
-                  ))}
+              <div className="rounded-[3px] bg-paper-raised p-5 shadow-[var(--shadow-card)] ring-1 ring-rule/60">
+                <div className="mb-3 text-[0.75rem] font-[500] text-ink">Drawn from</div>
+                <div className="flex flex-col gap-2.5">
+                  {sources.map((s) => {
+                    const logo = logoFor(s.kind)
+                    const Glyph = sourceGlyph[s.kind]
+                    return (
+                      <div key={s.kind} className="flex items-center gap-2.5 text-[0.8125rem] text-ink-soft">
+                        {logo ? (
+                          <img src={logo} alt="" className="h-4 w-4 shrink-0 object-contain" />
+                        ) : (
+                          <Glyph size={15} className="shrink-0 text-ink-muted" />
+                        )}
+                        <span className="truncate">{s.label}</span>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )}
