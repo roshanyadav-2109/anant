@@ -66,7 +66,7 @@ export function SettingsPage() {
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="max-w-4xl px-9 py-9 pb-16">
+      <div className="max-w-5xl px-9 py-9 pb-16">
         <div className="flex flex-col gap-10">
           {/* Account */}
           <Section title="Account" desc="Your profile in this workspace.">
