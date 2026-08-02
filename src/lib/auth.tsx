@@ -47,6 +47,7 @@ interface AuthValue {
   loading: boolean
   signIn: (email: string, password: string) => Promise<{ error?: string }>
   signUp: (email: string, password: string, name: string) => Promise<{ error?: string; needsConfirm?: boolean }>
+  signInWithGoogle: () => Promise<{ error?: string }>
   signInDemo: () => void
   signOut: () => Promise<void>
 }
@@ -124,6 +125,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error) return { error: error.message }
         // If email confirmation is on, there is no session yet.
         return { needsConfirm: !data.session }
+      },
+      async signInWithGoogle() {
+        if (!supabase) return { error: 'Sign-in is not configured.' }
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: { redirectTo: window.location.origin },
+        })
+        return error ? { error: error.message } : {}
       },
       signInDemo() {
         signInDemoInternal('you@local', 'Tejash')
