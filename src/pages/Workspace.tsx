@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { connectors } from '@/lib/mockData'
 import { logoFor } from '@/lib/logos'
 import { Dismiss, Dots, Plus } from '@/icons'
@@ -113,7 +114,7 @@ function ActivityModal({ item, onClose }: { item: Activity; onClose: () => void 
 
   const logo = item.target && logoFor(item.target)
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={onClose} />
       <div className="rise relative flex max-h-[80vh] w-[75vw] flex-col overflow-hidden rounded-[var(--radius-lg)] bg-paper-raised shadow-[var(--shadow-pop)]">
@@ -159,7 +160,8 @@ function ActivityModal({ item, onClose }: { item: Activity; onClose: () => void 
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
