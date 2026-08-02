@@ -8,22 +8,22 @@
    ============================================================ */
 
 @theme {
-  /* ===== Direction 2 · Elevated — tinted canvas, soft depth ===== */
-  /* Surfaces — tinted page, white elevated panels */
-  --color-paper: #f6f7fa;
+  /* ===== Polish Direction 1 · Crisp — clean near-white, cool-slate ink ===== */
+  /* Surfaces — crisp near-white page, pure white panels */
+  --color-paper: #fbfcfe;
   --color-paper-raised: #ffffff;
-  --color-paper-sunk: #eceef4;
+  --color-paper-sunk: #f0f2f7;
   --color-veil: #ffffff;
 
-  /* Ink — black headings, tasteful grey for secondary */
-  --color-ink: #0b0b0d;
-  --color-ink-soft: #26272c;
-  --color-ink-muted: #5b5f6b;
-  --color-ink-faint: #9aa0ad;
+  /* Ink — cool-slate greys with a faint indigo bias (chosen, not default) */
+  --color-ink: #10121a;
+  --color-ink-soft: #383c48;
+  --color-ink-muted: #5f6473;
+  --color-ink-faint: #9ea3b2;
 
   /* Hairlines */
-  --color-rule: #e7e9f0;
-  --color-rule-soft: #eef0f5;
+  --color-rule: #e6e8f1;
+  --color-rule-soft: #eef0f6;
 
   /* Accent — indigo, gradient CTA */
   --color-evergreen: #4f46e5;
