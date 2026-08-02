@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { insights, sourceGlyph } from '@/lib/mockData'
 import { logoFor } from '@/lib/logos'
 import { Dismiss } from '@/icons'
-import type { Insight } from '@/lib/types'
+import type { Insight, Provenance } from '@/lib/types'
 
 /* ============================================================
    Insights — "The Ledger × Canvas"
-   A chronological thread where each entry draws the link Anant
-   made: origin → verb → conclusion, wired out visually. Terse,
-   colour-led, keep/dismiss inline.
+   A chronological thread; each entry draws the link Anant made
+   (origin → verb → conclusion). A right rail summarises what's
+   there so the layout reads as one composition.
    ============================================================ */
 
 const verb: Record<Insight['kind'], string> = {
@@ -35,6 +35,12 @@ const keepLabel: Record<Insight['kind'], string> = {
   contradiction: 'Resolve',
 }
 
+const humanProv: Record<Provenance, string> = {
+  stated: 'Told to Anant',
+  inferred: 'Anant inferred',
+  aggregated: 'Noticed often',
+}
+
 function SourceNode({ ins }: { ins: Insight }) {
   const src = ins.source
   const logo = src && logoFor(src.kind)
@@ -57,7 +63,6 @@ function Entry({ ins, last }: { ins: Insight; last: boolean }) {
 
   return (
     <div className={'relative pl-9 ' + (last ? '' : 'pb-8')}>
-      {/* spine node */}
       <span
         className="absolute left-0 top-1 h-[15px] w-[15px] rounded-full border-[3px] bg-paper-raised"
         style={{ borderColor: color }}
@@ -77,14 +82,20 @@ function Entry({ ins, last }: { ins: Insight; last: boolean }) {
         <div className="mt-3.5 flex flex-wrap items-center gap-x-1 gap-y-2">
           <SourceNode ins={ins} />
 
-          <span className="relative mx-1 hidden h-px w-8 sm:block" style={{ background: `color-mix(in srgb, ${color} 55%, transparent)` }} />
+          <span
+            className="relative mx-1 hidden h-px w-8 sm:block"
+            style={{ background: `color-mix(in srgb, ${color} 55%, transparent)` }}
+          />
           <span
             className="rounded-full border px-2.5 py-0.5 text-[0.6875rem] font-[500]"
             style={{ color, borderColor: `color-mix(in srgb, ${color} 40%, transparent)` }}
           >
             {edge[ins.kind]}
           </span>
-          <span className="relative mx-1 hidden h-px w-8 sm:block" style={{ background: `color-mix(in srgb, ${color} 55%, transparent)` }} />
+          <span
+            className="relative mx-1 hidden h-px w-8 sm:block"
+            style={{ background: `color-mix(in srgb, ${color} 55%, transparent)` }}
+          />
 
           <div
             className="rounded-[var(--radius-lg)] border bg-[var(--color-royal-soft)] px-3 py-2 text-[0.8125rem] text-[var(--color-royal)]"
@@ -99,7 +110,10 @@ function Entry({ ins, last }: { ins: Insight; last: boolean }) {
           {resolved ? (
             <span className="text-[0.8125rem]" style={{ color }}>
               {resolved === 'kept' ? 'Kept.' : 'Dismissed.'}{' '}
-              <button className="font-[500] text-[var(--color-royal)] hover:underline" onClick={() => setResolved(null)}>
+              <button
+                className="font-[500] text-[var(--color-royal)] hover:underline"
+                onClick={() => setResolved(null)}
+              >
                 Undo
               </button>
             </span>
@@ -127,20 +141,65 @@ function Entry({ ins, last }: { ins: Insight; last: boolean }) {
 }
 
 export function InsightsPage() {
+  // counts for the rail
+  const byProv = insights.reduce<Record<string, number>>((acc, i) => {
+    acc[i.provenance] = (acc[i.provenance] ?? 0) + 1
+    return acc
+  }, {})
+  const provOrder: Provenance[] = ['stated', 'inferred', 'aggregated']
+  const sources = Array.from(new Set(insights.map((i) => i.source?.label).filter(Boolean))) as string[]
+
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
-      <div className="max-w-2xl px-9 py-10">
-        <header className="mb-9">
-          <h1 className="text-[1.375rem] tracking-[-0.02em] text-ink">What Anant has been noticing</h1>
-        </header>
+      <div className="grid max-w-5xl grid-cols-1 gap-x-14 px-9 py-11 lg:grid-cols-[minmax(0,1fr)_236px]">
+        {/* thread */}
+        <div className="min-w-0">
+          <header className="mb-9">
+            <h1 className="text-[1.375rem] tracking-[-0.02em] text-ink">What Anant has been noticing</h1>
+          </header>
 
-        {/* the thread */}
-        <div className="relative">
-          <div className="absolute bottom-3 left-[7px] top-3 w-px bg-royal-line/70" />
-          {insights.map((ins, i) => (
-            <Entry key={ins.id} ins={ins} last={i === insights.length - 1} />
-          ))}
+          <div className="relative">
+            <div className="absolute bottom-3 left-[7px] top-3 w-px bg-royal-line/70" />
+            {insights.map((ins, i) => (
+              <Entry key={ins.id} ins={ins} last={i === insights.length - 1} />
+            ))}
+          </div>
         </div>
+
+        {/* context rail */}
+        <aside className="hidden lg:block">
+          <div className="sticky top-4 border-l border-rule pl-7">
+            <div className="text-[2rem] leading-none tracking-[-0.03em] text-ink">{insights.length}</div>
+            <div className="mt-1 text-[0.8125rem] text-ink-soft">
+              {insights.length === 1 ? 'thing to look at' : 'things to look at'}
+            </div>
+
+            <div className="mt-7 flex flex-col gap-2.5">
+              {provOrder
+                .filter((p) => byProv[p])
+                .map((p) => (
+                  <div key={p} className="flex items-center gap-2.5 text-[0.8125rem]">
+                    <span className="h-2 w-2 rounded-full" style={{ background: `var(--color-${p})` }} />
+                    <span className="text-ink">{humanProv[p]}</span>
+                    <span className="ml-auto tabular-nums text-ink-soft">{byProv[p]}</span>
+                  </div>
+                ))}
+            </div>
+
+            {sources.length > 0 && (
+              <div className="mt-7 border-t border-rule pt-5">
+                <div className="mb-2.5 text-[0.75rem] font-[500] text-ink">Drawn from</div>
+                <div className="flex flex-col gap-2">
+                  {sources.map((label) => (
+                    <div key={label} className="truncate text-[0.8125rem] text-ink-soft">
+                      {label}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        </aside>
       </div>
     </div>
   )
