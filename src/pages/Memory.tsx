@@ -222,73 +222,79 @@ export function MemoryPage() {
     )
   }
 
-  return (
-    <div className="flex h-full min-h-0 flex-col">
-      {/* Toolbar */}
-      <div className="flex shrink-0 items-center gap-3 border-b border-rule px-6 py-3">
-        <div className="relative max-w-md flex-1">
-          <SearchGlyph size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search memories…"
-            className="focus-ring w-full rounded-[var(--radius)] border border-rule bg-paper-raised py-2 pl-9 pr-3 text-[0.875rem] text-ink placeholder:text-ink-faint"
-          />
+  const rail = (
+    <aside className="flex min-h-0 w-[224px] shrink-0 flex-col overflow-y-auto border-r border-rule bg-paper-raised p-3">
+      <Button variant="primary" className="mb-4 w-full justify-center" leading={<Plus size={16} />} onClick={addMemory}>
+        Add memory
+      </Button>
+      {filtersActive && (
+        <button onClick={clearFilters} className="mb-1.5 flex w-full items-center rounded-[6px] px-2.5 py-1.5 text-left text-[0.8125rem] font-[500] text-[var(--color-royal)] hover:bg-paper-sunk">
+          Clear filters
+        </button>
+      )}
+      <div>
+        <div className="mb-1 px-2.5 text-[0.9375rem] font-[600] text-ink">Type</div>
+        <div className="space-y-0.5">
+          {provOrder.map((p) => (
+            <FacetItem key={p} active={prov === p} label={provShort[p]} dot={p} onClick={() => setProv(prov === p ? 'all' : p)} />
+          ))}
         </div>
-        <Segmented
-          value={view}
-          onChange={setView}
-          options={[
-            { value: 'list', label: <><ListView size={16} /> List</> },
-            { value: 'graph', label: <><GraphView size={16} /> Graph</> },
-          ]}
-        />
-        <Button variant="primary" size="sm" leading={<Plus size={16} />} onClick={addMemory}>Add memory</Button>
       </div>
+      <div className="mt-4">
+        <div className="mb-1 px-2.5 text-[0.9375rem] font-[600] text-ink">Sources</div>
+        <div className="space-y-0.5">
+          {sources.map((k) => (
+            <FacetItem key={k} active={src === k} label={k[0].toUpperCase() + k.slice(1)} kind={k} onClick={() => setSrc(src === k ? 'all' : k)} />
+          ))}
+        </div>
+      </div>
+      <div className="mt-4">
+        <div className="mb-1 px-2.5 text-[0.9375rem] font-[600] text-ink">People</div>
+        <div className="space-y-0.5">
+          {subjects.map((s) => (
+            <FacetItem key={s} active={subject === s} label={s} onClick={() => setSubject(subject === s ? 'all' : s)} />
+          ))}
+        </div>
+      </div>
+    </aside>
+  )
+
+  const middleHeader = (
+    <div className="flex shrink-0 items-center gap-3 border-b border-rule px-4 py-3">
+      <div className="relative flex-1">
+        <SearchGlyph size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search memories…"
+          className="focus-ring w-full rounded-[var(--radius)] border border-rule bg-paper-raised py-2 pl-9 pr-3 text-[0.875rem] text-ink placeholder:text-ink-faint"
+        />
+      </div>
+      <Segmented
+        value={view}
+        onChange={setView}
+        options={[
+          { value: 'list', label: <><ListView size={16} /> List</> },
+          { value: 'graph', label: <><GraphView size={16} /> Graph</> },
+        ]}
+      />
+    </div>
+  )
+
+  return (
+    <div className="flex h-full min-h-0">
+      {rail}
 
       {view === 'graph' ? (
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5"><MemoryGraph /></div>
+        <div className="flex min-h-0 flex-1 flex-col">
+          {middleHeader}
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5"><MemoryGraph /></div>
+        </div>
       ) : (
-        <div className="grid min-h-0 flex-1 grid-cols-[216px_minmax(0,1fr)_400px]">
-          {/* Facet rail */}
-          <aside className="min-h-0 overflow-y-auto border-r border-rule bg-paper-sunk/40 p-3">
-            {filtersActive && (
-              <button onClick={clearFilters} className="mb-1.5 flex w-full items-center justify-between rounded-[6px] px-2.5 py-1.5 text-left text-[0.8125rem] font-[500] text-[var(--color-royal)] hover:bg-paper-sunk">
-                Clear filters
-              </button>
-            )}
-            <div>
-              <div className="mb-1 px-2.5 text-[0.9375rem] font-[600] text-ink">Type</div>
-              <div className="space-y-0.5">
-                {provOrder.map((p) => (
-                  <FacetItem key={p} active={prov === p} label={provShort[p]} dot={p} onClick={() => setProv(prov === p ? 'all' : p)} />
-                ))}
-              </div>
-            </div>
-            <div className="mt-4">
-              <div className="mb-1 px-2.5 text-[0.9375rem] font-[600] text-ink">Sources</div>
-              <div className="space-y-0.5">
-                {sources.map((k) => (
-                  <FacetItem key={k} active={src === k} label={k[0].toUpperCase() + k.slice(1)} kind={k} onClick={() => setSrc(src === k ? 'all' : k)} />
-                ))}
-              </div>
-            </div>
-            <div className="mt-4">
-              <div className="mb-1 px-2.5 text-[0.9375rem] font-[600] text-ink">People</div>
-              <div className="space-y-0.5">
-                {subjects.map((s) => (
-                  <FacetItem key={s} active={subject === s} label={s} onClick={() => setSubject(subject === s ? 'all' : s)} />
-                ))}
-              </div>
-            </div>
-          </aside>
-
-          {/* Compact list */}
+        <div className="grid min-h-0 flex-1 grid-cols-[minmax(0,1fr)_400px]">
+          {/* Middle column: search + toggle, then the list */}
           <div className="flex min-h-0 flex-col border-r border-rule">
-            <div className="flex shrink-0 items-center justify-between border-b border-rule px-4 py-2 text-[0.72rem] text-ink-muted">
-              <span>{filtered.length} {filtered.length === 1 ? 'memory' : 'memories'}</span>
-              {filtersActive && <span>filtered</span>}
-            </div>
+            {middleHeader}
             <div className="min-h-0 flex-1 overflow-y-auto">
               {filtered.length === 0 ? (
                 <p className="px-5 py-12 text-center text-[0.875rem] text-ink-faint">No memories match these filters.</p>
