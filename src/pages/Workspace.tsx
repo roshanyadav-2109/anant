@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react'
 import { connectors } from '@/lib/mockData'
 import { logoFor } from '@/lib/logos'
-import { Dots, Plus } from '@/icons'
+import { Dismiss, Dots, Plus } from '@/icons'
 
 /* ============================================================
    Workspace — an enterprise console.
@@ -15,11 +16,60 @@ const members = [
   { name: 'Dara Singh', email: 'dara@neural.ai', role: 'Viewer' as const, access: 'Shared only' },
 ]
 
-const activity = [
-  { who: 'Grace', what: 'connected Linear', when: '2h ago' },
-  { who: 'Tejash', what: 'removed 12 memories from Gmail', when: 'Yesterday' },
-  { who: 'Oliver', what: 'opened shared memory · Q3 launch', when: 'Yesterday' },
-  { who: 'Dara', what: 'viewed the activity log', when: '2 days ago' },
+interface Activity {
+  who: string
+  what: string
+  when: string
+  at: string
+  category: string
+  affects: string
+  detail: string
+  target?: string
+}
+
+const activity: Activity[] = [
+  {
+    who: 'Grace',
+    what: 'connected Linear',
+    when: '2h ago',
+    at: '2 Aug 2026, 11:20am',
+    category: 'Connection added',
+    affects: 'Shared memory',
+    target: 'linear',
+    detail:
+      'Grace linked the team’s Linear workspace. Anant can now read the issues and project updates Grace has access to, and use them to answer questions. 214 items have been brought in so far.',
+  },
+  {
+    who: 'Tejash',
+    what: 'removed 12 memories from Gmail',
+    when: 'Yesterday',
+    at: '1 Aug 2026, 4:02pm',
+    category: 'Memory removed',
+    affects: 'Shared memory',
+    target: 'gmail',
+    detail:
+      'Tejash removed 12 memories that came from old Gmail threads. They’re gone from everyone’s shared view and won’t be used in future answers. This can’t be undone after 30 days.',
+  },
+  {
+    who: 'Oliver',
+    what: 'opened shared memory · Q3 launch',
+    when: 'Yesterday',
+    at: '1 Aug 2026, 9:15am',
+    category: 'Memory opened',
+    affects: 'Shared memory · Q3 launch',
+    detail:
+      'Oliver opened the shared “Q3 launch” memory to review the timeline before the standup. Opening a memory is read-only and doesn’t change anything.',
+  },
+  {
+    who: 'Dara',
+    what: 'viewed the activity log',
+    when: '2 days ago',
+    at: '31 Jul 2026, 2:40pm',
+    category: 'Settings viewed',
+    affects: 'Workspace settings',
+    detail:
+      'Dara opened the workspace activity log. As a Viewer, Dara can see what’s happening but can’t change settings or remove memories.',
+  },
 ]
 
 const roleTone: Record<string, string> = {
@@ -44,6 +94,75 @@ function Avatar({ name }: { name: string }) {
   )
 }
 
+function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div>
+      <div className="text-[0.6875rem] uppercase tracking-[0.1em] text-ink-faint">{label}</div>
+      <div className="mt-1 text-[0.875rem] text-ink">{children}</div>
+    </div>
+  )
+}
+
+/* Centered 75%-width activity detail, blurred backdrop, plain close. */
+function ActivityModal({ item, onClose }: { item: Activity; onClose: () => void }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const logo = item.target && logoFor(item.target)
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+      <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={onClose} />
+      <div className="rise relative flex max-h-[80vh] w-[75vw] flex-col overflow-hidden rounded-[var(--radius-lg)] bg-paper-raised shadow-[var(--shadow-pop)]">
+        {/* header */}
+        <div className="flex items-start gap-3 border-b border-rule px-7 py-5">
+          <Avatar name={item.who} />
+          <div className="min-w-0 flex-1">
+            <div className="text-[1.0625rem] text-ink">
+              {item.who} {item.what}
+            </div>
+            <div className="mt-0.5 text-[0.8125rem] text-ink-soft">
+              {item.category} · {item.at}
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="focus-ring -mr-1 rounded-[var(--radius)] p-1 text-ink-faint transition-colors hover:text-ink"
+          >
+            <Dismiss size={20} />
+          </button>
+        </div>
+
+        {/* body */}
+        <div className="grid gap-8 overflow-y-auto px-7 py-6 sm:grid-cols-[190px_1fr]">
+          <div className="flex flex-col gap-5">
+            <DetailRow label="When">{item.at}</DetailRow>
+            <DetailRow label="Who">{item.who}</DetailRow>
+            <DetailRow label="Affects">{item.affects}</DetailRow>
+            {logo && (
+              <DetailRow label="Source">
+                <span className="inline-flex items-center gap-2">
+                  <img src={logo} alt="" className="h-4 w-4 object-contain" />
+                  {item.target && item.target.charAt(0).toUpperCase() + item.target.slice(1)}
+                </span>
+              </DetailRow>
+            )}
+          </div>
+
+          <div>
+            <div className="text-[0.6875rem] uppercase tracking-[0.1em] text-ink-faint">What happened</div>
+            <p className="mt-2 max-w-prose text-[0.9375rem] leading-relaxed text-ink-soft">{item.detail}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function Tile({ value, label, sub }: { value: string; label: string; sub?: string }) {
   return (
     <div className="rounded-[3px] bg-paper-raised p-4 shadow-[0_1px_2px_rgba(12,14,20,0.05)] ring-1 ring-rule/70">
@@ -56,6 +175,7 @@ function Tile({ value, label, sub }: { value: string; label: string; sub?: strin
 
 export function WorkspacePage() {
   const allowed = connectors.filter((c) => c.status === 'connected' || c.status === 'syncing')
+  const [openActivity, setOpenActivity] = useState<Activity | null>(null)
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
@@ -150,13 +270,17 @@ export function WorkspacePage() {
           {/* Recent activity */}
           <section className="rounded-[3px] bg-paper-raised p-5 shadow-[0_1px_2px_rgba(12,14,20,0.05)] ring-1 ring-rule/70">
             <h2 className="mb-4 text-[0.95rem] font-[500] text-ink">Recent activity</h2>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-1">
               {activity.map((a, i) => (
-                <div key={i} className="flex items-baseline gap-2 text-[0.875rem]">
+                <button
+                  key={i}
+                  onClick={() => setOpenActivity(a)}
+                  className="focus-ring -mx-2 flex items-baseline gap-2 rounded-[var(--radius)] px-2 py-1.5 text-left text-[0.875rem] transition-colors hover:bg-paper-sunk/60"
+                >
                   <span className="font-[500] text-ink">{a.who}</span>
                   <span className="text-ink-soft">{a.what}</span>
                   <span className="ml-auto shrink-0 text-[0.8125rem] text-ink-faint">{a.when}</span>
-                </div>
+                </button>
               ))}
             </div>
           </section>
@@ -185,6 +309,8 @@ export function WorkspacePage() {
           </div>
         </section>
       </div>
+
+      {openActivity && <ActivityModal item={openActivity} onClose={() => setOpenActivity(null)} />}
     </div>
   )
 }
