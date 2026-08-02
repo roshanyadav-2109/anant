@@ -12,8 +12,8 @@ import type { Memory, Provenance, SourceKind } from '@/lib/types'
 
 const provOrder: Provenance[] = ['stated', 'inferred', 'aggregated']
 const provShort: Record<Provenance, string> = {
-  stated: 'Said directly',
-  inferred: "Anant's guess",
+  stated: 'Facts',
+  inferred: 'Insights',
   aggregated: 'Patterns',
 }
 const provTitle: Record<Provenance, string> = {
