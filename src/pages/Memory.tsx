@@ -3,8 +3,8 @@ import { MemoryGraph } from '@/components/MemoryGraph'
 import { ConfidenceMeter, ProvenanceDot } from '@/components/Provenance'
 import { Button, cx, Segmented } from '@/components/ui'
 import {
-  ArrowRight, Confirm, Dismiss, Edit, Forget, GraphView, ListView,
-  Memory as MemoryGlyph, Plus, Search as SearchGlyph, Sync,
+  Aggregated, ArrowRight, Confirm, Dismiss, Edit, Forget, GraphView, Inferred, ListView,
+  Memory as MemoryGlyph, Plus, Search as SearchGlyph, Stated, Sync,
 } from '@/icons'
 import { memories as seedMemories, sourceGlyph } from '@/lib/mockData'
 import { logoFor } from '@/lib/logos'
@@ -12,10 +12,11 @@ import type { Memory, Provenance, SourceKind } from '@/lib/types'
 
 const provOrder: Provenance[] = ['stated', 'inferred', 'aggregated']
 const provShort: Record<Provenance, string> = {
-  stated: 'Facts',
-  inferred: 'Insights',
-  aggregated: 'Patterns',
+  stated: 'Told to Anant',
+  inferred: 'Anant figured out',
+  aggregated: 'Noticed often',
 }
+const provIcon = { stated: Stated, inferred: Inferred, aggregated: Aggregated } as const
 const provTitle: Record<Provenance, string> = {
   stated: 'Said directly',
   inferred: 'Anant figured this out',
@@ -32,6 +33,11 @@ function SourceMark({ kind, size = 15 }: { kind: SourceKind; size?: number }) {
   if (logo) return <img src={logo} alt="" style={{ width: size, height: size }} className="object-contain" />
   const Glyph = sourceGlyph[kind]
   return <Glyph size={size} className="text-ink-muted" />
+}
+
+function ProvGlyph({ p }: { p: Provenance }) {
+  const I = provIcon[p]
+  return <I size={16} style={{ color: `var(--color-${p})` }} />
 }
 
 function MetaRow({ label, children }: { label: string; children: React.ReactNode }) {
@@ -215,7 +221,7 @@ export function MemoryPage() {
         className={cx('flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[0.9375rem] text-ink transition-colors',
           active ? 'bg-paper-raised font-[500] shadow-[0_1px_2px_rgba(12,14,20,0.06)]' : 'font-[400] hover:bg-paper-raised/70')}
       >
-        {dot && <ProvenanceDot provenance={dot} />}
+        {dot && <ProvGlyph p={dot} />}
         {kind && <SourceMark kind={kind} size={14} />}
         <span className="flex-1 truncate">{label}</span>
       </button>
