@@ -49,8 +49,8 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
           'focus-ring group/nav relative flex items-center gap-3 rounded-[4px] px-3 py-2 text-[0.9rem] transition-colors duration-150',
           collapsed && 'justify-center px-0',
           isActive
-            ? 'bg-white/[0.07] font-[500] text-white'
-            : 'font-[400] text-[var(--color-sidebar-ink)] hover:bg-white/[0.06] hover:text-white',
+            ? 'font-[500] text-white'
+            : 'font-[400] text-[var(--color-sidebar-ink)] hover:text-white',
         )
       }
     >
