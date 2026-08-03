@@ -32,6 +32,28 @@ import type { ChatMessage, Citation, Conversation, Memory, Provenance, SourceKin
 
 const isEngineId = (id: string) => !!id && !id.startsWith('local_')
 
+/**
+ * Persist the in-flight streamed reply so a page refresh mid-answer doesn't lose
+ * it. Written as tokens arrive, cleared when the answer finishes. On the next
+ * load the reply is restored into its conversation instead of vanishing.
+ */
+const STREAM_KEY = 'anant.stream'
+type StreamCache = { convId: string; userText: string; answerText: string; ts: number }
+function saveStream(s: StreamCache) {
+  try { localStorage.setItem(STREAM_KEY, JSON.stringify(s)) } catch { /* ignore quota */ }
+}
+function loadStream(): StreamCache | null {
+  try {
+    const raw = localStorage.getItem(STREAM_KEY)
+    if (!raw) return null
+    const s = JSON.parse(raw) as StreamCache
+    return s && s.userText && Date.now() - s.ts < 10 * 60 * 1000 ? s : null
+  } catch { return null }
+}
+function clearStream() {
+  try { localStorage.removeItem(STREAM_KEY) } catch { /* ignore */ }
+}
+
 export function ChatPage() {
   const location = useLocation()
   const focusId = (location.state as { focusId?: string } | null)?.focusId
@@ -48,6 +70,8 @@ export function ChatPage() {
   const [convQuery, setConvQuery] = useState('')
   const threadRef = useRef<HTMLDivElement>(null)
   const hydratedRef = useRef(false)
+  const restoredRef = useRef(false)
+  const lastSaveRef = useRef(0)
   const { user } = useAuth()
   const me = user?.name ?? 'You'
 
@@ -71,6 +95,33 @@ export function ChatPage() {
       return (focusId && convos.some((c) => c.id === focusId) ? focusId : convos[0].id) ?? ''
     })
   }, [seedConvos, convos, focusId, loading])
+
+  // Restore a reply that was mid-stream when the page was refreshed. Runs once,
+  // after the conversation list is ready, so the interrupted answer reappears
+  // instead of vanishing. If the engine actually saved the full reply, the
+  // lazy message-load below replaces this partial with the complete version.
+  useEffect(() => {
+    if (loading || restoredRef.current || convos.length === 0) return
+    restoredRef.current = true
+    const cache = loadStream()
+    if (!cache) return
+    clearStream()
+    const uMsg: ChatMessage = { id: 'u_restored', role: 'user', text: cache.userText, at: '' }
+    const aMsg: ChatMessage = { id: 'a_restored', role: 'anant', text: cache.answerText || '…', streaming: false, at: '' }
+    setConvos((cs) => {
+      const idx = cs.findIndex((c) => c.id === cache.convId)
+      if (idx >= 0) {
+        if (cs[idx].messages.length > 0) return cs
+        const next = cs.slice()
+        next[idx] = { ...cs[idx], messages: [uMsg, aMsg] }
+        return next
+      }
+      const title = cache.userText.length > 40 ? cache.userText.slice(0, 40) + '…' : cache.userText || 'Conversation'
+      return [{ id: cache.convId, title, at: Date.now(), messages: [uMsg, aMsg] }, ...cs]
+    })
+    setActiveId(cache.convId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading, convos])
 
   const active = convos.find((c) => c.id === activeId)
 
@@ -123,7 +174,7 @@ export function ChatPage() {
     api
       .getMessages(activeId)
       .then((res) => {
-        if (cancelled) return
+        if (cancelled || res.messages.length === 0) return
         patchConv(activeId, (cv) => ({
           ...cv,
           messages: res.messages.map((m) => ({
@@ -154,6 +205,7 @@ export function ChatPage() {
       ...c,
       messages: [...c.messages, { id: answerId, role: 'anant', text: '', streaming: true, at: 'Just now' }],
     }))
+    saveStream({ convId, userText: text, answerText: '', ts: Date.now() })
 
     let acc = ''
     await chatStream(
@@ -166,8 +218,15 @@ export function ChatPage() {
             ...c,
             messages: c.messages.map((m) => (m.id === answerId ? { ...m, text: acc, streaming: true } : m)),
           }))
+          // Throttle localStorage writes so a long reply isn't hundreds of writes.
+          const now = Date.now()
+          if (now - lastSaveRef.current > 150) {
+            lastSaveRef.current = now
+            saveStream({ convId, userText: text, answerText: acc, ts: now })
+          }
         },
         onDone: (fin) => {
+          clearStream()
           patchConv(convId, (c) => ({
             ...c,
             messages: c.messages.map((m) => (m.id === answerId ? { ...m, text: fin.response || acc, streaming: false } : m)),
@@ -182,6 +241,7 @@ export function ChatPage() {
           }
         },
         onError: () => {
+          clearStream()
           patchConv(convId, (c) => ({
             ...c,
             messages: c.messages.map((m) =>

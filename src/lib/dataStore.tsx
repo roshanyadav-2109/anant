@@ -2,20 +2,58 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { useAuth } from '@/lib/auth'
 import { api, type AnantProfile } from '@/lib/anant'
 import { connectorCatalog } from '@/lib/catalog'
-import type { Connector, Conversation, Insight, Memory, SourceKind } from '@/lib/types'
+import type { Connector, Conversation, Insight, Memory, Provenance, SourceKind } from '@/lib/types'
 
-/** Best-effort source from the engine's memory category (it has no source field). */
-function sourceFromCategory(cat: string): { kind: SourceKind; label: string } {
-  const c = cat.toLowerCase()
-  if (/gmail|e-?mail/.test(c)) return { kind: 'gmail', label: 'Gmail' }
-  if (/slack|channel/.test(c)) return { kind: 'slack', label: 'Slack' }
-  if (/github|repo|commit|pull request|\bpr\b|issue|code/.test(c)) return { kind: 'github', label: 'GitHub' }
-  if (/notion/.test(c)) return { kind: 'notion', label: 'Notion' }
-  if (/linear/.test(c)) return { kind: 'linear', label: 'Linear' }
-  if (/drive|doc|sheet|slide|spreadsheet|presentation|\bfile\b|document/.test(c))
+/**
+ * The engine's memory object is only { category, content, created_at } — no
+ * source field — and `category` is a content type (conversation | factual |
+ * emotional | goal | relational). So the source can only be *inferred from the
+ * content* (best-effort; the engine should return a real source field). And
+ * provenance is derived from the category.
+ */
+function sourceFor(content: string, category: string): { kind: SourceKind; label: string } {
+  const c = content.toLowerCase()
+  if (/\bspreadsheet\b|google sheet|\btab\(s\)|\bslides?\b|presentation|google doc|\bdrive\b/.test(c))
     return { kind: 'drive', label: 'Google Drive' }
-  if (/calendar|event|meeting/.test(c)) return { kind: 'calendar', label: 'Calendar' }
-  return { kind: 'chat', label: 'Chat' }
+  if (/^\s*email\b|^\s*subject:|from:\s*.*@|\bgmail\b|\binbox\b/.test(c)) return { kind: 'gmail', label: 'Gmail' }
+  if (/pull request|\bpr #|\bissue #|\bcommit\b|\brepository\b|github/.test(c)) return { kind: 'github', label: 'GitHub' }
+  if (/\bslack\b|#[a-z0-9_-]+\s+channel/.test(c)) return { kind: 'slack', label: 'Slack' }
+  if (/\bnotion\b/.test(c)) return { kind: 'notion', label: 'Notion' }
+  if (/\blinear\b|\bLIN-\d/.test(content)) return { kind: 'linear', label: 'Linear' }
+  if (/\bcalendar\b|\bmeeting\b|\bevent\b/.test(c)) return { kind: 'calendar', label: 'Calendar' }
+  // Fall back to a neutral label rather than a wrong specific source.
+  return { kind: 'chat', label: category === 'conversation' ? 'Chat' : 'Anant memory' }
+}
+
+function provFor(category: string): Provenance {
+  const c = category.toLowerCase()
+  if (c === 'emotional' || c === 'relational') return 'inferred'
+  return 'stated'
+}
+
+/** A short, human title for a memory — the quoted name if any, else the opening words. */
+function titleFor(content: string, category: string): string {
+  const quoted = content.match(/["'“']([^"'”']{2,60})["'”']/)
+  if (quoted) return quoted[1].trim()
+  const firstLine = content.split('\n').map((s) => s.trim()).find(Boolean) || ''
+  if (!firstLine) return category ? category[0].toUpperCase() + category.slice(1) : 'Memory'
+  const words = firstLine.split(/\s+/).slice(0, 6).join(' ')
+  return firstLine.length > words.length ? words + '…' : words
+}
+
+/** Turn the engine's raw timestamp ("2026-08-03 18:49:59.632580+00:00") into a friendly label. */
+function whenLabel(iso?: string): string {
+  if (!iso) return ''
+  const t = Date.parse(iso.replace(' ', 'T').replace(/(\.\d{3})\d+/, '$1'))
+  if (!t) return ''
+  const m = Math.floor((Date.now() - t) / 60000)
+  if (m < 1) return 'just now'
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  const d = Math.floor(h / 24)
+  if (d < 7) return `${d}d ago`
+  return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })
 }
 
 /**
@@ -77,16 +115,20 @@ export function DataProvider({ children }: { children: ReactNode }) {
     ])
 
     setMemories(
-      mem.memories.map((m, i) => ({
-        id: `mem_${i}_${m.created_at}`,
-        fact: m.content,
-        subject: m.category || 'Memory',
-        category: m.category || '',
-        provenance: 'stated',
-        source: sourceFromCategory(m.category || ''),
-        when: m.created_at ?? '',
-        confidence: 1,
-      })),
+      mem.memories.map((m, i) => {
+        const content = m.content || ''
+        const category = m.category || ''
+        return {
+          id: `mem_${i}_${m.created_at}`,
+          fact: content,
+          subject: titleFor(content, category),
+          category,
+          provenance: provFor(category),
+          source: sourceFor(content, category),
+          when: whenLabel(m.created_at),
+          confidence: 1,
+        }
+      }),
     )
     setInsights(
       pat.patterns.map((p, i) => ({
