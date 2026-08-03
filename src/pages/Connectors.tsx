@@ -1,18 +1,37 @@
 import { useEffect, useRef, useState } from 'react'
 import { ConnectorCard } from '@/components/ConnectorCard'
 import { useData } from '@/lib/dataStore'
-import { api } from '@/lib/anant'
+import { api, ApiError, type ConnectorRun } from '@/lib/anant'
+import { liveConnectors, type ConnectorService } from '@/lib/catalog'
 import { Attach, Connectors as LinkGlyph, Dismiss, Edit, Plus, type IconProps } from '@/icons'
 import type { ComponentType } from 'react'
+import type { Connector, ConnectorStatus } from '@/lib/types'
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
+const errMsg = (e: unknown) => (e instanceof ApiError ? e.message : 'Something went wrong. Please try again.')
+function relTime(iso?: string): string {
+  if (!iso) return ''
+  const t = Date.parse(iso)
+  if (!t) return ''
+  const m = Math.floor((Date.now() - t) / 60000)
+  if (m < 1) return 'just now'
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  return h < 24 ? `${h}h ago` : `${Math.floor(h / 24)}d ago`
+}
+
+const statusFns: Record<ConnectorService, () => Promise<ConnectorRun>> = {
+  slack: () => api.slackStatus(),
+  github: () => api.githubStatus(),
+  notion: () => api.notionStatus(),
+  linear: () => api.linearStatus(),
+  google: () => api.googleStatus(),
+}
 
 function PathwayTile({
   icon: Icon, label, hint, accent, onClick,
 }: {
-  icon: ComponentType<IconProps>
-  label: string
-  hint: string
-  accent?: boolean
-  onClick?: () => void
+  icon: ComponentType<IconProps>; label: string; hint: string; accent?: boolean; onClick?: () => void
 }) {
   return (
     <button onClick={onClick} className={cxTile(accent)}>
@@ -45,120 +64,209 @@ function cxTile(accent?: boolean) {
 export function ConnectorsPage() {
   const { connectors, refresh } = useData()
 
-  const [modal, setModal] = useState<null | 'text' | 'link'>(null)
-  const [value, setValue] = useState('')
+  // Real per-connector status from the engine.
+  const [runs, setRuns] = useState<Partial<Record<ConnectorService, ConnectorRun | null>>>({})
+  const anyRunning = Object.values(runs).some((r) => r?.status === 'running')
+
+  // Connect form (static-token connectors).
+  const [modalId, setModalId] = useState<string | null>(null)
+  const [form, setForm] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
+
+  // "Add to your memory" pathways.
+  const [textModal, setTextModal] = useState<null | 'text' | 'link'>(null)
+  const [value, setValue] = useState('')
   const [toast, setToast] = useState<string | null>(null)
   const fileRef = useRef<HTMLInputElement>(null)
   const availRef = useRef<HTMLDivElement>(null)
 
-  // Slack — the one real connector on the engine.
-  const [slackConnected, setSlackConnected] = useState(() => localStorage.getItem('anant.slack') === 'connected')
-  const [slackModal, setSlackModal] = useState(false)
-  const [botToken, setBotToken] = useState('')
-  const [slackWs, setSlackWs] = useState('')
-
-  useEffect(() => {
-    api
-      .slackStatus()
-      .then((s) => {
-        if (s.status && s.status !== 'never_synced' && !/error|not_connected/i.test(s.status)) {
-          setSlackConnected(true)
-          localStorage.setItem('anant.slack', 'connected')
-        }
-      })
-      .catch(() => {})
-  }, [])
-
-  // Reflect Slack's real state onto the catalogue.
-  const list = connectors.map((c) => (c.id === 'slack' && slackConnected ? { ...c, status: 'connected' as const } : c))
-  const connected = list.filter((c) => c.status === 'connected' || c.status === 'syncing')
-  const available = list.filter((c) => c.status === 'available' || c.status === 'error')
-
   function flash(msg: string) {
     setToast(msg)
-    window.setTimeout(() => setToast(null), 2600)
+    window.setTimeout(() => setToast(null), 3200)
   }
 
-  async function connectSlack() {
-    if (!botToken.trim() || !slackWs.trim()) return
+  async function refreshStatus(service: ConnectorService) {
+    const r = await statusFns[service]().catch(() => null)
+    setRuns((s) => ({ ...s, [service]: r }))
+    return r
+  }
+  async function pollStatus(service: ConnectorService) {
+    for (let i = 0; i < 40; i++) {
+      const r = await statusFns[service]().catch(() => null)
+      setRuns((s) => ({ ...s, [service]: r }))
+      if (!r || r.status !== 'running') return r
+      await sleep(2500)
+    }
+  }
+  async function syncGoogleAll() {
+    for (const svc of ['drive', 'calendar', 'gmail'] as const) {
+      try {
+        await api.googleSync(svc, 20)
+        await pollStatus('google')
+      } catch {
+        /* skip a service that fails; continue the rest */
+      }
+    }
+  }
+
+  // On mount: handle the Google return, then load real status for each connector.
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search)
+    const g = p.get('google')
+    if (g) {
+      window.history.replaceState({}, '', '/connectors')
+      if (g === 'connected') {
+        flash('Google connected — importing your data…')
+        void syncGoogleAll()
+      } else {
+        flash(`Google connection failed${p.get('reason') ? `: ${p.get('reason')}` : ''}`)
+      }
+    }
+    ;(['slack', 'github', 'notion', 'linear', 'google'] as ConnectorService[]).forEach((s) => void refreshStatus(s))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function connectGoogle() {
+    const ENGINE_CB = `${api.base}/api/connectors/google/oauth-callback`
+    const RETURN = `${window.location.origin}/connectors`
+    setBusy(true)
+    api
+      .googleConnect('primary', ENGINE_CB, RETURN)
+      .then(({ authorization_url }) => {
+        window.location.href = authorization_url
+      })
+      .catch((e) => {
+        flash(errMsg(e))
+        setBusy(false)
+      })
+  }
+
+  function handleConnect(catalogId: string) {
+    const cfg = liveConnectors[catalogId]
+    if (!cfg) {
+      flash('No live integration yet — this app is coming soon.')
+      return
+    }
+    if (cfg.oauth) {
+      connectGoogle()
+      return
+    }
+    if (anyRunning) {
+      flash('An import is already running — please wait for it to finish.')
+      return
+    }
+    setForm({})
+    setModalId(catalogId)
+  }
+
+  async function submitConnect() {
+    const cfg = modalId ? liveConnectors[modalId] : null
+    if (!cfg) return
+    const f = form
     setBusy(true)
     try {
-      await api.slackConnect(botToken.trim(), slackWs.trim())
-      await api.slackSync().catch(() => {})
-      setSlackConnected(true)
-      localStorage.setItem('anant.slack', 'connected')
-      setSlackModal(false)
-      setBotToken('')
-      setSlackWs('')
-      flash('Slack connected — importing your messages')
-      await refresh()
+      if (cfg.service === 'slack') {
+        await api.slackConnect(f.bot_token, f.workspace_id)
+        await api.slackSync(f.channel_id, f.channel_name, 20)
+      } else if (cfg.service === 'github') {
+        await api.githubConnect(f.token, f.repo)
+        await api.githubSync(f.repo, 20)
+      } else if (cfg.service === 'notion') {
+        await api.notionConnect(f.token, f.workspace)
+        await api.notionSync(20, f.workspace)
+      } else if (cfg.service === 'linear') {
+        await api.linearConnect(f.api_key, f.workspace)
+        await api.linearSync(20, f.workspace)
+      }
+      if (cfg.idField) localStorage.setItem(`anant.conn.${cfg.service}`, f[cfg.idField] ?? '')
+      setModalId(null)
+      flash('Connected — importing your data…')
+      void pollStatus(cfg.service).then(() => refresh())
     } catch (e) {
-      flash(e instanceof Error ? e.message : 'Could not connect Slack')
+      if (e instanceof ApiError && e.status === 409) flash('An import is already running — please wait.')
+      else flash(errMsg(e))
     } finally {
       setBusy(false)
     }
   }
 
-  async function disconnectSlack() {
-    await api.slackDelete().catch(() => {})
-    setSlackConnected(false)
-    localStorage.removeItem('anant.slack')
-    flash('Slack disconnected')
+  async function handleDisconnect(catalogId: string) {
+    const cfg = liveConnectors[catalogId]
+    if (!cfg) return
+    const id = localStorage.getItem(`anant.conn.${cfg.service}`) ?? ''
+    try {
+      if (cfg.service === 'slack') await api.slackForget()
+      else if (cfg.service === 'github') await api.githubForget(id)
+      else if (cfg.service === 'notion') await api.notionForget(id)
+      else if (cfg.service === 'linear') await api.linearForget(id)
+      else if (cfg.service === 'google') await api.googleForget('primary')
+      localStorage.removeItem(`anant.conn.${cfg.service}`)
+      flash('Disconnected.')
+      void refreshStatus(cfg.service)
+    } catch (e) {
+      flash(errMsg(e))
+    }
   }
 
-  function handleConnect(id: string) {
-    if (id === 'slack') setSlackModal(true)
-    else flash('No live integration yet — Slack is the only connector wired to the engine so far.')
-  }
-
-  async function save(kind: 'text' | 'link') {
+  // "Add to your memory" — text/link go through chat (engine ingests); file has no endpoint yet.
+  async function saveText(kind: 'text' | 'link') {
     const v = value.trim()
     if (!v) return
     setBusy(true)
-    // The engine builds memory from chat — hand it the text/link to remember.
-    const prompt = kind === 'link' ? `Please remember this link: ${v}` : `Please remember this: ${v}`
-    await api.chat(prompt).catch(() => {})
+    await api.chat(kind === 'link' ? `Please remember this link: ${v}` : `Please remember this: ${v}`).catch(() => {})
     await refresh()
     setBusy(false)
-    setModal(null)
+    setTextModal(null)
     setValue('')
     flash('Sent to Anant — it will remember this')
   }
-
   function onFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     e.target.value = ''
     if (!file) return
-    // No file-ingestion endpoint on the engine yet — be honest rather than fake it.
     flash(`“${file.name}” selected — file import isn’t available yet`)
   }
+
+  // Apply real engine status onto the catalogue for display.
+  function shape(c: Connector): Connector {
+    const cfg = liveConnectors[c.id]
+    if (!cfg) return c
+    const r = runs[cfg.service]
+    let status: ConnectorStatus = 'available'
+    let items: number | undefined
+    let lastSync: string | undefined
+    if (r?.status === 'running') {
+      status = 'syncing'
+      items = r.items_ingested
+    } else if (r?.status === 'completed') {
+      status = 'connected'
+      items = r.items_ingested
+      lastSync = relTime(r.finished_at)
+    } else if (r?.status === 'failed') {
+      status = 'error'
+    }
+    return { ...c, status, items, lastSync }
+  }
+
+  const shaped = connectors.map(shape)
+  const connected = shaped.filter((c) => c.status === 'connected' || c.status === 'syncing')
+  const available = shaped.filter((c) => c.status === 'available' || c.status === 'error')
+  const modalCfg = modalId ? liveConnectors[modalId] : null
+  const modalName = modalId ? connectors.find((c) => c.id === modalId)?.name ?? modalId : ''
 
   return (
     <div className="min-h-0 flex-1 overflow-y-auto">
       <div className="mx-auto max-w-5xl px-8 py-8">
-        {/* Add to memory — four pathways (the entry point) */}
+        {/* Add to memory — four pathways */}
         <section className="mb-10">
           <h2 className="mb-3 text-[0.95rem] font-[500] text-ink">Add to your memory</h2>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <PathwayTile icon={Edit} label="Paste text" hint="Notes, a snippet" onClick={() => setModal('text')} />
-            <PathwayTile icon={LinkGlyph} label="Add a link" hint="Article or page" onClick={() => setModal('link')} />
+            <PathwayTile icon={Edit} label="Paste text" hint="Notes, a snippet" onClick={() => setTextModal('text')} />
+            <PathwayTile icon={LinkGlyph} label="Add a link" hint="Article or page" onClick={() => setTextModal('link')} />
             <PathwayTile icon={Attach} label="Upload a file" hint="PDF, doc, transcript" onClick={() => fileRef.current?.click()} />
-            <PathwayTile
-              icon={Plus}
-              label="Connect an app"
-              hint="Slack, Gmail, Drive…"
-              accent
-              onClick={() => availRef.current?.scrollIntoView({ behavior: 'smooth' })}
-            />
+            <PathwayTile icon={Plus} label="Connect an app" hint="Slack, GitHub, Google…" accent onClick={() => availRef.current?.scrollIntoView({ behavior: 'smooth' })} />
           </div>
-          <input
-            ref={fileRef}
-            type="file"
-            accept=".pdf,.doc,.docx,.txt,.md,application/pdf"
-            className="hidden"
-            onChange={onFile}
-          />
+          <input ref={fileRef} type="file" accept=".pdf,.doc,.docx,.txt,.md,application/pdf" className="hidden" onChange={onFile} />
         </section>
 
         {connected.length > 0 && (
@@ -169,12 +277,7 @@ export function ConnectorsPage() {
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {connected.map((c) => (
-                <ConnectorCard
-                  key={c.id}
-                  connector={c}
-                  onConnect={() => handleConnect(c.id)}
-                  onDisconnect={c.id === 'slack' ? disconnectSlack : undefined}
-                />
+                <ConnectorCard key={c.id} connector={c} onConnect={() => handleConnect(c.id)} onDisconnect={() => handleDisconnect(c.id)} />
               ))}
             </div>
           </section>
@@ -193,92 +296,69 @@ export function ConnectorsPage() {
         </section>
       </div>
 
-      {/* Paste text / Add a link modal */}
-      {modal && (
+      {/* Connect form (Slack / GitHub / Notion / Linear) */}
+      {modalCfg && modalCfg.fields && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={() => setModal(null)} />
+          <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={() => setModalId(null)} />
           <div className="rise relative w-full max-w-lg rounded-[var(--radius-lg)] bg-paper-raised p-6 shadow-[var(--shadow-pop)]">
-            <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-[1.05rem] text-ink">{modal === 'link' ? 'Add a link' : 'Paste text'}</h3>
-              <button onClick={() => setModal(null)} aria-label="Close" className="text-ink-faint hover:text-ink">
+            <div className="mb-1 flex items-center justify-between">
+              <h3 className="text-[1.05rem] text-ink">Connect {modalName}</h3>
+              <button onClick={() => setModalId(null)} aria-label="Close" className="text-ink-faint hover:text-ink">
                 <Dismiss size={18} />
               </button>
             </div>
-            {modal === 'link' ? (
-              <input
-                autoFocus
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                placeholder="https://…"
-                className="focus-ring w-full rounded-[var(--radius)] bg-paper-raised px-3 py-2.5 text-[0.9375rem] text-ink ring-1 ring-rule placeholder:text-ink-faint"
-              />
-            ) : (
-              <textarea
-                autoFocus
-                value={value}
-                onChange={(e) => setValue(e.target.value)}
-                placeholder="Paste a note, a snippet, anything worth remembering…"
-                rows={5}
-                className="focus-ring w-full resize-none rounded-[var(--radius)] bg-paper-raised px-3 py-2.5 text-[0.9375rem] leading-relaxed text-ink ring-1 ring-rule placeholder:text-ink-faint"
-              />
-            )}
+            <p className="mb-4 text-[0.8125rem] leading-relaxed text-ink-muted">
+              Anant reads {modalName} inbound only — it never writes back to the source.
+            </p>
+            <div className="flex flex-col gap-2.5">
+              {modalCfg.fields.map((fld, i) => (
+                <input
+                  key={fld.name}
+                  autoFocus={i === 0}
+                  type={fld.password ? 'password' : 'text'}
+                  value={form[fld.name] ?? ''}
+                  onChange={(e) => setForm((s) => ({ ...s, [fld.name]: e.target.value }))}
+                  placeholder={`${fld.label} — ${fld.placeholder}`}
+                  className="focus-ring w-full rounded-[var(--radius)] bg-paper-raised px-3 py-2.5 text-[0.9375rem] text-ink ring-1 ring-rule placeholder:text-ink-faint"
+                />
+              ))}
+            </div>
             <div className="mt-4 flex items-center justify-end gap-2">
-              <button onClick={() => setModal(null)} className="rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] text-ink-soft hover:text-ink">
+              <button onClick={() => setModalId(null)} className="rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] text-ink-soft hover:text-ink">
                 Cancel
               </button>
               <button
-                onClick={() => save(modal)}
-                disabled={busy || !value.trim()}
+                onClick={submitConnect}
+                disabled={busy || modalCfg.fields.some((f) => !(form[f.name] ?? '').trim())}
                 className="rounded-[var(--radius)] bg-royal px-3.5 py-2 text-[0.875rem] font-[500] text-white transition-opacity hover:opacity-90 disabled:opacity-40"
               >
-                {busy ? 'Saving…' : 'Add to memory'}
+                {busy ? 'Connecting…' : `Connect ${modalName}`}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Slack — real connect (bot token + workspace id) */}
-      {slackModal && (
+      {/* Paste text / Add a link */}
+      {textModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={() => setSlackModal(false)} />
+          <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={() => setTextModal(null)} />
           <div className="rise relative w-full max-w-lg rounded-[var(--radius-lg)] bg-paper-raised p-6 shadow-[var(--shadow-pop)]">
-            <div className="mb-1 flex items-center justify-between">
-              <h3 className="text-[1.05rem] text-ink">Connect Slack</h3>
-              <button onClick={() => setSlackModal(false)} aria-label="Close" className="text-ink-faint hover:text-ink">
+            <div className="mb-3 flex items-center justify-between">
+              <h3 className="text-[1.05rem] text-ink">{textModal === 'link' ? 'Add a link' : 'Paste text'}</h3>
+              <button onClick={() => setTextModal(null)} aria-label="Close" className="text-ink-faint hover:text-ink">
                 <Dismiss size={18} />
               </button>
             </div>
-            <p className="mb-4 text-[0.8125rem] leading-relaxed text-ink-muted">
-              Paste a Slack <span className="font-[500] text-ink">bot token</span> (starts with <code>xoxb-</code>) and
-              your <span className="font-[500] text-ink">workspace ID</span>. Anant reads the channels the bot is in —
-              nothing is sent back out.
-            </p>
-            <div className="flex flex-col gap-2.5">
-              <input
-                autoFocus
-                value={botToken}
-                onChange={(e) => setBotToken(e.target.value)}
-                placeholder="xoxb-…"
-                className="focus-ring w-full rounded-[var(--radius)] bg-paper-raised px-3 py-2.5 text-[0.9375rem] text-ink ring-1 ring-rule placeholder:text-ink-faint"
-              />
-              <input
-                value={slackWs}
-                onChange={(e) => setSlackWs(e.target.value)}
-                placeholder="Workspace ID (e.g. T01234ABC)"
-                className="focus-ring w-full rounded-[var(--radius)] bg-paper-raised px-3 py-2.5 text-[0.9375rem] text-ink ring-1 ring-rule placeholder:text-ink-faint"
-              />
-            </div>
+            {textModal === 'link' ? (
+              <input autoFocus value={value} onChange={(e) => setValue(e.target.value)} placeholder="https://…" className="focus-ring w-full rounded-[var(--radius)] bg-paper-raised px-3 py-2.5 text-[0.9375rem] text-ink ring-1 ring-rule placeholder:text-ink-faint" />
+            ) : (
+              <textarea autoFocus value={value} onChange={(e) => setValue(e.target.value)} rows={5} placeholder="Paste a note, a snippet, anything worth remembering…" className="focus-ring w-full resize-none rounded-[var(--radius)] bg-paper-raised px-3 py-2.5 text-[0.9375rem] leading-relaxed text-ink ring-1 ring-rule placeholder:text-ink-faint" />
+            )}
             <div className="mt-4 flex items-center justify-end gap-2">
-              <button onClick={() => setSlackModal(false)} className="rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] text-ink-soft hover:text-ink">
-                Cancel
-              </button>
-              <button
-                onClick={connectSlack}
-                disabled={busy || !botToken.trim() || !slackWs.trim()}
-                className="rounded-[var(--radius)] bg-royal px-3.5 py-2 text-[0.875rem] font-[500] text-white transition-opacity hover:opacity-90 disabled:opacity-40"
-              >
-                {busy ? 'Connecting…' : 'Connect Slack'}
+              <button onClick={() => setTextModal(null)} className="rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] text-ink-soft hover:text-ink">Cancel</button>
+              <button onClick={() => saveText(textModal)} disabled={busy || !value.trim()} className="rounded-[var(--radius)] bg-royal px-3.5 py-2 text-[0.875rem] font-[500] text-white transition-opacity hover:opacity-90 disabled:opacity-40">
+                {busy ? 'Saving…' : 'Add to memory'}
               </button>
             </div>
           </div>

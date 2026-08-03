@@ -2,11 +2,72 @@ import { CoGeneric } from '@/icons'
 import type { Connector } from '@/lib/types'
 
 /**
- * The catalogue of apps you can connect. The engine currently has a real
- * connector for Slack only (POST /api/connectors/slack/*); the rest are shown
- * as available and light up as their integrations ship. Nothing is "connected"
- * here — real status comes from the engine.
+ * The catalogue of apps you can connect. Five are LIVE against the engine
+ * (Slack, GitHub, Notion, Linear, and Google → Gmail/Drive/Docs/Calendar via
+ * one OAuth). The rest are shown as available and light up as integrations
+ * ship. Real status comes from each connector's /status endpoint.
  */
+
+export type ConnectorService = 'slack' | 'github' | 'notion' | 'linear' | 'google'
+
+export interface ConnectField {
+  name: string
+  label: string
+  placeholder: string
+  password?: boolean
+}
+
+export interface LiveConnector {
+  service: ConnectorService
+  oauth?: boolean
+  /** Fields collected in the connect form (static-token connectors). */
+  fields?: ConnectField[]
+  /** The form field whose value identifies the source for sync/forget. */
+  idField?: string
+}
+
+/** catalog id → live connector config. Four Google tiles share one OAuth. */
+export const liveConnectors: Record<string, LiveConnector> = {
+  slack: {
+    service: 'slack',
+    idField: 'channel_id',
+    fields: [
+      { name: 'bot_token', label: 'Bot token', placeholder: 'xoxb-…', password: true },
+      { name: 'workspace_id', label: 'Workspace ID', placeholder: 'T01234ABC' },
+      { name: 'channel_id', label: 'Channel ID', placeholder: 'C01234ABC' },
+      { name: 'channel_name', label: 'Channel name', placeholder: 'general' },
+    ],
+  },
+  github: {
+    service: 'github',
+    idField: 'repo',
+    fields: [
+      { name: 'token', label: 'Access token', placeholder: 'ghp_…', password: true },
+      { name: 'repo', label: 'Repository', placeholder: 'owner/repo' },
+    ],
+  },
+  notion: {
+    service: 'notion',
+    idField: 'workspace',
+    fields: [
+      { name: 'token', label: 'Integration token', placeholder: 'secret_…', password: true },
+      { name: 'workspace', label: 'Workspace label', placeholder: 'my-workspace' },
+    ],
+  },
+  linear: {
+    service: 'linear',
+    idField: 'workspace',
+    fields: [
+      { name: 'api_key', label: 'API key', placeholder: 'lin_api_…', password: true },
+      { name: 'workspace', label: 'Workspace label', placeholder: 'my-team' },
+    ],
+  },
+  gmail: { service: 'google', oauth: true },
+  drive: { service: 'google', oauth: true },
+  gdocs: { service: 'google', oauth: true },
+  calendar: { service: 'google', oauth: true },
+}
+
 const c = (id: string, name: string, category: string): Connector => ({
   id,
   name,

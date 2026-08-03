@@ -193,12 +193,58 @@ export const api = {
   audit: (org_id: string, limit = 50) =>
     request<{ events: { ts: string; actor: string; action: string; object: string; decision: string }[] }>(`/api/orgs/${org_id}/audit?limit=${limit}`),
 
-  /* ===================== Slack connector ===================== */
-  slackConnect: (bot_token: string, workspace_id: string) =>
-    request<unknown>('/api/connectors/slack/connect', { method: 'POST', body: { bot_token, workspace_id } }),
-  slackSync: () => request<unknown>('/api/connectors/slack/sync', { method: 'POST' }),
-  slackStatus: () => request<{ status: string }>('/api/connectors/slack/status'),
-  slackDelete: () => request<unknown>('/api/connectors/slack', { method: 'DELETE' }),
+  /* ===================== Connectors ===================== */
+  // Each connector: connect (store credential) · sync (bounded backfill, async
+  // 202) · status (poll) · forget (deactivate by source). Only ONE sync runs
+  // per user at a time across all connectors → a second sync returns 409.
+
+  // Slack — bot token + workspace to connect, then a channel to sync.
+  slackConnect: (bot_token: string, workspace_id: string, workspace_name?: string) =>
+    request<ConnectAck>('/api/connectors/slack/connect', { method: 'POST', body: { bot_token, workspace_id, workspace_name } }),
+  slackSync: (channel_id: string, channel_name: string, limit = 50) =>
+    request<SyncAck>('/api/connectors/slack/sync', { method: 'POST', body: { channel_id, channel_name, limit } }),
+  slackStatus: () => request<ConnectorRun>('/api/connectors/slack/status'),
+  slackForget: () => request('/api/connectors/slack', { method: 'DELETE' }),
+
+  // GitHub — PAT + owner/repo.
+  githubConnect: (token: string, repo: string) =>
+    request<ConnectAck>('/api/connectors/github/connect', { method: 'POST', body: { token, repo } }),
+  githubSync: (repo: string, limit = 50) =>
+    request<SyncAck>('/api/connectors/github/sync', { method: 'POST', body: { repo, limit } }),
+  githubStatus: () => request<ConnectorRun>('/api/connectors/github/status'),
+  githubForget: (repo: string) =>
+    request(`/api/connectors/github?repo=${encodeURIComponent(repo)}`, { method: 'DELETE' }),
+
+  // Notion — integration token + workspace label.
+  notionConnect: (token: string, workspace: string) =>
+    request<ConnectAck>('/api/connectors/notion/connect', { method: 'POST', body: { token, workspace } }),
+  notionSync: (limit = 50, workspace?: string) =>
+    request<SyncAck>('/api/connectors/notion/sync', { method: 'POST', body: { limit, workspace } }),
+  notionStatus: () => request<ConnectorRun>('/api/connectors/notion/status'),
+  notionForget: (workspace: string) =>
+    request(`/api/connectors/notion?workspace=${encodeURIComponent(workspace)}`, { method: 'DELETE' }),
+
+  // Linear — API key + workspace label.
+  linearConnect: (api_key: string, workspace: string) =>
+    request<ConnectAck>('/api/connectors/linear/connect', { method: 'POST', body: { api_key, workspace } }),
+  linearSync: (limit = 50, workspace?: string) =>
+    request<SyncAck>('/api/connectors/linear/sync', { method: 'POST', body: { limit, workspace } }),
+  linearStatus: () => request<ConnectorRun>('/api/connectors/linear/status'),
+  linearForget: (workspace: string) =>
+    request(`/api/connectors/linear?workspace=${encodeURIComponent(workspace)}`, { method: 'DELETE' }),
+
+  // Google (OAuth) — one connect grants Gmail + Drive + Calendar (read-only),
+  // then sync per service.
+  googleConnect: (label: string, redirect_uri: string, return_url?: string) =>
+    request<{ authorization_url: string; state: string }>('/api/connectors/google/connect', {
+      method: 'POST',
+      body: { label, redirect_uri, return_url },
+    }),
+  googleSync: (service: 'gmail' | 'drive' | 'calendar', limit = 20, label?: string) =>
+    request<SyncAck>('/api/connectors/google/sync', { method: 'POST', body: { service, limit, label } }),
+  googleStatus: () => request<ConnectorRun>('/api/connectors/google/status'),
+  googleForget: (label: string) =>
+    request(`/api/connectors/google?label=${encodeURIComponent(label)}`, { method: 'DELETE' }),
 }
 
 /* ===================== Streaming chat (SSE) ===================== */
@@ -265,6 +311,26 @@ export async function chatStream(
 }
 
 /* ===================== Response types ===================== */
+
+export interface ConnectAck {
+  connector_account_id?: string
+  replaced?: boolean
+}
+export interface SyncAck {
+  sync_run_id?: string
+  status?: string
+}
+export interface ConnectorRun {
+  status: 'never_synced' | 'running' | 'completed' | 'failed'
+  items_fetched?: number
+  items_ingested?: number
+  items_skipped?: number
+  items_failed?: number
+  error_message?: string | null
+  started_at?: string
+  finished_at?: string
+  metadata?: { egress?: string[] }
+}
 
 export interface AnantProfile {
   identity: { name?: string; age?: string; location?: string; education?: string; occupation?: string; company?: string }
