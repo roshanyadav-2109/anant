@@ -41,7 +41,13 @@ export function Login() {
     }
     setBusy(false)
     if (res.error) {
-      setError(res.error)
+      // Signing up with an existing username → guide them to sign in instead.
+      if (mode === 'signup' && /taken|already|exists/i.test(res.error)) {
+        setMode('signin')
+        setError('That username already exists — please sign in with your password instead.')
+      } else {
+        setError(res.error)
+      }
       return
     }
     navigate('/memory')
