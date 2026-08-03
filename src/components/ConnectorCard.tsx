@@ -68,17 +68,17 @@ export function ConnectorCard({
         </div>
       )}
 
-      {/* Importing — animated meter (engine gives no total, so it's indeterminate) */}
+      {/* Importing — a bar that fills toward completion + the live item count */}
       {status === 'syncing' && (
         <div className="mt-3">
           <div className="mb-1.5 flex items-center justify-between text-[0.8125rem]">
             <span className="text-[var(--color-royal)]">Importing…</span>
             <span className="tnum text-ink-muted">
-              {connector.items ? `${connector.items.toLocaleString()} so far` : 'starting…'}
+              {connector.items ? `${connector.items.toLocaleString()} items` : ''}
             </span>
           </div>
           <div className="h-1.5 overflow-hidden rounded-full bg-paper-sunk">
-            <div className="bar-indeterminate h-full w-1/3 rounded-full bg-royal" />
+            <div className="bar-filling h-full rounded-full bg-royal" />
           </div>
         </div>
       )}

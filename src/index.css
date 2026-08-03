@@ -190,12 +190,15 @@
   }
   .consolidating { animation: anant-consolidate 1.8s ease-in-out infinite; }
 
-  /* Indeterminate progress meter — a moving segment for imports with no known total */
-  @keyframes anant-indeterminate {
-    0% { transform: translateX(-110%); }
-    100% { transform: translateX(360%); }
+  /* Import progress — fills toward the end and holds (no reset loop). Reaches
+     the finish only when the import actually completes (handled in JS). */
+  @keyframes anant-fill {
+    0% { width: 6%; }
+    35% { width: 52%; }
+    70% { width: 78%; }
+    100% { width: 93%; }
   }
-  .bar-indeterminate { animation: anant-indeterminate 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+  .bar-filling { animation: anant-fill 16s cubic-bezier(0.15, 0.7, 0.2, 1) forwards; }
 
   @keyframes anant-caret {
     0%, 100% { opacity: 1; }
