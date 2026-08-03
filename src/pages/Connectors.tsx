@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ConnectorCard } from '@/components/ConnectorCard'
 import { useData } from '@/lib/dataStore'
 import { api } from '@/lib/anant'
@@ -44,8 +44,6 @@ function cxTile(accent?: boolean) {
 
 export function ConnectorsPage() {
   const { connectors, refresh } = useData()
-  const connected = connectors.filter((c) => c.status === 'connected' || c.status === 'syncing')
-  const available = connectors.filter((c) => c.status === 'available' || c.status === 'error')
 
   const [modal, setModal] = useState<null | 'text' | 'link'>(null)
   const [value, setValue] = useState('')
@@ -54,9 +52,64 @@ export function ConnectorsPage() {
   const fileRef = useRef<HTMLInputElement>(null)
   const availRef = useRef<HTMLDivElement>(null)
 
+  // Slack — the one real connector on the engine.
+  const [slackConnected, setSlackConnected] = useState(() => localStorage.getItem('anant.slack') === 'connected')
+  const [slackModal, setSlackModal] = useState(false)
+  const [botToken, setBotToken] = useState('')
+  const [slackWs, setSlackWs] = useState('')
+
+  useEffect(() => {
+    api
+      .slackStatus()
+      .then((s) => {
+        if (s.status && s.status !== 'never_synced' && !/error|not_connected/i.test(s.status)) {
+          setSlackConnected(true)
+          localStorage.setItem('anant.slack', 'connected')
+        }
+      })
+      .catch(() => {})
+  }, [])
+
+  // Reflect Slack's real state onto the catalogue.
+  const list = connectors.map((c) => (c.id === 'slack' && slackConnected ? { ...c, status: 'connected' as const } : c))
+  const connected = list.filter((c) => c.status === 'connected' || c.status === 'syncing')
+  const available = list.filter((c) => c.status === 'available' || c.status === 'error')
+
   function flash(msg: string) {
     setToast(msg)
     window.setTimeout(() => setToast(null), 2600)
+  }
+
+  async function connectSlack() {
+    if (!botToken.trim() || !slackWs.trim()) return
+    setBusy(true)
+    try {
+      await api.slackConnect(botToken.trim(), slackWs.trim())
+      await api.slackSync().catch(() => {})
+      setSlackConnected(true)
+      localStorage.setItem('anant.slack', 'connected')
+      setSlackModal(false)
+      setBotToken('')
+      setSlackWs('')
+      flash('Slack connected — importing your messages')
+      await refresh()
+    } catch (e) {
+      flash(e instanceof Error ? e.message : 'Could not connect Slack')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  async function disconnectSlack() {
+    await api.slackDelete().catch(() => {})
+    setSlackConnected(false)
+    localStorage.removeItem('anant.slack')
+    flash('Slack disconnected')
+  }
+
+  function handleConnect(id: string) {
+    if (id === 'slack') setSlackModal(true)
+    else flash('No live integration yet — Slack is the only connector wired to the engine so far.')
   }
 
   async function save(kind: 'text' | 'link') {
@@ -116,7 +169,12 @@ export function ConnectorsPage() {
             </div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {connected.map((c) => (
-                <ConnectorCard key={c.id} connector={c} />
+                <ConnectorCard
+                  key={c.id}
+                  connector={c}
+                  onConnect={() => handleConnect(c.id)}
+                  onDisconnect={c.id === 'slack' ? disconnectSlack : undefined}
+                />
               ))}
             </div>
           </section>
@@ -129,7 +187,7 @@ export function ConnectorsPage() {
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {available.map((c) => (
-              <ConnectorCard key={c.id} connector={c} />
+              <ConnectorCard key={c.id} connector={c} onConnect={() => handleConnect(c.id)} />
             ))}
           </div>
         </section>
@@ -174,6 +232,53 @@ export function ConnectorsPage() {
                 className="rounded-[var(--radius)] bg-royal px-3.5 py-2 text-[0.875rem] font-[500] text-white transition-opacity hover:opacity-90 disabled:opacity-40"
               >
                 {busy ? 'Saving…' : 'Add to memory'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Slack — real connect (bot token + workspace id) */}
+      {slackModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-ink/30 backdrop-blur-sm" onClick={() => setSlackModal(false)} />
+          <div className="rise relative w-full max-w-lg rounded-[var(--radius-lg)] bg-paper-raised p-6 shadow-[var(--shadow-pop)]">
+            <div className="mb-1 flex items-center justify-between">
+              <h3 className="text-[1.05rem] text-ink">Connect Slack</h3>
+              <button onClick={() => setSlackModal(false)} aria-label="Close" className="text-ink-faint hover:text-ink">
+                <Dismiss size={18} />
+              </button>
+            </div>
+            <p className="mb-4 text-[0.8125rem] leading-relaxed text-ink-muted">
+              Paste a Slack <span className="font-[500] text-ink">bot token</span> (starts with <code>xoxb-</code>) and
+              your <span className="font-[500] text-ink">workspace ID</span>. Anant reads the channels the bot is in —
+              nothing is sent back out.
+            </p>
+            <div className="flex flex-col gap-2.5">
+              <input
+                autoFocus
+                value={botToken}
+                onChange={(e) => setBotToken(e.target.value)}
+                placeholder="xoxb-…"
+                className="focus-ring w-full rounded-[var(--radius)] bg-paper-raised px-3 py-2.5 text-[0.9375rem] text-ink ring-1 ring-rule placeholder:text-ink-faint"
+              />
+              <input
+                value={slackWs}
+                onChange={(e) => setSlackWs(e.target.value)}
+                placeholder="Workspace ID (e.g. T01234ABC)"
+                className="focus-ring w-full rounded-[var(--radius)] bg-paper-raised px-3 py-2.5 text-[0.9375rem] text-ink ring-1 ring-rule placeholder:text-ink-faint"
+              />
+            </div>
+            <div className="mt-4 flex items-center justify-end gap-2">
+              <button onClick={() => setSlackModal(false)} className="rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] text-ink-soft hover:text-ink">
+                Cancel
+              </button>
+              <button
+                onClick={connectSlack}
+                disabled={busy || !botToken.trim() || !slackWs.trim()}
+                className="rounded-[var(--radius)] bg-royal px-3.5 py-2 text-[0.875rem] font-[500] text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+              >
+                {busy ? 'Connecting…' : 'Connect Slack'}
               </button>
             </div>
           </div>

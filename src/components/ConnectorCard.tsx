@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import type { Connector, ConnectorStatus } from '@/lib/types'
 import { cx, Button } from '@/components/ui'
 import { Alert, Confirm, Sync } from '@/icons'
@@ -24,18 +23,24 @@ export function StatusPill({ status }: { status: ConnectorStatus }) {
   )
 }
 
-export function ConnectorCard({ connector }: { connector: Connector }) {
+export function ConnectorCard({
+  connector,
+  onConnect,
+  onDisconnect,
+}: {
+  connector: Connector
+  onConnect?: () => void
+  onDisconnect?: () => void
+}) {
   const { icon: Icon } = connector
   const logo = logoFor(connector.id)
-  const [status, setStatus] = useState(connector.status)
+  const status = connector.status
 
-  // Optimistic local status. Real connection flows are per-provider (the
-  // engine ships a Slack connector; others light up as integrations land).
   function connect() {
-    setStatus('connected')
+    onConnect?.()
   }
   function disconnect() {
-    setStatus('available')
+    onDisconnect?.()
   }
 
   const progress =

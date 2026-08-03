@@ -194,10 +194,10 @@ export const api = {
     request<{ events: { ts: string; actor: string; action: string; object: string; decision: string }[] }>(`/api/orgs/${org_id}/audit?limit=${limit}`),
 
   /* ===================== Slack connector ===================== */
-  slackConnect: (bot_token: string, channel_id: string) =>
-    request<unknown>('/api/connectors/slack/connect', { method: 'POST', body: { bot_token, channel_id } }),
+  slackConnect: (bot_token: string, workspace_id: string) =>
+    request<unknown>('/api/connectors/slack/connect', { method: 'POST', body: { bot_token, workspace_id } }),
   slackSync: () => request<unknown>('/api/connectors/slack/sync', { method: 'POST' }),
-  slackStatus: () => request<unknown>('/api/connectors/slack/status'),
+  slackStatus: () => request<{ status: string }>('/api/connectors/slack/status'),
   slackDelete: () => request<unknown>('/api/connectors/slack', { method: 'DELETE' }),
 }
 
