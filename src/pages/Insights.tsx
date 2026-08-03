@@ -14,9 +14,49 @@ const kindMeta: Record<Insight['kind'], { label: string; color: string }> = {
   contradiction: { label: 'Worth a check', color: 'var(--color-alert)' },
 }
 
+/**
+ * If the insight describes a link between two things, pull out the two ends so
+ * we can draw a small flow instead of a paragraph. Returns null when the text
+ * isn't clearly a two-sided connection (then we just show the description).
+ */
+function asConnection(text: string): { a: string; b: string; relation: string } | null {
+  const clean = (s: string) =>
+    s.trim().replace(/^(the|your|a|an)\s+/i, '').replace(/[."',;:]+$/, '').trim()
+  const ok = (a: string, b: string) =>
+    a && b && a.length <= 42 && b.length <= 42 && a.toLowerCase() !== b.toLowerCase()
+
+  const tries: { re: RegExp; rel: string }[] = [
+    { re: /relationship between (.+?) and (.+?)(?:[.,]|$)/i, rel: 'linked to' },
+    { re: /(?:connection|link) between (.+?) and (.+?)(?:[.,]|$)/i, rel: 'linked to' },
+    { re: /connects? (.+?) (?:to|with|and) (.+?)(?:[.,]|$)/i, rel: 'connects to' },
+    { re: /links? (.+?) (?:to|with|and) (.+?)(?:[.,]|$)/i, rel: 'links to' },
+    { re: /(.+?) (?:is|are) (?:related|connected|linked) to (.+?)(?:[.,]|$)/i, rel: 'related to' },
+    { re: /between (.+?) and (.+?)(?:[.,]|$)/i, rel: 'linked to' },
+  ]
+  for (const t of tries) {
+    const m = text.match(t.re)
+    if (m) {
+      const a = clean(m[1])
+      const b = clean(m[2])
+      if (ok(a, b)) return { a, b, relation: t.rel }
+    }
+  }
+  return null
+}
+
+function FlowNode({ label }: { label: string }) {
+  return (
+    <span className="max-w-[46%] truncate rounded-[var(--radius)] bg-paper-raised px-3 py-2 text-[0.8125rem] text-ink ring-1 ring-rule">
+      {label}
+    </span>
+  )
+}
+
 function InsightRow({ ins }: { ins: Insight }) {
   const [resolved, setResolved] = useState<null | 'kept' | 'dismissed'>(null)
   const meta = kindMeta[ins.kind]
+  const text = ins.body || ins.title
+  const flow = asConnection(text)
 
   return (
     <article className="rounded-[var(--radius-lg)] bg-paper-raised p-5 shadow-[0_1px_2px_rgba(12,14,20,0.05)] ring-1 ring-rule/70">
@@ -30,7 +70,21 @@ function InsightRow({ ins }: { ins: Insight }) {
         )}
       </div>
 
-      <p className="max-w-2xl text-[0.9375rem] leading-relaxed text-ink">{ins.body || ins.title}</p>
+      {flow ? (
+        /* Visual: a small connecting flow when the insight links two things */
+        <div className="flex flex-wrap items-center gap-2">
+          <FlowNode label={flow.a} />
+          <span className="inline-flex items-center gap-1.5 text-[0.75rem] text-[var(--color-royal)]">
+            <span className="h-px w-4 bg-royal-line" />
+            {flow.relation}
+            <span aria-hidden>→</span>
+          </span>
+          <FlowNode label={flow.b} />
+        </div>
+      ) : (
+        /* Text: a plain description otherwise */
+        <p className="max-w-2xl text-[0.9375rem] leading-relaxed text-ink">{text}</p>
+      )}
 
       <div className="mt-4 flex items-center gap-3">
         {resolved ? (
