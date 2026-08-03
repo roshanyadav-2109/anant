@@ -297,7 +297,7 @@ function TeamView({ onOpenActivity }: { onOpenActivity: (a: Activity) => void })
                   'flex items-center gap-3 px-4 py-3 ' + (i < members.length - 1 ? 'border-b border-rule/70' : '')
                 }
               >
-                <Avatar name={m.name} />
+                {m.you ? <IdentityLogo fallback={initials(m.name)} size={36} rounded={18} /> : <Avatar name={m.name} />}
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <span className="text-[0.9rem] font-[500] text-ink">{m.name}</span>

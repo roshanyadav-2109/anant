@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth'
 import { exportMemory, forgetAll } from '@/lib/dataActions'
+import { IdentityLogo } from '@/components/IdentityLogo'
 import { Export, Forget } from '@/icons'
 
 /* ============================================================
@@ -72,9 +73,7 @@ export function SettingsPage() {
           {/* Account */}
           <Section title="Account" desc="Your profile in this workspace.">
             <div className="mb-4 flex items-center gap-3 border-b border-rule/70 pb-4">
-              <span className="flex h-11 w-11 items-center justify-center rounded-full bg-[var(--color-royal-soft)] text-[0.875rem] font-[500] text-[var(--color-royal)]">
-                {initials}
-              </span>
+              <IdentityLogo fallback={initials} size={44} rounded={22} />
               <div>
                 <div className="text-[0.9375rem] font-[500] text-ink">{user?.name ?? '—'}</div>
                 <div className="text-[0.8125rem] text-ink-soft">@{user?.username ?? '—'}</div>

@@ -6,6 +6,7 @@ import { Button, cx, IconButton } from '@/components/ui'
 import { ArrowRight, Attach, ChevronDown, Dismiss, Mark, Plus, Search, Send, Stop } from '@/icons'
 import { provenanceLabel, sourceGlyph } from '@/lib/mockData'
 import { useData } from '@/lib/dataStore'
+import { useLogo } from '@/lib/brand'
 import { api, chatStream } from '@/lib/anant'
 import { randomGreeting } from '@/lib/greetings'
 
@@ -446,11 +447,12 @@ function Message({
   onSeeSources: (list: Citation[]) => void
 }) {
   const isUser = message.role === 'user'
+  const logo = useLogo()
   return (
     <div className="flex gap-3">
       {isUser ? (
-        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-ink text-[0.85rem] font-[500] text-white">
-          {me.slice(0, 1).toUpperCase()}
+        <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-[6px] bg-ink text-[0.85rem] font-[500] text-white">
+          {logo ? <img src={logo} alt="" className="h-full w-full object-cover" /> : me.slice(0, 1).toUpperCase()}
         </span>
       ) : (
         <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-[6px] bg-white text-ink ring-1 ring-rule">
