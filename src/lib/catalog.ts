@@ -24,6 +24,9 @@ export interface LiveConnector {
   fields?: ConnectField[]
   /** The form field whose value identifies the source for sync/forget. */
   idField?: string
+  /** A link to where the user creates the token (static-token connectors). */
+  helpUrl?: string
+  helpLabel?: string
 }
 
 /** catalog id → live connector config. Four Google tiles share one OAuth. */
@@ -31,6 +34,8 @@ export const liveConnectors: Record<string, LiveConnector> = {
   slack: {
     service: 'slack',
     idField: 'channel_id',
+    helpUrl: 'https://api.slack.com/apps',
+    helpLabel: 'Create a Slack app & bot token',
     fields: [
       { name: 'bot_token', label: 'Bot token', placeholder: 'xoxb-…', password: true },
       { name: 'workspace_id', label: 'Workspace ID', placeholder: 'T01234ABC' },
@@ -41,6 +46,8 @@ export const liveConnectors: Record<string, LiveConnector> = {
   github: {
     service: 'github',
     idField: 'repo',
+    helpUrl: 'https://github.com/settings/tokens',
+    helpLabel: 'Create a GitHub access token',
     fields: [
       { name: 'token', label: 'Access token', placeholder: 'ghp_…', password: true },
       { name: 'repo', label: 'Repository', placeholder: 'owner/repo' },
@@ -49,6 +56,8 @@ export const liveConnectors: Record<string, LiveConnector> = {
   notion: {
     service: 'notion',
     idField: 'workspace',
+    helpUrl: 'https://www.notion.so/my-integrations',
+    helpLabel: 'Create a Notion integration',
     fields: [
       { name: 'token', label: 'Integration token', placeholder: 'secret_…', password: true },
       { name: 'workspace', label: 'Workspace label', placeholder: 'my-workspace' },
@@ -57,6 +66,8 @@ export const liveConnectors: Record<string, LiveConnector> = {
   linear: {
     service: 'linear',
     idField: 'workspace',
+    helpUrl: 'https://linear.app/settings/api',
+    helpLabel: 'Create a Linear API key',
     fields: [
       { name: 'api_key', label: 'API key', placeholder: 'lin_api_…', password: true },
       { name: 'workspace', label: 'Workspace label', placeholder: 'my-team' },

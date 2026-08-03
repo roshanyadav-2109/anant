@@ -307,8 +307,21 @@ export function ConnectorsPage() {
                 <Dismiss size={18} />
               </button>
             </div>
-            <p className="mb-4 text-[0.8125rem] leading-relaxed text-ink-muted">
+            <p className="mb-3 text-[0.8125rem] leading-relaxed text-ink-muted">
               Anant reads {modalName} inbound only — it never writes back to the source.
+              {modalCfg.helpUrl && (
+                <>
+                  {' '}
+                  <a
+                    href={modalCfg.helpUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-[500] text-[var(--color-royal)] hover:underline"
+                  >
+                    {modalCfg.helpLabel ?? 'Where do I find this?'} →
+                  </a>
+                </>
+              )}
             </p>
             <div className="flex flex-col gap-2.5">
               {modalCfg.fields.map((fld, i) => (
