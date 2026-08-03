@@ -116,8 +116,10 @@ export function ConnectorsPage() {
     if (g) {
       window.history.replaceState({}, '', '/connectors')
       if (g === 'connected') {
+        localStorage.setItem('anant.conn.google', '1')
+        setRuns((s) => ({ ...s, google: { status: 'running' } }))
         flash('Google connected — importing your data…')
-        void syncGoogleAll()
+        void syncGoogleAll().then(() => refresh())
       } else {
         flash(`Google connection failed${p.get('reason') ? `: ${p.get('reason')}` : ''}`)
       }
@@ -165,26 +167,40 @@ export function ConnectorsPage() {
     const f = form
     setBusy(true)
     try {
-      if (cfg.service === 'slack') {
-        await api.slackConnect(f.bot_token, f.workspace_id)
-        await api.slackSync(f.channel_id, f.channel_name, 20)
-      } else if (cfg.service === 'github') {
-        await api.githubConnect(f.token, f.repo)
-        await api.githubSync(f.repo, 20)
-      } else if (cfg.service === 'notion') {
-        await api.notionConnect(f.token, f.workspace)
-        await api.notionSync(20, f.workspace)
-      } else if (cfg.service === 'linear') {
-        await api.linearConnect(f.api_key, f.workspace)
-        await api.linearSync(20, f.workspace)
-      }
-      if (cfg.idField) localStorage.setItem(`anant.conn.${cfg.service}`, f[cfg.idField] ?? '')
+      // 1) Connect — store the credential.
+      if (cfg.service === 'slack') await api.slackConnect(f.bot_token, f.workspace_id)
+      else if (cfg.service === 'github') await api.githubConnect(f.token, f.repo)
+      else if (cfg.service === 'notion') await api.notionConnect(f.token, f.workspace)
+      else if (cfg.service === 'linear') await api.linearConnect(f.api_key, f.workspace)
+      // Remember the connection so the card reads "connected" right away.
+      localStorage.setItem(`anant.conn.${cfg.service}`, cfg.idField ? (f[cfg.idField] ?? '1') : '1')
+      setRuns((s) => ({ ...s, [cfg.service]: { status: 'running' } }))
       setModalId(null)
-      flash('Connected — importing your data…')
-      void pollStatus(cfg.service).then(() => refresh())
+      flash('Connected — starting import…')
+
+      // 2) Sync — separate, so a sync hiccup never hides the connection.
+      try {
+        if (cfg.service === 'slack') await api.slackSync(f.channel_id, f.channel_name, 20)
+        else if (cfg.service === 'github') await api.githubSync(f.repo, 20)
+        else if (cfg.service === 'notion') await api.notionSync(20, f.workspace)
+        else if (cfg.service === 'linear') await api.linearSync(20, f.workspace)
+        const done = await pollStatus(cfg.service)
+        await refresh()
+        flash(
+          done?.status === 'completed'
+            ? `Import finished — ${done.items_ingested ?? 0} item${(done.items_ingested ?? 0) === 1 ? '' : 's'} added to memory.`
+            : 'Connected. Import is still running.',
+        )
+      } catch (se) {
+        if (se instanceof ApiError && se.status === 409) {
+          flash('Connected. Another import is running — this one starts after it finishes.')
+        } else {
+          flash(`Connected, but the import failed: ${errMsg(se)}`)
+        }
+        void refreshStatus(cfg.service)
+      }
     } catch (e) {
-      if (e instanceof ApiError && e.status === 409) flash('An import is already running — please wait.')
-      else flash(errMsg(e))
+      flash(`Could not connect: ${errMsg(e)}`)
     } finally {
       setBusy(false)
     }
@@ -227,11 +243,14 @@ export function ConnectorsPage() {
     flash(`“${file.name}” selected — file import isn’t available yet`)
   }
 
-  // Apply real engine status onto the catalogue for display.
+  // Apply real engine status onto the catalogue for display. The engine's
+  // /status returns "never_synced" for a connected-but-unsynced account (same
+  // as not-connected), so we also remember the connection locally.
   function shape(c: Connector): Connector {
     const cfg = liveConnectors[c.id]
     if (!cfg) return c
     const r = runs[cfg.service]
+    const connectedLocally = !!localStorage.getItem(`anant.conn.${cfg.service}`)
     let status: ConnectorStatus = 'available'
     let items: number | undefined
     let lastSync: string | undefined
@@ -244,6 +263,8 @@ export function ConnectorsPage() {
       lastSync = relTime(r.finished_at)
     } else if (r?.status === 'failed') {
       status = 'error'
+    } else if (connectedLocally) {
+      status = 'connected' // connected, sync not run/finished yet
     }
     return { ...c, status, items, lastSync }
   }
