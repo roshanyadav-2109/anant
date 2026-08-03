@@ -7,6 +7,7 @@ import { ArrowRight, Attach, ChevronDown, Dismiss, Mark, Plus, Search, Send, Sto
 import { provenanceLabel, sourceGlyph } from '@/lib/mockData'
 import { useData } from '@/lib/dataStore'
 import { useLogo } from '@/lib/brand'
+import { Markdown } from '@/components/Markdown'
 import { api, chatStream } from '@/lib/anant'
 import { randomGreeting } from '@/lib/greetings'
 
@@ -469,11 +470,11 @@ function Message({
           )}
           {message.at && <span className="text-[0.72rem] text-ink-muted">{message.at}</span>}
         </div>
-        <p
-          className={cx('text-[1.0625rem] leading-relaxed text-ink', message.streaming && 'stream-caret')}
-        >
-          {message.text}
-        </p>
+        {message.streaming ? (
+          <p className="stream-caret text-[1.0625rem] leading-relaxed text-ink">{message.text}</p>
+        ) : (
+          <Markdown text={message.text} className="space-y-2 text-[1.0625rem] leading-relaxed text-ink" />
+        )}
         {message.citations && !message.streaming && (
           <div className="mt-3 flex flex-wrap items-center gap-2">
             {message.citations.slice(0, 3).map((c, i) => (
