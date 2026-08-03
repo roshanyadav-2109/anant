@@ -83,11 +83,21 @@ export function ConnectorCard({
         </div>
       )}
 
-      <div className="mt-4 flex items-center justify-end border-t border-rule/70 pt-3">
+      <div className="mt-4 flex items-center justify-end gap-3 border-t border-rule/70 pt-3">
         {status === 'available' ? (
-          <Button size="sm" variant="primary" onClick={connect}>
-            Connect
-          </Button>
+          <>
+            {onDisconnect && (
+              <button
+                onClick={disconnect}
+                className="text-[0.75rem] text-ink-faint transition-colors hover:text-[var(--color-alert)]"
+              >
+                Disconnect
+              </button>
+            )}
+            <Button size="sm" variant="primary" onClick={connect}>
+              Connect
+            </Button>
+          </>
         ) : (
           <button
             onClick={disconnect}

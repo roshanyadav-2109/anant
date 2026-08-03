@@ -217,6 +217,7 @@ export function ConnectorsPage() {
       else if (cfg.service === 'linear') await api.linearForget(id)
       else if (cfg.service === 'google') await api.googleForget('primary')
       localStorage.removeItem(`anant.conn.${cfg.service}`)
+      setRuns((s) => ({ ...s, [cfg.service]: { status: 'never_synced' } }))
       flash('Disconnected.')
       void refreshStatus(cfg.service)
     } catch (e) {
@@ -311,7 +312,12 @@ export function ConnectorsPage() {
           </div>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {available.map((c) => (
-              <ConnectorCard key={c.id} connector={c} onConnect={() => handleConnect(c.id)} />
+              <ConnectorCard
+                key={c.id}
+                connector={c}
+                onConnect={() => handleConnect(c.id)}
+                onDisconnect={liveConnectors[c.id] ? () => handleDisconnect(c.id) : undefined}
+              />
             ))}
           </div>
         </section>
