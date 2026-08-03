@@ -7,6 +7,9 @@ import { Attach, Connectors as LinkGlyph, Dismiss, Edit, Plus, type IconProps } 
 import type { ComponentType } from 'react'
 import type { Connector, ConnectorStatus } from '@/lib/types'
 
+// How many items to pull per import (the engine bounds this 1–200).
+const IMPORT_LIMIT = 100
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms))
 const errMsg = (e: unknown) => (e instanceof ApiError ? e.message : 'Something went wrong. Please try again.')
 function relTime(iso?: string): string {
@@ -101,7 +104,7 @@ export function ConnectorsPage() {
   async function syncGoogleAll() {
     for (const svc of ['drive', 'calendar', 'gmail'] as const) {
       try {
-        await api.googleSync(svc, 20)
+        await api.googleSync(svc, IMPORT_LIMIT)
         await pollStatus('google')
       } catch {
         /* skip a service that fails; continue the rest */
@@ -180,10 +183,10 @@ export function ConnectorsPage() {
 
       // 2) Sync — separate, so a sync hiccup never hides the connection.
       try {
-        if (cfg.service === 'slack') await api.slackSync(f.channel_id, f.channel_name, 20)
-        else if (cfg.service === 'github') await api.githubSync(f.repo, 20)
-        else if (cfg.service === 'notion') await api.notionSync(20, f.workspace)
-        else if (cfg.service === 'linear') await api.linearSync(20, f.workspace)
+        if (cfg.service === 'slack') await api.slackSync(f.channel_id, f.channel_name, IMPORT_LIMIT)
+        else if (cfg.service === 'github') await api.githubSync(f.repo, IMPORT_LIMIT)
+        else if (cfg.service === 'notion') await api.notionSync(IMPORT_LIMIT, f.workspace)
+        else if (cfg.service === 'linear') await api.linearSync(IMPORT_LIMIT, f.workspace)
         const done = await pollStatus(cfg.service)
         await refresh()
         flash(
