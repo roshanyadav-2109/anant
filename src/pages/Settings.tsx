@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '@/lib/auth'
+import { exportMemory, forgetAll } from '@/lib/dataActions'
 import { Export, Forget } from '@/icons'
 
 /* ============================================================
@@ -111,11 +112,20 @@ export function SettingsPage() {
             desc="Your memory is yours. Take a full copy or clear it, whenever you want."
           >
             <div className="flex flex-wrap items-center gap-2">
-              <button className="focus-ring inline-flex items-center gap-2 rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] text-ink-soft ring-1 ring-rule transition-colors hover:text-ink">
+              <button
+                onClick={() => void exportMemory().catch(() => {})}
+                className="focus-ring inline-flex items-center gap-2 rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] text-ink-soft ring-1 ring-rule transition-colors hover:text-ink"
+              >
                 <Export size={16} />
                 Export everything
               </button>
-              <button className="focus-ring inline-flex items-center gap-2 rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] font-[500] text-[var(--color-alert)] transition-colors hover:bg-[color-mix(in_srgb,var(--color-alert)_10%,transparent)]">
+              <button
+                onClick={() => {
+                  if (window.confirm('This permanently erases everything Anant remembers about you. Continue?'))
+                    void forgetAll().catch(() => {})
+                }}
+                className="focus-ring inline-flex items-center gap-2 rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] font-[500] text-[var(--color-alert)] transition-colors hover:bg-[color-mix(in_srgb,var(--color-alert)_10%,transparent)]"
+              >
                 <Forget size={16} />
                 Delete everything
               </button>

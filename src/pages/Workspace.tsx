@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { useAuth } from '@/lib/auth'
 import { useData } from '@/lib/dataStore'
+import { exportMemory, forgetAll } from '@/lib/dataActions'
+import { api } from '@/lib/anant'
 import { logoFor } from '@/lib/logos'
 import { Dismiss, Dots, Export, Forget, Plus } from '@/icons'
 
@@ -22,50 +24,17 @@ interface Activity {
   target?: string
 }
 
-const activity: Activity[] = [
-  {
-    who: 'Grace',
-    what: 'connected Linear',
-    when: '2h ago',
-    at: '2 Aug 2026, 11:20am',
-    category: 'Connection added',
-    affects: 'Shared memory',
-    target: 'linear',
-    detail:
-      'Grace linked the team’s Linear workspace. Anant can now read the issues and project updates Grace has access to, and use them to answer questions. 214 items have been brought in so far.',
-  },
-  {
-    who: 'Tejash',
-    what: 'removed 12 memories from Gmail',
-    when: 'Yesterday',
-    at: '1 Aug 2026, 4:02pm',
-    category: 'Memory removed',
-    affects: 'Shared memory',
-    target: 'gmail',
-    detail:
-      'Tejash removed 12 memories that came from old Gmail threads. They’re gone from everyone’s shared view and won’t be used in future answers. This can’t be undone after 30 days.',
-  },
-  {
-    who: 'Oliver',
-    what: 'opened shared memory · Q3 launch',
-    when: 'Yesterday',
-    at: '1 Aug 2026, 9:15am',
-    category: 'Memory opened',
-    affects: 'Shared memory · Q3 launch',
-    detail:
-      'Oliver opened the shared “Q3 launch” memory to review the timeline before the standup. Opening a memory is read-only and doesn’t change anything.',
-  },
-  {
-    who: 'Dara',
-    what: 'viewed the activity log',
-    when: '2 days ago',
-    at: '31 Jul 2026, 2:40pm',
-    category: 'Settings viewed',
-    affects: 'Workspace settings',
-    detail:
-      'Dara opened the workspace activity log. As a Viewer, Dara can see what’s happening but can’t change settings or remove memories.',
-  },
-]
+function relTime(iso: string): string {
+  const t = Date.parse(iso)
+  if (!t) return ''
+  const s = Math.max(1, Math.floor((Date.now() - t) / 1000))
+  if (s < 60) return 'just now'
+  const m = Math.floor(s / 60)
+  if (m < 60) return `${m}m ago`
+  const h = Math.floor(m / 60)
+  if (h < 24) return `${h}h ago`
+  return `${Math.floor(h / 24)}d ago`
+}
 
 const roleTone: Record<string, string> = {
   Admin: 'bg-[var(--color-royal-soft)] text-[var(--color-royal)]',
@@ -171,8 +140,17 @@ function Tile({ value, label, sub }: { value: string; label: string; sub?: strin
 
 /* ---- Personal — for individuals, solo founders, public figures --------- */
 function PersonalView({ name, email }: { name: string; email: string }) {
-  const { connectors } = useData()
+  const { connectors, stats, refresh } = useData()
   const allowed = connectors.filter((c) => c.status === 'connected' || c.status === 'syncing')
+
+  async function onExport() {
+    await exportMemory().catch(() => {})
+  }
+  async function onDelete() {
+    if (!window.confirm('This permanently erases everything Anant remembers about you. Continue?')) return
+    await forgetAll().catch(() => {})
+    await refresh()
+  }
   return (
     <>
       <header className="flex flex-wrap items-center gap-4">
@@ -181,21 +159,18 @@ function PersonalView({ name, email }: { name: string; email: string }) {
           <div className="flex items-center gap-2.5">
             <h1 className="text-[1.375rem] tracking-[-0.02em] text-ink">{name}</h1>
             <span className="rounded-full bg-[var(--color-royal-soft)] px-2.5 py-0.5 text-[0.75rem] font-[500] text-[var(--color-royal)]">
-              Pro plan
+              Individual
             </span>
           </div>
           <div className="text-[0.875rem] text-ink-soft">{email} · just you</div>
         </div>
-        <button className="focus-ring ml-auto rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] text-ink-soft ring-1 ring-rule transition-colors hover:text-ink">
-          Manage plan
-        </button>
       </header>
 
       <div className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Tile value="Pro" label="Your plan" sub="renews Jan 2027" />
-        <Tile value="342" label="Your memories" sub="growing daily" />
-        <Tile value={String(allowed.length)} label="Connected apps" sub="all yours" />
-        <Tile value="Jan 2026" label="Member since" />
+        <Tile value={String(stats?.memories ?? 0)} label="Memories" sub="in your engine" />
+        <Tile value={String(stats?.entities ?? 0)} label="People & things" sub="Anant has found" />
+        <Tile value={String(stats?.patterns ?? 0)} label="Patterns" sub="noticed so far" />
+        <Tile value={String(allowed.length)} label="Connected apps" />
       </div>
 
       {/* Create a team — the upgrade path for solo → startup */}
@@ -223,11 +198,17 @@ function PersonalView({ name, email }: { name: string; email: string }) {
         </div>
         <div className="rounded-[3px] bg-paper-raised p-5 shadow-[0_1px_2px_rgba(12,14,20,0.05)] ring-1 ring-rule/70">
           <div className="flex flex-wrap items-center gap-2">
-            <button className="focus-ring inline-flex items-center gap-2 rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] text-ink-soft ring-1 ring-rule transition-colors hover:text-ink">
+            <button
+              onClick={onExport}
+              className="focus-ring inline-flex items-center gap-2 rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] text-ink-soft ring-1 ring-rule transition-colors hover:text-ink"
+            >
               <Export size={16} />
               Export everything
             </button>
-            <button className="focus-ring inline-flex items-center gap-2 rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] font-[500] text-[var(--color-alert)] transition-colors hover:bg-[color-mix(in_srgb,var(--color-alert)_10%,transparent)]">
+            <button
+              onClick={onDelete}
+              className="focus-ring inline-flex items-center gap-2 rounded-[var(--radius)] px-3.5 py-2 text-[0.875rem] font-[500] text-[var(--color-alert)] transition-colors hover:bg-[color-mix(in_srgb,var(--color-alert)_10%,transparent)]"
+            >
               <Forget size={16} />
               Delete everything
             </button>
@@ -244,22 +225,50 @@ function PersonalView({ name, email }: { name: string; email: string }) {
 /* ---- Team — for startups and enterprises ------------------------------- */
 function TeamView({ onOpenActivity }: { onOpenActivity: (a: Activity) => void }) {
   const { connectors, members } = useData()
+  const { user } = useAuth()
   const allowed = connectors.filter((c) => c.status === 'connected' || c.status === 'syncing')
+
+  // Real audit log from the engine.
+  const [activityList, setActivityList] = useState<Activity[]>([])
+  useEffect(() => {
+    if (!user?.orgId) return
+    api
+      .audit(user.orgId, 50)
+      .then((res) =>
+        setActivityList(
+          (res.events ?? []).map((e) => ({
+            who: e.actor,
+            what: `${e.action}${e.object ? ` · ${e.object}` : ''}`,
+            when: relTime(e.ts),
+            at: e.ts,
+            category: e.action,
+            affects: e.object || '—',
+            detail: `${e.actor} performed “${e.action}” on ${e.object || 'the workspace'} — ${e.decision}.`,
+          })),
+        ),
+      )
+      .catch(() => {})
+  }, [user?.orgId])
+
+  const orgLabel = user?.name ? `${user.name}’s organization` : 'Your organization'
+
   return (
     <>
       {/* Identity */}
       <header className="flex flex-wrap items-center gap-4">
         <span className="flex h-11 w-11 items-center justify-center rounded-[8px] bg-royal text-[1.125rem] font-[500] text-white">
-          N
+          {orgLabel.slice(0, 1).toUpperCase()}
         </span>
         <div className="min-w-0">
           <div className="flex items-center gap-2.5">
-            <h1 className="text-[1.375rem] tracking-[-0.02em] text-ink">Neural AI</h1>
+            <h1 className="text-[1.375rem] tracking-[-0.02em] text-ink">{orgLabel}</h1>
             <span className="rounded-full bg-[var(--color-royal-soft)] px-2.5 py-0.5 text-[0.75rem] font-[500] text-[var(--color-royal)]">
-              Team plan
+              Organization
             </span>
           </div>
-          <div className="text-[0.875rem] text-ink-soft">{members.length} people · neural.ai</div>
+          <div className="text-[0.875rem] text-ink-soft">
+            {members.length} {members.length === 1 ? 'person' : 'people'}
+          </div>
         </div>
         <button className="focus-ring ml-auto inline-flex items-center gap-1.5 rounded-[var(--radius)] bg-royal px-3.5 py-2 text-[0.875rem] font-[500] text-white transition-opacity hover:opacity-90">
           <Plus size={16} />
@@ -337,19 +346,23 @@ function TeamView({ onOpenActivity }: { onOpenActivity: (a: Activity) => void })
           {/* Recent activity */}
           <section className="rounded-[3px] bg-paper-raised p-5 shadow-[0_1px_2px_rgba(12,14,20,0.05)] ring-1 ring-rule/70">
             <h2 className="mb-4 text-[0.95rem] font-[500] text-ink">Recent activity</h2>
-            <div className="flex flex-col gap-1">
-              {activity.map((a, i) => (
-                <button
-                  key={i}
-                  onClick={() => onOpenActivity(a)}
-                  className="focus-ring -mx-2 flex items-baseline gap-2 rounded-[var(--radius)] px-2 py-1.5 text-left text-[0.875rem] transition-colors hover:bg-paper-sunk/60"
-                >
-                  <span className="font-[500] text-ink">{a.who}</span>
-                  <span className="text-ink-soft">{a.what}</span>
-                  <span className="ml-auto shrink-0 text-[0.8125rem] text-ink-faint">{a.when}</span>
-                </button>
-              ))}
-            </div>
+            {activityList.length === 0 ? (
+              <p className="text-[0.875rem] text-ink-muted">No activity yet.</p>
+            ) : (
+              <div className="flex flex-col gap-1">
+                {activityList.map((a, i) => (
+                  <button
+                    key={i}
+                    onClick={() => onOpenActivity(a)}
+                    className="focus-ring -mx-2 flex items-baseline gap-2 rounded-[var(--radius)] px-2 py-1.5 text-left text-[0.875rem] transition-colors hover:bg-paper-sunk/60"
+                  >
+                    <span className="font-[500] text-ink">{a.who}</span>
+                    <span className="text-ink-soft">{a.what}</span>
+                    <span className="ml-auto shrink-0 text-[0.8125rem] text-ink-faint">{a.when}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </section>
         </div>
 
