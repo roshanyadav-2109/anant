@@ -76,6 +76,8 @@ export const liveConnectors: Record<string, LiveConnector> = {
   gmail: { service: 'google', oauth: true },
   drive: { service: 'google', oauth: true },
   gdocs: { service: 'google', oauth: true },
+  gsheets: { service: 'google', oauth: true },
+  gslides: { service: 'google', oauth: true },
   calendar: { service: 'google', oauth: true },
 }
 
@@ -119,6 +121,8 @@ export const connectorCatalog: Connector[] = [
   c('box', 'Box', 'Documents'),
   c('onedrive', 'OneDrive', 'Documents'),
   c('gdocs', 'Google Docs', 'Documents'),
+  c('gsheets', 'Google Sheets', 'Documents'),
+  c('gslides', 'Google Slides', 'Documents'),
   c('evernote', 'Evernote', 'Notes'),
   c('clickup', 'ClickUp', 'Tasks'),
   c('monday', 'monday.com', 'Tasks'),

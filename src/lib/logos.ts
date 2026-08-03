@@ -39,6 +39,8 @@ export const brandLogo: Record<string, string> = {
   box: '/connectors/box.svg',
   onedrive: '/connectors/onedrive.svg',
   gdocs: '/connectors/gdocs.svg',
+  gsheets: '/connectors/gsheets.svg',
+  gslides: '/connectors/gslides.svg',
   evernote: '/connectors/evernote.svg',
   // Tasks & databases
   clickup: '/connectors/clickup.svg',
