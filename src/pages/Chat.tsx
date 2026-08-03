@@ -33,7 +33,7 @@ const isEngineId = (id: string) => !!id && !id.startsWith('local_')
 export function ChatPage() {
   const location = useLocation()
   const focusId = (location.state as { focusId?: string } | null)?.focusId
-  const { conversations: seedConvos, memories, loading, refresh } = useData()
+  const { conversations: seedConvos, memories, loading } = useData()
   const [greeting] = useState(randomGreeting)
   const suggestions = useMemo(() => suggestionsFromHistory(memories), [memories])
   const [convos, setConvos] = useState<Conversation[]>([])
@@ -45,25 +45,30 @@ export function ChatPage() {
   const [openSrc, setOpenSrc] = useState<Set<number>>(new Set())
   const [convQuery, setConvQuery] = useState('')
   const threadRef = useRef<HTMLDivElement>(null)
+  const hydratedRef = useRef(false)
   const { user } = useAuth()
   const me = user?.name ?? 'You'
 
-  // Load conversations from the database, then pick the active one.
-  useEffect(() => {
-    setConvos(seedConvos)
-  }, [seedConvos])
+  // Hydrate from the engine ONCE, then keep local state authoritative and pick
+  // the active conversation. Merged into one effect so hydration and the
+  // empty-history fallback can't race and clobber each other.
   useEffect(() => {
     if (loading) return
-    // Empty history → start a fresh (unsaved) conversation so the composer shows.
+    const placeholder = () => [{ id: `local_${Date.now()}`, title: 'New conversation', at: Date.now(), messages: [] as ChatMessage[] }]
+    if (!hydratedRef.current) {
+      hydratedRef.current = true
+      setConvos(seedConvos.length ? seedConvos : placeholder())
+      return
+    }
     if (convos.length === 0) {
-      setConvos([{ id: `local_${Date.now()}`, title: 'New conversation', at: Date.now(), messages: [] }])
+      setConvos(placeholder())
       return
     }
     setActiveId((cur) => {
       if (cur && convos.some((c) => c.id === cur)) return cur
       return (focusId && convos.some((c) => c.id === focusId) ? focusId : convos[0].id) ?? ''
     })
-  }, [convos, focusId, loading])
+  }, [seedConvos, convos, focusId, loading])
 
   const active = convos.find((c) => c.id === activeId)
 
@@ -166,12 +171,12 @@ export function ChatPage() {
             messages: c.messages.map((m) => (m.id === answerId ? { ...m, text: fin.response || acc, streaming: false } : m)),
           }))
           setStreaming(false)
-          // Adopt the engine's conversation id for a brand-new local thread.
+          // Adopt the engine's conversation id for a brand-new local thread
+          // (keep the local messages — do NOT reload the list, which has none).
           if (!isEngineId(convId) && fin.conversation_id) {
             const title = text.length > 40 ? text.slice(0, 40) + '…' : text
             patchConv(convId, (c) => ({ ...c, id: fin.conversation_id, title }))
             setActiveId(fin.conversation_id)
-            void refresh()
           }
         },
         onError: () => {
