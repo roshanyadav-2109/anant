@@ -4,8 +4,10 @@
  * enterprise, an `org` claim. Base URL is configurable per environment.
  */
 
-const BASE = (import.meta.env.VITE_ANANT_API_URL as string | undefined)?.replace(/\/$/, '') || 'http://localhost:8000'
-const NGROK = String(import.meta.env.VITE_ANANT_NGROK ?? '') === 'true'
+const BASE =
+  (import.meta.env.VITE_ANANT_API_URL as string | undefined)?.replace(/\/$/, '') ||
+  'https://scoldedly-unfinical-julius.ngrok-free.dev'
+const NGROK = String(import.meta.env.VITE_ANANT_NGROK ?? '') === 'true' || BASE.includes('ngrok')
 
 const TOKEN_KEY = 'anant.token'
 
