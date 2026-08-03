@@ -2,7 +2,21 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import { useAuth } from '@/lib/auth'
 import { api, type AnantProfile } from '@/lib/anant'
 import { connectorCatalog } from '@/lib/catalog'
-import type { Connector, Conversation, Insight, Memory } from '@/lib/types'
+import type { Connector, Conversation, Insight, Memory, SourceKind } from '@/lib/types'
+
+/** Best-effort source from the engine's memory category (it has no source field). */
+function sourceFromCategory(cat: string): { kind: SourceKind; label: string } {
+  const c = cat.toLowerCase()
+  if (/gmail|e-?mail/.test(c)) return { kind: 'gmail', label: 'Gmail' }
+  if (/slack|channel/.test(c)) return { kind: 'slack', label: 'Slack' }
+  if (/github|repo|commit|pull request|\bpr\b|issue|code/.test(c)) return { kind: 'github', label: 'GitHub' }
+  if (/notion/.test(c)) return { kind: 'notion', label: 'Notion' }
+  if (/linear/.test(c)) return { kind: 'linear', label: 'Linear' }
+  if (/drive|doc|sheet|slide|spreadsheet|presentation|\bfile\b|document/.test(c))
+    return { kind: 'drive', label: 'Google Drive' }
+  if (/calendar|event|meeting/.test(c)) return { kind: 'calendar', label: 'Calendar' }
+  return { kind: 'chat', label: 'Chat' }
+}
 
 /**
  * Loads workspace data from the Anant Engine once the user is signed in and
@@ -69,7 +83,7 @@ export function DataProvider({ children }: { children: ReactNode }) {
         subject: m.category || 'Memory',
         category: m.category || '',
         provenance: 'stated',
-        source: { kind: 'chat', label: 'Anant' },
+        source: sourceFromCategory(m.category || ''),
         when: m.created_at ?? '',
         confidence: 1,
       })),

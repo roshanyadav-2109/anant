@@ -74,20 +74,28 @@ export function ConnectorCard({
         </div>
       )}
 
-      {/* Importing — a bar that fills toward completion + the live item count */}
-      {status === 'syncing' && (
-        <div className="mt-3">
-          <div className="mb-1.5 flex items-center justify-between text-[0.8125rem]">
-            <span className="text-[var(--color-royal)]">Importing…</span>
-            <span className="tnum text-ink-muted">
-              {connector.items ? `${connector.items.toLocaleString()} items` : ''}
-            </span>
-          </div>
-          <div className="h-1.5 overflow-hidden rounded-full bg-paper-sunk">
-            <div className="bar-filling h-full rounded-full bg-royal" />
-          </div>
-        </div>
-      )}
+      {/* Importing — the bar is driven by the real item count, so it never
+          resets on tab change and only grows as more is imported (asymptotes
+          toward the end since the engine reports no total). */}
+      {status === 'syncing' &&
+        (() => {
+          const n = connector.items ?? 0
+          const pct = Math.max(6, Math.round((95 * n) / (n + 40)))
+          return (
+            <div className="mt-3">
+              <div className="mb-1.5 flex items-center justify-between text-[0.8125rem]">
+                <span className="text-[var(--color-royal)]">Importing…</span>
+                <span className="tnum text-ink-muted">{n > 0 ? `${n.toLocaleString()} items` : 'starting…'}</span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-paper-sunk">
+                <div
+                  className="h-full rounded-full bg-royal transition-[width] duration-700 ease-out"
+                  style={{ width: `${pct}%` }}
+                />
+              </div>
+            </div>
+          )
+        })()}
 
       {status === 'error' && (
         <div className="mt-3 text-[0.8125rem] text-[var(--color-alert)]">The last import didn’t finish. Try reconnecting.</div>

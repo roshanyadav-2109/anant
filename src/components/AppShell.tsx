@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/lib/auth'
+import { useLogo } from '@/lib/brand'
 import { cx, IconButton } from '@/components/ui'
 import {
   Chat,
@@ -76,6 +77,7 @@ function NavRow({ item, collapsed }: { item: NavItem; collapsed: boolean }) {
 export function AppShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
   const { user, signOut } = useAuth()
+  const logo = useLogo()
   const navigate = useNavigate()
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -152,8 +154,8 @@ export function AppShell({ children }: { children: ReactNode }) {
               collapsed && 'justify-center px-0',
             )}
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[4px] bg-white/[0.08] text-[0.85rem] font-[500] text-white">
-              {initials}
+            <span className="flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-[4px] bg-white/[0.08] text-[0.85rem] font-[500] text-white">
+              {logo ? <img src={logo} alt="" className="h-full w-full object-cover" /> : initials}
             </span>
             {!collapsed && (
               <span className="min-w-0 flex-1 leading-tight">

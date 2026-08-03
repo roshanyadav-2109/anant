@@ -4,6 +4,7 @@ import { useAuth } from '@/lib/auth'
 import { useData } from '@/lib/dataStore'
 import { exportMemory, forgetAll } from '@/lib/dataActions'
 import { api } from '@/lib/anant'
+import { IdentityLogo } from '@/components/IdentityLogo'
 import { logoFor } from '@/lib/logos'
 import { Dismiss, Dots, Export, Forget, Plus } from '@/icons'
 
@@ -154,7 +155,7 @@ function PersonalView({ name, email }: { name: string; email: string }) {
   return (
     <>
       <header className="flex flex-wrap items-center gap-4">
-        <Avatar name={name} />
+        <IdentityLogo fallback={initials(name)} size={44} rounded={22} editable />
         <div className="min-w-0">
           <div className="flex items-center gap-2.5">
             <h1 className="text-[1.375rem] tracking-[-0.02em] text-ink">{name}</h1>
@@ -256,9 +257,7 @@ function TeamView({ onOpenActivity }: { onOpenActivity: (a: Activity) => void })
     <>
       {/* Identity */}
       <header className="flex flex-wrap items-center gap-4">
-        <span className="flex h-11 w-11 items-center justify-center rounded-[8px] bg-royal text-[1.125rem] font-[500] text-white">
-          {orgLabel.slice(0, 1).toUpperCase()}
-        </span>
+        <IdentityLogo fallback={orgLabel.slice(0, 1).toUpperCase()} size={44} rounded={8} editable />
         <div className="min-w-0">
           <div className="flex items-center gap-2.5">
             <h1 className="text-[1.375rem] tracking-[-0.02em] text-ink">{orgLabel}</h1>
