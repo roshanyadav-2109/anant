@@ -5,7 +5,7 @@ import { logoFor } from '@/lib/logos'
 
 const statusMeta: Record<ConnectorStatus, { label: string; className: string }> = {
   connected: { label: 'Connected', className: 'text-[var(--color-ok)]' },
-  syncing: { label: 'Bringing in…', className: 'text-ink-muted' },
+  syncing: { label: 'Importing', className: 'text-[var(--color-royal)]' },
   error: { label: 'Needs attention', className: 'text-[var(--color-alert)]' },
   available: { label: 'Available', className: 'text-ink-faint' },
 }
@@ -43,11 +43,6 @@ export function ConnectorCard({
     onDisconnect?.()
   }
 
-  const progress =
-    connector.items && connector.itemsTarget
-      ? Math.round((connector.items / connector.itemsTarget) * 100)
-      : null
-
   return (
     <div className="group flex flex-col rounded-[var(--radius-lg)] border border-rule bg-paper-raised p-4 transition-all duration-150 hover:border-ink-faint/50 hover:shadow-[var(--shadow-card)]">
       <div className="flex items-center gap-3">
@@ -61,26 +56,35 @@ export function ConnectorCard({
         <StatusPill status={status} />
       </div>
 
-      {status !== 'available' && (
+      {status === 'connected' && (
         <div className="mt-3 text-[0.8125rem] text-ink-muted">
-          {status === 'connected' && (
-            <span>
-              Updated {connector.lastSync} · <span className="tnum">{connector.items?.toLocaleString()}</span> items
-            </span>
-          )}
-          {status === 'syncing' && (
-            <span>
-              <span className="tnum">{connector.items?.toLocaleString()}</span> of ~
-              <span className="tnum">{connector.itemsTarget?.toLocaleString()}</span> imported
-            </span>
-          )}
+          {connector.lastSync ? `Updated ${connector.lastSync}` : 'Connected'}
+          {connector.items ? (
+            <>
+              {' · '}
+              <span className="tnum">{connector.items.toLocaleString()}</span> items
+            </>
+          ) : null}
         </div>
       )}
 
-      {progress !== null && status === 'syncing' && (
-        <div className="mt-2 h-1 overflow-hidden rounded-full bg-paper-sunk">
-          <div className="h-full rounded-full bg-evergreen transition-[width] duration-500" style={{ width: `${progress}%` }} />
+      {/* Importing — animated meter (engine gives no total, so it's indeterminate) */}
+      {status === 'syncing' && (
+        <div className="mt-3">
+          <div className="mb-1.5 flex items-center justify-between text-[0.8125rem]">
+            <span className="text-[var(--color-royal)]">Importing…</span>
+            <span className="tnum text-ink-muted">
+              {connector.items ? `${connector.items.toLocaleString()} so far` : 'starting…'}
+            </span>
+          </div>
+          <div className="h-1.5 overflow-hidden rounded-full bg-paper-sunk">
+            <div className="bar-indeterminate h-full w-1/3 rounded-full bg-royal" />
+          </div>
         </div>
+      )}
+
+      {status === 'error' && (
+        <div className="mt-3 text-[0.8125rem] text-[var(--color-alert)]">The last import didn’t finish. Try reconnecting.</div>
       )}
 
       <div className="mt-4 flex items-center justify-end gap-3 border-t border-rule/70 pt-3">

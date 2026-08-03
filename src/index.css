@@ -190,6 +190,13 @@
   }
   .consolidating { animation: anant-consolidate 1.8s ease-in-out infinite; }
 
+  /* Indeterminate progress meter — a moving segment for imports with no known total */
+  @keyframes anant-indeterminate {
+    0% { transform: translateX(-110%); }
+    100% { transform: translateX(360%); }
+  }
+  .bar-indeterminate { animation: anant-indeterminate 1.15s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
   @keyframes anant-caret {
     0%, 100% { opacity: 1; }
     50% { opacity: 0; }
