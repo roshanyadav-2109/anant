@@ -58,13 +58,19 @@ export function ConnectorCard({
 
       {status === 'connected' && (
         <div className="mt-3 text-[0.8125rem] text-ink-muted">
-          {connector.lastSync ? `Updated ${connector.lastSync}` : 'Connected'}
-          {connector.items ? (
-            <>
-              {' · '}
-              <span className="tnum">{connector.items.toLocaleString()}</span> items
-            </>
-          ) : null}
+          {connector.lastSync ? (
+            (connector.items ?? 0) > 0 ? (
+              <span>
+                Updated {connector.lastSync} · <span className="tnum">{connector.items!.toLocaleString()}</span> items
+              </span>
+            ) : (
+              // Completed a sync but found nothing to bring in.
+              <span>Connected · nothing to import found here</span>
+            )
+          ) : (
+            // Connected but no sync has finished yet.
+            <span>Connected · nothing imported yet</span>
+          )}
         </div>
       )}
 
